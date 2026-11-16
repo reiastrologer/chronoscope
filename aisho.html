@@ -93,6 +93,8 @@
     <div id="periodResult"></div>
   </div>
 
+  <div id="chartMap"></div>
+
   <p class="backlink"><a href="./index.html">← クロノスコープ（年間星読み）へ</a></p>
 </div>
 <footer>
@@ -290,8 +292,8 @@ document.getElementById('calcBtn').addEventListener('click', async () => {
       ((A.unknown || B.unknown) ? '<p class="note">※出生時刻が不明な方については、ASC・MCを除いて計算しています。</p>' : '') +
       `<h3 class="sec">💞 ハーモニー</h3>` + (harmony.slice(0, 10).map(card).join('') || '<p class="note">該当するアスペクトはありませんでした。</p>') +
       `<h3 class="sec">⚡ 刺激・課題</h3>` + (hard.slice(0, 8).map(card).join('') || '<p class="note">該当するアスペクトはありませんでした。</p>') +
-      `<h3 class="sec">🗺 二人の星マップ</h3>` + chartTable(A, posA) + chartTable(B, posB) +
       '<p class="note">※相性は星の響き合いの傾向です。実際の関係は、二人の歩み寄りでいくらでも育ちます。</p>';
+    document.getElementById('chartMap').innerHTML = `<h3 class="sec">🗺 二人の星マップ</h3>` + chartTable(A, posA) + chartTable(B, posB);
     window.__charts = { A, B, posA, posB };
     document.getElementById('periodSection').style.display = 'block';
     res.scrollIntoView({ behavior: 'smooth' });
