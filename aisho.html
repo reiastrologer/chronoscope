@@ -369,14 +369,28 @@ document.getElementById('calcBtn').addEventListener('click', async () => {
       `<div class="scorebox"><div style="color:#8a8178;font-size:13px;">${esc(A.name)} × ${esc(B.name)} のシンクロ度</div><div class="score">${score}</div><div class="verdict">${verdict(score)}</div></div>` +
       (fateChecks(posA, posB, A.name, B.name).map(f => `<div style="background:linear-gradient(135deg, rgba(197,168,128,0.25), rgba(197,168,128,0.08)); border:1px solid #c5a880; border-radius:10px; padding:12px 14px; margin-bottom:12px;"><div style="font-weight:700; color:#c5a880; margin-bottom:4px;">💫 運命の人の配置 ― ${esc(f.fromName)}の${f.body === 0 ? '☉太陽' : '♀金星'} × ${esc(f.toName)}の☊ドラゴンヘッド ☌（オーブ ${f.orb.toFixed(1)}°）</div><div style="font-size:14px;">${f.text}<br><span style="color:#c5a880;">（割と多いですが相性良いのは間違いなし！）</span></div></div>`).join('')) +
       `<p class="counts">ハーモニー ${harmony.length}件 ／ 刺激・課題 ${hard.length}件</p>` +
-      ((A.unknown || B.unknown) ? '<p class="note">※出生時刻が不明な方については、ASC・MCを除いて計算しています。</p>' : '');
-    window.__hits = hits;
-    document.getElementById('aspectArea').innerHTML =
-      `<h3 class="sec">📋 アスペクト表（二人の星の響き合い）</h3>` +
-      '<p class="note" style="margin-top:0;">カードをタップすると、そのアスペクトの円（チャート）が開きます。</p>' +
+      ((A.unknown || B.unknown) ? '<p class="note">※出生時刻が不明な方については、ASC・MCを除いて計算しています。</p>' : '') +
       `<h3 class="sec">💞 ハーモニー</h3>` + (harmony.slice(0, 10).map(card).join('') || '<p class="note">該当するアスペクトはありませんでした。</p>') +
       `<h3 class="sec">⚡ 刺激・課題</h3>` + (hard.slice(0, 8).map(card).join('') || '<p class="note">該当するアスペクトはありませんでした。</p>') +
       '<p class="note">※相性は星の響き合いの傾向です。実際の関係は、二人の歩み寄りでいくらでも育ちます。</p>';
+    window.__hits = hits;
+    // アスペクト表（グリッド）: 行=Aの星、列=Bの星、セル=アスペクト記号（タップで円が開く）
+    const hitMap = new Map(hits.map(h => [h.a.id + ':' + h.b.id, h]));
+    const gRows = BODIES.filter(b => posA[b.id] !== undefined);
+    const gCols = BODIES.filter(b => posB[b.id] !== undefined);
+    const gCell = (a, b) => {
+      const h = hitMap.get(a.id + ':' + b.id);
+      if (!h) return '<td style="color:#4a443c;">・</td>';
+      const col = h.asp.kind === 'hard' ? '#e07856' : '#8fd0a8';
+      return `<td style="color:${col}; font-weight:700; cursor:pointer;" onclick="showWheel(${a.id},${b.id})">${h.asp.emoji}</td>`;
+    };
+    document.getElementById('aspectArea').innerHTML =
+      `<h3 class="sec">📋 アスペクト表</h3>` +
+      '<p class="note" style="margin-top:0;">記号をタップすると、そのアスペクトの円（チャート）が開きます。行＝' + esc(A.name) + 'の星、列＝' + esc(B.name) + 'の星。</p>' +
+      '<div style="overflow-x:auto;"><table class="chart" style="text-align:center;">' +
+      '<tr><th></th>' + gCols.map(b => `<th>${b.emoji}</th>`).join('') + '</tr>' +
+      gRows.map(a => '<tr><th>' + a.emoji + '</th>' + gCols.map(b => gCell(a, b)).join('') + '</tr>').join('') +
+      '</table></div>';
     document.getElementById('chartMap').innerHTML = `<h3 class="sec">🗺 二人の星マップ</h3>` + chartTable(A, posA) + chartTable(B, posB);
     // クロノスくんのおまじない（結果の一番最後に、悩んでる人への魔法）
     const MAGIC_MSGS = [
