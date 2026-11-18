@@ -405,36 +405,50 @@
           if (end < start) end = Date.UTC(Y + 1, +sm[3] - 1, +sm[4]);
           return { cfg: gm ? gm[0] : tx.slice(0, 24), start: start, end: end, peak: pm ? (+pm[1] + '月' + pm[2] + '日') : '' };
         }
-        function feelPhase(rec, feltMs) {
-          if (rec.end <= rec.start) return 'ピーク付近';
-          var r = (feltMs - rec.start) / (rec.end - rec.start);
-          if (r < 0.34) return '開始寄り';
-          if (r > 0.67) return '終わり寄り';
-          return 'ピーク付近';
-        }
+        var PHASES = ['開始ごろ', 'ピークごろ', '終了ごろ'];
         function addFeelButtons(Y, m, d) {
           var list = document.getElementById('scheduleList'); if (!list) return;
           var bk = birthKey();
-          var feltMs = Date.UTC(Y, m - 1, d);
-          var arr = feelLoad();
+          var ym = Y + '-' + m;
           list.querySelectorAll('.schedule-card').forEach(function (card) {
-            if (card.style.display === 'none' || card.querySelector('.feelBtn')) return;
+            if (card.style.display === 'none' || card.querySelector('.feelWrap')) return;
             var sp = cardSpan(card, Y); if (!sp) return;
-            var rec = { bk: bk, cfg: sp.cfg, start: sp.start, end: sp.end, peak: sp.peak, felt: feltMs };
-            var has = arr.some(function (x) { return x.bk === bk && x.cfg === rec.cfg && x.start === rec.start && x.felt === feltMs; });
-            var btn = document.createElement('button');
-            btn.type = 'button'; btn.className = 'feelBtn';
-            btn.style.cssText = 'margin:8px 0 2px;background:transparent;border:1px solid #8a8178;color:#c5a880;border-radius:999px;padding:4px 12px;font-size:12px;cursor:pointer;';
-            btn.textContent = has ? '✓ 感じた記録あり（取消）' : 'この配置、感じた日に記録';
-            btn.addEventListener('click', function () {
-              var a2 = feelLoad();
-              var idx = a2.findIndex(function (x) { return x.bk === bk && x.cfg === rec.cfg && x.start === rec.start && x.felt === feltMs; });
-              if (idx >= 0) { a2.splice(idx, 1); btn.textContent = 'この配置、感じた日に記録'; }
-              else { rec.phase = feelPhase(rec, feltMs); a2.push(rec); btn.textContent = '✓ 感じた記録あり（取消）'; }
-              feelSave(a2);
-              renderFeelStats();
+            var wrap = document.createElement('div');
+            wrap.className = 'feelWrap';
+            wrap.style.cssText = 'margin:8px 0 2px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;';
+            var label = document.createElement('span');
+            label.style.cssText = 'font-size:12px; color:#8a8178;';
+            label.textContent = 'いつ感じた？';
+            wrap.appendChild(label);
+            function paint() {
+              var arr = feelLoad();
+              var cur = arr.find(function (x) { return x.bk === bk && x.cfg === sp.cfg && x.start === sp.start; });
+              wrap.querySelectorAll('.feelBtn').forEach(function (b) {
+                var on = cur && cur.phase === b.dataset.ph;
+                b.style.background = on ? '#b98a2f' : 'transparent';
+                b.style.color = on ? '#1a1712' : '#c5a880';
+                b.style.fontWeight = on ? '700' : '400';
+              });
+            }
+            PHASES.forEach(function (ph) {
+              var btn = document.createElement('button');
+              btn.type = 'button'; btn.className = 'feelBtn'; btn.dataset.ph = ph;
+              btn.style.cssText = 'background:transparent;border:1px solid #8a8178;color:#c5a880;border-radius:999px;padding:4px 12px;font-size:12px;cursor:pointer;';
+              btn.textContent = ph;
+              btn.addEventListener('click', function () {
+                var arr = feelLoad();
+                var idx = arr.findIndex(function (x) { return x.bk === bk && x.cfg === sp.cfg && x.start === sp.start; });
+                if (idx >= 0 && arr[idx].phase === ph) arr.splice(idx, 1);
+                else if (idx >= 0) { arr[idx].phase = ph; arr[idx].ym = ym; }
+                else arr.push({ bk: bk, cfg: sp.cfg, start: sp.start, end: sp.end, peak: sp.peak, phase: ph, ym: ym });
+                feelSave(arr);
+                paint();
+                renderFeelStats();
+              });
+              wrap.appendChild(btn);
             });
-            card.appendChild(btn);
+            card.appendChild(wrap);
+            paint();
           });
         }
         function renderFeelStats() {
@@ -442,16 +456,31 @@
           var old = document.getElementById('feelStats'); if (old) old.remove();
           var bk = birthKey();
           var mine = feelLoad().filter(function (x) { return x.bk === bk; });
-          if (!mine.length) return;
-          var c = { '開始寄り': 0, 'ピーク付近': 0, '終わり寄り': 0 };
-          mine.forEach(function (x) { if (c[x.phase] !== undefined) c[x.phase]++; });
-          var line = 'あなたの感じた記録（' + mine.length + '件）： 開始寄り ' + c['開始寄り'] + '件／ピーク付近 ' + c['ピーク付近'] + '件／終わり寄り ' + c['終わり寄り'] + '件';
-          var maxK = Object.keys(c).sort(function (a, b) { return c[b] - c[a]; })[0];
-          if (mine.length >= 5 && c[maxK] >= 3) line += ' ― あなたは「' + maxK + '」に感じやすいタイプかもしれません。';
+          if (!mine.length) {
+            var hint = document.createElement('div');
+            hint.id = 'feelStats';
+            hint.style.cssText = 'font-size:12px;color:#8a8178;margin-top:8px; line-height:1.7;';
+            hint.textContent = '「いつ感じた？」ボタンについて： その配置の影響を実際に感じた時期（開始ごろ／ピークごろ／終了ごろ）を、各カードで記録できます。記録はあなたの端末の中だけに残り、月ごとに集計されます。溜まってくると、あなたがどの時期に感じやすいかの傾向が見えてきます。';
+            bn.appendChild(hint);
+            return;
+          }
+          var ym = dayTarget.Y + '-' + dayTarget.m;
+          function countOf(list) { var c = [0, 0, 0]; list.forEach(function (x) { var i = PHASES.indexOf(x.phase); if (i >= 0) c[i]++; }); return c; }
+          var mc = countOf(mine.filter(function (x) { return x.ym === ym; }));
+          var lines = [];
+          if (mc[0] + mc[1] + mc[2] > 0) lines.push(dayTarget.m + '月の感じた記録（' + (mc[0] + mc[1] + mc[2]) + '件）： 開始ごろ ' + mc[0] + '／ピークごろ ' + mc[1] + '／終了ごろ ' + mc[2]);
+          var ac = countOf(mine);
+          var total = ac[0] + ac[1] + ac[2];
+          if (total > 0 && lines.length === 0) lines.push('感じた記録（全' + total + '件）： 開始ごろ ' + ac[0] + '／ピークごろ ' + ac[1] + '／終了ごろ ' + ac[2]);
+          if (total >= 5) {
+            var maxi = ac.indexOf(Math.max(ac[0], ac[1], ac[2]));
+            if (ac[maxi] >= 3) lines.push('これまでの傾向： あなたは「' + PHASES[maxi] + '」に感じやすいタイプかもしれません。');
+          }
+          if (!lines.length) return;
           var div = document.createElement('div');
           div.id = 'feelStats';
-          div.style.cssText = 'font-size:12px;color:#8a8178;margin-top:8px;';
-          div.textContent = line;
+          div.style.cssText = 'font-size:12px;color:#8a8178;margin-top:8px; line-height:1.7;';
+          div.innerHTML = lines.map(function (t) { return '<div>' + t + '</div>'; }).join('');
           bn.appendChild(div);
         }
         function ensureDirector() {
