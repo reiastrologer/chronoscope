@@ -85,6 +85,8 @@
         <label style="font-size: 13.5px; color: #c5a880; cursor: pointer;"><input type="checkbox" id="psUnknown" style="transform: scale(1.2); margin-right: 6px;">出生時間は不明（ハウス・アセンダント・MCは出ません）</label>
       </div>
       <div id="psResult" style="text-align: left; margin-top: 16px;"></div>
+        <button id="psRectBtn" style="margin-top:14px; padding:9px 18px; font-size:14px; font-weight:700; color:#ffd88a; background:transparent; border:1.5px solid #b98a2f; border-radius:999px; cursor:pointer;">🕐 出生時刻が不明な方へ：時刻ごとの違いを見る</button>
+        <div id="psRect" style="display:none; margin-top:12px; text-align:left;"></div>
     </div>
     <script type="module">
       try {
@@ -162,6 +164,46 @@
           '<div style="color:#faf6f0; line-height:1.75; font-size:14.5px;">' + body + '</div></div>';
         const sect = t => '<div style="font-weight:700; color:#e8cf9f; font-size:17px; margin:22px 0 10px;">' + t + '</div>';
         const bullets = arr => '・' + arr.join('<br>・');
+        document.getElementById('psRectBtn').addEventListener('click', async () => {
+          const box = document.getElementById('psRect');
+          box.style.display = 'block';
+          box.innerHTML = '<p style="color:#9a8d7a; font-size:13.5px;">計算中…</p>';
+          try {
+            await initWasm();
+            const b = pBirth();
+            const sgn2 = lon => Math.floor(lon / 30) % 12;
+            const fmt = min => String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0');
+            const snap = min => {
+              const jd = PJD(b.y, b.m, b.d, min / 60 - b.tz, 1);
+              const sun = pPos(jd, 0), moon = pPos(jd, 1);
+              const H = pHouses(jd, b.pref[1], b.pref[0]);
+              return { moon: sgn2(moon), asc: sgn2(H.asc), mc: sgn2(H.mc), sh: houseOf(sun, H.cusps), mh: houseOf(moon, H.cusps) };
+            };
+            const segs = [];
+            let prev = null, start = 0, cur = null;
+            for (let min = 0; min <= 1440; min += 2) {
+              const s = snap(Math.min(min, 1439));
+              const key = [s.moon, s.asc, s.mc, s.sh, s.mh].join('/');
+              if (prev !== null && key !== prev) { segs.push({ from: start, to: min, s: cur }); start = min; }
+              prev = key; cur = s;
+            }
+            segs.push({ from: start, to: 1440, s: cur });
+            let hh = '<h4 style="color:#ffd88a; margin:4px 0 6px;">出生時刻が不明な方へ</h4>';
+            hh += '<p style="font-size:13.5px; color:#d8cbb2; line-height:1.7; margin:0 0 10px;">生まれた時刻で読みがどう変わるかの一覧です（時刻は目安です）。「それっぽい！」と感じるものを選んで、上のフォームにその時刻を入れて性格チェックをしてみるのもいいかも！とはいえ、感覚だけだと午前と午後を取り違えて半日ズレることもあります。正確な時刻は、母子手帳などで確認してみてください。母子手帳がない場合は、出生届の記録で分かることもあります（法務局での保管は約27年です）。</p>';
+            hh += '<div style="max-height:420px; overflow-y:auto; display:grid; gap:6px;">';
+            for (const s2 of segs) {
+              const t = PTRAIT[SKEY[s2.s.asc]], tm = PTRAIT[SKEY[s2.s.moon]];
+              hh += '<div style="background:rgba(255,216,138,0.05); border:1px solid rgba(255,216,138,0.16); border-radius:8px; padding:7px 10px;">'
+                + '<span style="color:#ffd88a; font-weight:700; font-size:13.5px;">' + fmt(s2.from) + '〜' + (s2.to >= 1440 ? '24:00' : fmt(s2.to)) + '</span>'
+                + '<span style="font-size:13.5px; color:#e8dcc2;"> ' + t.essence + '</span><br>'
+                + '<span style="font-size:12.5px; color:#bdb098;">心の奥：' + tm.essence + ' ／ 適職：' + PTRAIT[SKEY[s2.s.mc]].jobs.slice(0, 3).join('・') + ' ／ 太陽' + s2.s.sh + 'ハウス・月' + s2.s.mh + 'ハウス</span></div>';
+            }
+            hh += '</div>';
+            box.innerHTML = hh;
+          } catch (e) {
+            box.innerHTML = '<p style="color:#e0a090; font-size:13.5px;">計算に失敗しました。生年月日を確認してもう一度お試しください。</p>';
+          }
+        });
         document.getElementById('psBtn').addEventListener('click', async () => {
           const box = document.getElementById('psResult');
           const b = pBirth();
