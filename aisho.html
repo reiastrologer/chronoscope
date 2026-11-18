@@ -535,6 +535,7 @@ function transitPositions(jd) {
 function dayAspects(tPos, natalPos) {
   const hits = [];
   for (const tb of BODIES.slice(0, 11)) {
+    if (tb.id === 1) continue; // 運行の月は速すぎて毎日のように当たるため、点数にも入れない
     for (const nb of BODIES) {
       if (natalPos[nb.id] === undefined) continue;
       const diff = angDiff(tPos[tb.id], natalPos[nb.id]);
