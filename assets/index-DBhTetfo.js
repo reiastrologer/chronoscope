@@ -38,8 +38,8 @@
     <div class="container">
       <div class="header">
         <h1>個人の運勢</h1>
-        <p class="notice-text">🔮 効果の保証はありません</p>
-        <p class="author">produced by れいさん</p>
+        
+        
       </div>
       <div class="input-card">
         <div class="form-row" style="display:flex; flex-direction:column; gap:16px;">
