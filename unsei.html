@@ -59,14 +59,7 @@
         <a href="./omajinai.html" class="topTab">✨ クロノスくんのおまじない</a>
       </div>
     </div>
-            <div style="max-width: 880px; margin: 14px auto 0; padding: 0 16px;">
-      <div style="display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; background: rgba(197,168,128,0.06); border: 1px solid rgba(197,168,128,0.25); border-radius: 12px; padding: 12px;">
-        <span style="font-size: 13.5px; color: #c5a880;">📅 見たい日</span>
-        <input type="date" id="jumpDate" style="padding: 8px; border-radius: 8px; background: #1c1a17; color: #faf6f0; border: 1px solid #4a4238; font-size: 15px; color-scheme: dark;">
-        <button id="jumpBtn" type="button" style="background: linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color: #e8cf9f; border: 1px solid #c5a880; border-radius: 999px; padding: 9px 18px; font-size: 14px; font-weight: 700; cursor: pointer;">その日へ飛ぶ 🚀</button>
-      </div>
-    </div>
-    <div id="app"></div>
+            <div id="app"></div>
     
 
 
@@ -276,56 +269,98 @@
         });
       })();
     </script>
-    <script>
+    
+        <script>
       (function () {
-        var jd = document.getElementById('jumpDate');
-        if (jd && !jd.value) { var t = new Date(); var pad = function (n) { return (n < 10 ? '0' : '') + n; }; jd.value = t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate()); }
-        function monthHead(m) {
-          var hs = document.querySelectorAll('#app h2');
-          for (var i = 0; i < hs.length; i++) { if (hs[i].textContent.indexOf(m + '月の星') >= 0) return hs[i]; }
-          return null;
+        function pad(n) { return (n < 10 ? '0' : '') + n; }
+        function resetView() {
+          var list = document.getElementById('scheduleList');
+          if (list) list.querySelectorAll('.schedule-card').forEach(function (c) { c.style.display = ''; });
+          var tabs = document.getElementById('monthTabs'); if (tabs) tabs.style.display = '';
+          var hs = document.getElementById('halfSumSection'); if (hs) hs.style.display = '';
+          var old = document.getElementById('dayBanner'); if (old) old.remove();
         }
-        function findCard(m, d) {
-          var head = monthHead(m); if (!head) return null;
-          var re = new RegExp('🎯\\s*' + m + '月' + d + '日');
-          var reSpan = new RegExp('影響期間[\\s\\S]*?' + m + '月' + d + '日');
-          var divs = document.querySelectorAll('#app div');
-          var best = null, fallback = null;
-          for (var i = 0; i < divs.length; i++) {
-            var el = divs[i];
-            if (el.compareDocumentPosition(head) & 2) continue; // headより前は除く
-            var tx = el.textContent || '';
-            if (tx.indexOf('💻') < 0) continue;
-            if (re.test(tx) && (!best || tx.length < best.textContent.length)) best = el;
-            else if (!fallback && reSpan.test(tx)) fallback = el;
-          }
-          return best || fallback;
+        function applyDay(Y, m, d) {
+          var list = document.getElementById('scheduleList'); if (!list) return;
+          var target = Date.UTC(Y, m - 1, d);
+          var kept = 0, nearest = null, nearestDiff = 1e15;
+          list.querySelectorAll('.schedule-card').forEach(function (card) {
+            var tx = card.textContent || '';
+            if (tx.indexOf('💻') < 0) { card.style.display = 'none'; return; }
+            var pm = tx.match(/🎯\s*(\d+)月(\d+)日/);
+            var sm = tx.match(/影響期間[:：]\s*(\d+)月(\d+)日\s*〜\s*(\d+)月(\d+)日/);
+            var keep = false;
+            if (pm && +pm[1] === m && +pm[2] === d) keep = true;
+            if (sm) {
+              var s1 = Date.UTC(Y, +sm[1] - 1, +sm[2]), e1 = Date.UTC(Y, +sm[3] - 1, +sm[4]);
+              if (e1 < s1) {
+                if (target >= Date.UTC(Y - 1, +sm[1] - 1, +sm[2]) && target <= e1) keep = true;
+                if (target >= s1 && target <= Date.UTC(Y + 1, +sm[3] - 1, +sm[4])) keep = true;
+              } else if (target >= s1 && target <= e1) keep = true;
+            }
+            if (pm) { var pd = Date.UTC(Y, +pm[1] - 1, +pm[2]); var diff = Math.abs(pd - target); if (diff < nearestDiff) { nearestDiff = diff; nearest = pm[1] + '月' + pm[2] + '日'; } }
+            card.style.display = keep ? '' : 'none';
+            if (keep) kept++;
+          });
+          var tabs = document.getElementById('monthTabs'); if (tabs) tabs.style.display = 'none';
+          var hs = document.getElementById('halfSumSection'); if (hs) hs.style.display = 'none';
+          var old = document.getElementById('dayBanner'); if (old) old.remove();
+          var bn = document.createElement('div');
+          bn.id = 'dayBanner';
+          bn.style.cssText = 'max-width:880px;margin:18px auto 0;padding:14px 16px;border:1px solid #c5a880;border-radius:12px;background:rgba(197,168,128,0.08);text-align:center;scroll-margin-top:140px;';
+          bn.innerHTML = '<div style="font-size:17px;font-weight:700;color:#e8cf9f;">📅 ' + Y + '年' + m + '月' + d + '日の運勢</div>' +
+            '<div style="font-size:13px;color:#c5a880;margin-top:4px;">この日に効いている配置：' + kept + '件' + (kept === 0 && nearest ? '（一番近いピークは ' + nearest + ' です）' : '') + '</div>' +
+            '<button type="button" id="dayAllBtn" style="margin-top:10px;background:transparent;color:#ffd88a;border:1.5px solid #b98a2f;border-radius:999px;padding:8px 18px;font-size:13.5px;font-weight:700;cursor:pointer;">月全体を見る</button>';
+          list.parentElement.insertBefore(bn, list);
+          document.getElementById('dayAllBtn').addEventListener('click', resetView);
+          bn.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-        function jump(m, d) {
-          var card = findCard(m, d);
-          var target = card || monthHead(m);
-          if (!target) return false;
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          if (card) {
-            card.style.transition = 'box-shadow 0.4s';
-            var n = 0;
-            var iv = setInterval(function () { n++; card.style.boxShadow = (n % 2 ? '0 0 0 3px rgba(255,216,138,0.95)' : '0 0 0 0 rgba(255,216,138,0)'); if (n > 5) { clearInterval(iv); card.style.boxShadow = ''; } }, 450);
-          }
-          return true;
-        }
-        var btn = document.getElementById('jumpBtn');
-        if (btn) btn.addEventListener('click', function () {
-          if (!jd || !jd.value) return;
-          var parts = jd.value.split('-').map(Number);
-          var y = parts[0], m = parts[1], d = parts[2];
+        var tries = 0;
+        var iv = setInterval(function () {
+          tries++;
           var sy = document.getElementById('scanyear');
-          if (monthHead(m) && sy && parseInt(sy.value, 10) === y) { jump(m, d); return; }
-          if (sy) sy.value = y;
           var cb = document.getElementById('calcBtn');
-          if (cb) cb.click();
-          var tries = 0;
-          var iv = setInterval(function () { tries++; if (jump(m, d) || tries > 60) clearInterval(iv); }, 500);
-        });
+          if ((sy && cb) || tries > 60) {
+            clearInterval(iv);
+            if (!sy || !cb) return;
+            var grp = sy.closest('.form-group') || sy.parentElement;
+            var wrap = document.createElement('div');
+            wrap.className = 'form-group';
+            wrap.innerHTML = '<label>占いたい日</label><input type="date" id="wantDate" class="form-control" style="margin-top:4px; color-scheme: dark;">';
+            grp.parentElement.insertBefore(wrap, grp);
+            grp.style.display = 'none';
+            var wd = document.getElementById('wantDate');
+            var t = new Date();
+            wd.value = t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate());
+            cb.addEventListener('click', function () {
+              if (wd.value) sy.value = wd.value.split('-')[0];
+            }, true);
+            cb.addEventListener('click', function () {
+              if (!wd.value) return;
+              var parts = wd.value.split('-').map(Number);
+              var Y = parts[0], m = parts[1], d = parts[2];
+              resetView();
+              var n = 0;
+              var iv2 = setInterval(function () {
+                n++;
+                var tabs = document.querySelectorAll('.month-tab-btn');
+                var list = document.getElementById('scheduleList');
+                if (tabs.length === 12 && list && list.children.length > 0) {
+                  clearInterval(iv2);
+                  var tab = document.querySelector('.month-tab-btn[data-month="' + m + '"]');
+                  if (tab) tab.click();
+                  var n2 = 0;
+                  var iv3 = setInterval(function () {
+                    n2++;
+                    var head = list.querySelector('h2');
+                    if ((head && head.textContent.indexOf(m + '月の星') >= 0) || n2 > 20) { clearInterval(iv3); applyDay(Y, m, d); }
+                  }, 300);
+                }
+                if (n > 80) clearInterval(iv2);
+              }, 400);
+            });
+          }
+        }, 250);
       })();
     </script>
   </body>
