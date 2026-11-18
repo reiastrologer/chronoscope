@@ -63,7 +63,7 @@
           var VIDS = [6, 7, 4, 1, 2, 3, 5]; // 文章の順に対応する動画番号（内容で対応付け）
           var FILES = ['動画1 ハート.mp4', '動画2 指ハート.mp4', '動画3 ダンス.mp4', '動画4 バク転.mp4', '動画5 回転.mp4', '動画6 星キャッチ.mp4', '動画7 おやすみ.mp4'];
           var mi = Math.floor(Math.random() * MSGS.length);
-          st.innerHTML = sp + '<div style="padding-top:18px;"><video class="mgImg" src="./' + encodeURIComponent(FILES[VIDS[mi] - 1]) + '" poster="./chronos_magic.jpg" autoplay loop muted playsinline></video></div>' +
+          st.innerHTML = sp + '<div style="padding-top:18px;"><video class="mgImg" src="./' + encodeURIComponent(FILES[VIDS[mi] - 1]) + '" poster="./chronos_magic_poster.jpg" autoplay loop muted playsinline></video></div>' +
             '<div class="mgMsg">' + MSGS[mi] + '</div>';
           st.style.display = 'none';
           void st.offsetWidth;
