@@ -221,7 +221,7 @@ function pairInfo(hit) {
 }
 const FATE_ORB = 5;
 const FATE_TEXTS = {
-  sun: '相手の進むべき方向（ドラゴンヘッド）に、太陽――生き方そのものが重なります。相手にとってこの人は、「出会うべくして出会った」と感じさせる存在。れいじが「運命の人」と読む配置です。',
+  sun: '相手の進むべき方向（ドラゴンヘッド）に、太陽――生き方そのものが重なります。相手にとってこの人は、「出会うべくして出会った」と感じさせる存在。本サイト制作者が「運命の人」と読む配置です。',
   venus: '相手の魂の進路（ドラゴンヘッド）に、金星――愛と魅力が重なります。懐かしいのに新しい、不思議な引力を感じ合う組み合わせ。恋愛面での「運命の人」の配置です。'
 };
 function fateChecks(posA, posB, nameA, nameB) {
@@ -446,6 +446,7 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
     for (const day of days) {
       for (const [owner, hits] of [['A', day.hitsA], ['B', day.hitsB]]) {
         for (const h of hits) {
+          if (h.tb.id === 1) continue; // 運行の月はハイライトにも出さない
           const key = owner + ':' + h.tb.id + ':' + h.nb.id + ':' + h.asp.angle;
           if (!best.has(key) || best.get(key).h.orb > h.orb) best.set(key, { day, owner, h });
         }
@@ -495,6 +496,7 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
       html = `<div class="scorebox"><div style="color:#8a8178;font-size:13px;">${year}年${month}月の二人の空模様</div><div class="score">${avg}</div>` +
         `<div class="verdict">${verdict(avg)}</div></div>` +
         `<p class="counts">💞 おすすめの日: ${byDate(sorted.slice(0, 3)).map(fmt).join(' ／ ')}<br>⚡ すれ違い注意: ${byDate(sorted.slice(-3)).map(fmt).join(' ／ ')}</p>` +
+        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※おすすめの日は「その日の二人の総合点」、ハイライトは「この期間で一番くっきり出る配置」で選んでいます。選び方が違うため、日付が重なることも、ずれることもあります。</p>` +
         `<h3 class="sec">✨ この月のハイライト</h3>` + cardsHtml;
     } else {
       const rows = [];
@@ -508,6 +510,7 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
         `<div class="verdict">${verdict(avg)}</div></div>` +
         `<p class="counts">💞 ベスト月: ${bestM.m}月（${bestM.ma}） ／ ⚡ 注意月: ${worstM.m}月（${worstM.ma}）</p>` +
         rows.map(r => `<div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><span style="width:38px; font-size:13px;">${r.m}月</span><div style="flex:1; background:rgba(255,255,255,0.05); border-radius:4px;"><div style="width:${r.ma}%; background:linear-gradient(90deg,#9a7d55,#c5a880); height:14px; border-radius:4px;"></div></div><span style="width:30px; font-size:13px;">${r.ma}</span></div>`).join('') +
+        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ベスト月・注意月は「月ごとの平均点」、ハイライトは「この期間で一番くっきり出る配置」で選んでいます。選び方が違うため、月と日付がずれることもあります。</p>` +
         `<h3 class="sec">✨ この年のハイライト</h3>` + cardsHtml;
     }
     out.innerHTML = html;
