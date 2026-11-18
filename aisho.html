@@ -53,6 +53,16 @@
 <body>
 <div class="wrap">
   <p style="text-align:center; font-size:14px; color:#e8cf9f; font-weight:700; margin:4px 0 10px;">📜 見落とさないように、最後までスクロールしてね！</p>
+  <style>
+    .topTab { display: block; text-align: center; padding: 13px 8px; border-radius: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.28), rgba(197,168,128,0.10)); border: 1px solid #c5a880; color: #e8cf9f; font-weight: 700; font-size: 15px; text-decoration: none; }
+    .topTab.active { background: linear-gradient(135deg, rgba(255,216,138,0.55), rgba(197,168,128,0.25)); color: #ffe9b8; border-color: #ffd88a; }
+  </style>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 14px;">
+    <a href="./seikaku.html" class="topTab">🌟 性格チェック</a>
+    <a href="./unsei.html" class="topTab">🔮 個人の運勢</a>
+    <a href="./aisho.html" class="topTab active">💞 相性診断</a>
+    <a href="./omajinai.html" class="topTab">✨ クロノスくんのおまじない</a>
+  </div>
   <h1>🌙 相性診断</h1>
   <p class="sub">二人の出生図を重ねて、星の相性を読みます。</p>
 
@@ -125,7 +135,7 @@
     </div>
   </div>
 
-  <p class="backlink"><a href="./index.html">← クロノスコープ（年間星読み）へ</a></p>
+  <p class="backlink"><a href="./unsei.html">← クロノスコープ（年間星読み）へ</a></p>
 </div>
 <footer>
   本サイトは、Swiss Ephemeris（© Astrodienst AG）のライセンス規約（GNU AGPL）を厳格に守り、無償提供の理念に従って運営しております。有償で提供することはありません。どなたでも自由にお使いください。
