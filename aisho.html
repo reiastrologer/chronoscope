@@ -396,6 +396,7 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
       topCards.push(it);
       if (topCards.length >= 6) break;
     }
+    topCards.sort((a, b2) => (a.day.m - b2.day.m) || (a.day.d - b2.day.d));
     const cardFor = (it) => {
       const ownerName = it.owner === 'A' ? C.A.name : C.B.name;
       const fakeHit = { a: it.h.tb, b: it.h.nb, asp: it.h.asp, orb: it.h.orb };
