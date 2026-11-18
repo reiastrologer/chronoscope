@@ -60,8 +60,10 @@
           var sp = SP.map(function (p, i) {
             return '<span class="mgSparkle" style="top:' + p[0] + '%; left:' + p[1] + '%; font-size:' + (13 + (i % 4) * 5) + 'px; animation-delay:' + ((i % 6) * 0.18) + 's;">' + (i % 3 === 0 ? '⭐' : '✨') + '</span>';
           }).join('');
-          st.innerHTML = sp + '<div style="padding-top:18px;"><img class="mgImg" src="./chronos_magic.jpg" alt="クロノスくん"></div>' +
-            '<div class="mgMsg">' + MSGS[Math.floor(Math.random() * MSGS.length)] + '</div>';
+          var VIDS = [6, 7, 4, 1, 2, 3, 5]; // 文章の順に対応する動画番号（内容で対応付け）
+          var mi = Math.floor(Math.random() * MSGS.length);
+          st.innerHTML = sp + '<div style="padding-top:18px;"><video class="mgImg" src="./chronos_magic' + VIDS[mi] + '.mp4" poster="./chronos_magic.jpg" autoplay loop muted playsinline></video></div>' +
+            '<div class="mgMsg">' + MSGS[mi] + '</div>';
           st.style.display = 'none';
           void st.offsetWidth;
           st.style.display = 'block';
