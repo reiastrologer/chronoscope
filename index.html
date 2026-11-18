@@ -169,8 +169,9 @@
           box.style.display = 'block';
           box.innerHTML = '<p style="color:#9a8d7a; font-size:13.5px;">計算中…</p>';
           try {
-            await initWasm();
+            await pInit();
             const b = pBirth();
+            if (!b) { box.innerHTML = '<p style="color:#e8cf9f; font-size:13.5px;">上のフォームで生年月日を選んでから押してください。</p>'; return; }
             const sgn2 = lon => Math.floor(lon / 30) % 12;
             const fmt = min => String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0');
             const snap = min => {
