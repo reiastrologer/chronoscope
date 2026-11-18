@@ -139,7 +139,7 @@
           return pos;
         }
         function wheelSVG(natal, transit, tId, aspGlyph, nId) {
-          const P = (lon, r) => [160 - r * Math.cos(lon * Math.PI / 180), 160 - r * Math.sin(lon * Math.PI / 180)];
+          const P = (lon, r) => [160 - r * Math.cos(lon * Math.PI / 180), 160 + r * Math.sin(lon * Math.PI / 180)]; // 通常のチャートと同じ反時計回り
           const SG = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
           let s = '<svg viewBox="0 0 320 320" style="width:100%; max-width:340px; display:block; margin:0 auto;">';
           s += '<circle cx="160" cy="160" r="152" fill="none" stroke="#c5a880" stroke-opacity="0.5"/>';
