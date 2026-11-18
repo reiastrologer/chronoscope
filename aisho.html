@@ -113,8 +113,16 @@
     </details>
   </div>
 
-  <div id="chartMap"></div>
   <div id="magicArea"></div>
+  <div id="aspectArea"></div>
+  <div id="chartMap"></div>
+  <div id="wheelModal" style="display:none; position:fixed; inset:0; background:rgba(5,5,12,0.88); z-index:50; align-items:center; justify-content:center; padding:18px;" onclick="if(event.target===this)closeWheel()">
+    <div style="background:#14121e; border:1px solid #c5a880; border-radius:16px; padding:18px; max-width:400px; width:100%; text-align:center;">
+      <div id="wheelTitle" style="font-weight:700; color:#e8cf9f; margin-bottom:10px; font-size:15px;"></div>
+      <div id="wheelBody"></div>
+      <button type="button" onclick="closeWheel()" style="margin-top:12px; background:rgba(197,168,128,0.15); color:#c5a880; border:1px solid rgba(197,168,128,0.5); border-radius:999px; padding:9px 26px; font-size:14px; cursor:pointer;">閉じる</button>
+    </div>
+  </div>
 
   <p class="backlink"><a href="./index.html">← クロノスコープ（年間星読み）へ</a></p>
 </div>
@@ -274,6 +282,46 @@ function verdict(score) {
   if (score >= 42) return '刺激多めの成長型相性。違いを楽しめるかどうかが鍵です。';
   return '静かに育てるタイプの相性。時間をかけるほど良さが見えてきます。';
 }
+// ===== アスペクトの円（二重円チャート） =====
+function wheelSVG(posA, posB, h, nameA, nameB) {
+  const cx = 160, cy = 160;
+  const P = (lon, r) => [cx - r * Math.cos(lon * Math.PI / 180), cy - r * Math.sin(lon * Math.PI / 180)];
+  const SG = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
+  let s = '<svg viewBox="0 0 320 320" style="width:100%; max-width:340px; display:block; margin:0 auto;">';
+  s += '<circle cx="160" cy="160" r="152" fill="none" stroke="#c5a880" stroke-opacity="0.5"/>';
+  s += '<circle cx="160" cy="160" r="128" fill="none" stroke="#c5a880" stroke-opacity="0.3"/>';
+  s += '<circle cx="160" cy="160" r="80" fill="none" stroke="#c5a880" stroke-opacity="0.3"/>';
+  for (let i = 0; i < 12; i++) {
+    const [x1, y1] = P(i * 30, 128), [x2, y2] = P(i * 30, 152);
+    s += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#c5a880" stroke-opacity="0.4"/>`;
+    const [gx, gy] = P(i * 30 + 15, 140);
+    s += `<text x="${gx.toFixed(1)}" y="${gy.toFixed(1)}" fill="#c5a880" font-size="13" text-anchor="middle" dominant-baseline="middle">${SG[i]}</text>`;
+  }
+  const [ax, ay] = P(posA[h.a.id], 92), [bx, by] = P(posB[h.b.id], 116);
+  const col = h.asp.kind === 'hard' ? '#e07856' : '#8fd0a8';
+  s += `<line x1="${ax.toFixed(1)}" y1="${ay.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${col}" stroke-width="2" stroke-opacity="0.9"/>`;
+  const dots = (pos, r, color, hl) => Object.keys(pos).map(k => {
+    const b = BODIES.find(x => x.id === +k);
+    if (!b) return '';
+    const [x, y] = P(pos[k], r);
+    return (hl === +k ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="11" fill="none" stroke="${color}" stroke-width="1.6"/>` : '') +
+      `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" fill="${color}" font-size="${hl === +k ? 15 : 11}" text-anchor="middle" dominant-baseline="middle">${b.emoji}</text>`;
+  }).join('');
+  s += dots(posB, 116, '#a8c4e0', h.b.id);
+  s += dots(posA, 92, '#e8cf9f', h.a.id);
+  s += `<text x="160" y="152" fill="#e8cf9f" font-size="13" text-anchor="middle">${h.a.emoji} ${h.asp.emoji} ${h.b.emoji}</text>`;
+  s += `<text x="160" y="170" fill="#8a8178" font-size="10" text-anchor="middle">内側（金）＝${nameA} ／ 外側（青）＝${nameB}</text>`;
+  return s + '</svg>';
+}
+window.showWheel = (aid, bid) => {
+  const C = window.__charts || {};
+  const h = (window.__hits || []).find(x => x.a.id === aid && x.b.id === bid);
+  if (!h || !C.posA) return;
+  document.getElementById('wheelTitle').textContent = `${C.A.name}の${h.a.name} × ${C.B.name}の${h.b.name} ― ${h.asp.name}（オーブ ${h.orb.toFixed(1)}°）`;
+  document.getElementById('wheelBody').innerHTML = wheelSVG(C.posA, C.posB, h, C.A.name, C.B.name);
+  document.getElementById('wheelModal').style.display = 'flex';
+};
+window.closeWheel = () => { document.getElementById('wheelModal').style.display = 'none'; };
 function signOf(lon) { return SIGNS[Math.floor(((lon % 360) + 360) % 360 / 30)]; }
 function degOf(lon) { return (((lon % 30) + 30) % 30).toFixed(1); }
 function esc(s) { return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -313,7 +361,7 @@ document.getElementById('calcBtn').addEventListener('click', async () => {
       (P.unknown ? '<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※月は、出生時間がわからないと位置が1日で最大約13°も動くため、省略しています。</p>' : '');
     const card = (h) => {
       const info = synInfo(h);
-      return `<div class="card ${h.asp.kind === 'hard' ? 'hard' : ''}"><div class="ttl">${esc(A.name)}の${h.a.emoji}${h.a.name} × ${esc(B.name)}の${h.b.emoji}${h.b.name}</div>` +
+      return `<div class="card ${h.asp.kind === 'hard' ? 'hard' : ''}" style="cursor:pointer;" onclick="showWheel(${h.a.id},${h.b.id})"><div class="ttl">${esc(A.name)}の${h.a.emoji}${h.a.name} × ${esc(B.name)}の${h.b.emoji}${h.b.name}</div>` +
         `<div class="asp">${h.asp.emoji} ${h.asp.name}（オーブ ${h.orb.toFixed(1)}°）</div>` +
         `<div class="desc">${info.desc}</div></div>`;
     };
@@ -321,7 +369,11 @@ document.getElementById('calcBtn').addEventListener('click', async () => {
       `<div class="scorebox"><div style="color:#8a8178;font-size:13px;">${esc(A.name)} × ${esc(B.name)} のシンクロ度</div><div class="score">${score}</div><div class="verdict">${verdict(score)}</div></div>` +
       (fateChecks(posA, posB, A.name, B.name).map(f => `<div style="background:linear-gradient(135deg, rgba(197,168,128,0.25), rgba(197,168,128,0.08)); border:1px solid #c5a880; border-radius:10px; padding:12px 14px; margin-bottom:12px;"><div style="font-weight:700; color:#c5a880; margin-bottom:4px;">💫 運命の人の配置 ― ${esc(f.fromName)}の${f.body === 0 ? '☉太陽' : '♀金星'} × ${esc(f.toName)}の☊ドラゴンヘッド ☌（オーブ ${f.orb.toFixed(1)}°）</div><div style="font-size:14px;">${f.text}<br><span style="color:#c5a880;">（割と多いですが相性良いのは間違いなし！）</span></div></div>`).join('')) +
       `<p class="counts">ハーモニー ${harmony.length}件 ／ 刺激・課題 ${hard.length}件</p>` +
-      ((A.unknown || B.unknown) ? '<p class="note">※出生時刻が不明な方については、ASC・MCを除いて計算しています。</p>' : '') +
+      ((A.unknown || B.unknown) ? '<p class="note">※出生時刻が不明な方については、ASC・MCを除いて計算しています。</p>' : '');
+    window.__hits = hits;
+    document.getElementById('aspectArea').innerHTML =
+      `<h3 class="sec">📋 アスペクト表（二人の星の響き合い）</h3>` +
+      '<p class="note" style="margin-top:0;">カードをタップすると、そのアスペクトの円（チャート）が開きます。</p>' +
       `<h3 class="sec">💞 ハーモニー</h3>` + (harmony.slice(0, 10).map(card).join('') || '<p class="note">該当するアスペクトはありませんでした。</p>') +
       `<h3 class="sec">⚡ 刺激・課題</h3>` + (hard.slice(0, 8).map(card).join('') || '<p class="note">該当するアスペクトはありませんでした。</p>') +
       '<p class="note">※相性は星の響き合いの傾向です。実際の関係は、二人の歩み寄りでいくらでも育ちます。</p>';
