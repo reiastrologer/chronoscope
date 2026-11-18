@@ -447,7 +447,7 @@ document.getElementById('calcBtn').addEventListener('click', async () => {
         <p style="font-size:13px; color:#8a8178; margin-bottom:10px;">― 悩んでるあなたへ ―</p>
         <button id="magicBtn" type="button" style="background:linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color:#e8cf9f; border:1px solid #c5a880; border-radius:999px; padding:12px 26px; font-size:16px; font-weight:700; cursor:pointer;">✨ クロノスくんのおまじない ✨</button>
         <div id="magicStage" class="magic-stage" style="display:none;">${sp}
-          <div style="padding-top:18px;"><img class="magic-img" src="./chronos_magic.jpg" alt="クロノスくん"></div>
+          <div style="padding-top:18px;"><video id="magicVid" class="magic-img" src="./chronos_magic1.mp4" poster="./chronos_magic.jpg" autoplay loop muted playsinline></video></div>
           <div class="magic-msg" id="magicMsg"></div>
         </div></div>`;
     };
@@ -456,7 +456,12 @@ document.getElementById('calcBtn').addEventListener('click', async () => {
     document.getElementById('magicBtn').addEventListener('click', () => {
       const st = document.getElementById('magicStage');
       const msg = document.getElementById('magicMsg');
-      msg.textContent = MAGIC_MSGS[Math.floor(Math.random() * MAGIC_MSGS.length)];
+      const MAGIC_VIDS = [6, 7, 4, 2, 1, 5, 3]; // 文章の順に対応する動画番号（内容で対応付け）
+      const mi = Math.floor(Math.random() * MAGIC_MSGS.length);
+      msg.textContent = MAGIC_MSGS[mi];
+      const vid = document.getElementById('magicVid');
+      const next = './chronos_magic' + MAGIC_VIDS[mi] + '.mp4';
+      if (vid && vid.getAttribute('src') !== next) { vid.src = next; vid.play().catch(() => {}); }
       st.style.display = 'none';
       void st.offsetWidth; // アニメーションを最初から再生し直す
       st.style.display = 'block';
