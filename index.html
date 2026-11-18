@@ -81,6 +81,9 @@
       <p style="font-size: 13px; color: #8a8178; margin-bottom: 10px;">― あなたの星の性格 ―</p>
       <button id="psBtn" type="button" style="background: linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color: #e8cf9f; border: 1px solid #c5a880; border-radius: 999px; padding: 12px 26px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans JP', sans-serif;">🌟 性格チェックを見る 🌟</button>
       <p style="font-size: 12px; color: #8a8178; margin-top: 8px;">上のフォームに入力した生年月日・出生地で、生まれた日の星の配置から性格を読みます。</p>
+      <div style="margin-top: 10px;">
+        <label style="font-size: 13.5px; color: #c5a880; cursor: pointer;"><input type="checkbox" id="psUnknown" style="transform: scale(1.2); margin-right: 6px;">出生時間は不明（ハウス・アセンダント・MCは出ません）</label>
+      </div>
       <div id="psResult" style="text-align: left; margin-top: 16px;"></div>
     </div>
     <script type="module">
@@ -144,7 +147,7 @@
             const o = s.selectedOptions && s.selectedOptions[0];
             if (o && PPREF[o.textContent.trim()]) { pref = PPREF[o.textContent.trim()]; break; }
           }
-          return { y: parseInt(y), m: parseInt(mo), d: parseInt(d), hourUT: hh + mm / 60 - tz, unknown, pref: pref || PPREF['東京'] };
+          return { y: parseInt(y), m: parseInt(mo), d: parseInt(d), hourUT: hh + mm / 60 - tz, unknown, tz, pref: pref || PPREF['東京'] };
         }
         function houseOf(lon, cusps) {
           for (let h = 0; h < 12; h++) {
@@ -163,6 +166,7 @@
           const box = document.getElementById('psResult');
           const b = pBirth();
           if (!b) { box.innerHTML = '<p style="color:#e8cf9f; text-align:center;">上のフォームで生年月日を選んでから押してください。</p>'; return; }
+          if (document.getElementById('psUnknown').checked) { b.unknown = true; b.hourUT = 12 - b.tz; }
           box.innerHTML = '<p style="color:#8a8178; text-align:center;">読み取り中…</p>';
           try {
             await pInit();
@@ -170,6 +174,20 @@
             const pos = {};
             for (let i = 0; i <= 9; i++) { if (b.unknown && i === 1) continue; pos[i] = pPos(jd, i); }
             pos[10] = pPos(jd, 11);
+            let moonDual = null;
+            if (b.unknown) {
+              const jdS = PJD(b.y, b.m, b.d, 0 - b.tz, 1);
+              const mS = pPos(jdS, 1);
+              const dE = (pPos(jdS + 1, 1) - mS + 360) % 360;
+              const sS = Math.floor(mS / 30) % 12, sE = Math.floor(((mS + dE) % 360) / 30) % 12;
+              if (sS === sE) { pos[1] = pPos(jd, 1); }
+              else {
+                const target = mS + (30 - (mS % 30));
+                let lo = jdS, hi = jdS + 1;
+                for (let it = 0; it < 24; it++) { const mid = (lo + hi) / 2; const dd = (pPos(mid, 1) - mS + 360) % 360; if (mS + dd < target) lo = mid; else hi = mid; }
+                moonDual = { a: sS, b: sE, hour: Math.round(((lo + hi) / 2 - jdS) * 24) };
+              }
+            }
             let cusps = null;
             if (!b.unknown) {
               const h = pHouses(jd, b.pref[1], b.pref[0]);
@@ -181,6 +199,7 @@
             // ---- 基本人物 ----
             let basic = tr(0).essence + 'です。';
             if (pos[1] !== undefined) basic += '心の奥では、' + tr(1).essence + 'な一面も持ちます。';
+            else if (moonDual) basic += '心の奥は、' + PTRAIT[SKEY[moonDual.a]].essence + 'か、' + PTRAIT[SKEY[moonDual.b]].essence + 'のどちらかになります（出生時間によって変わります）。';
             if (pos[11] !== undefined) basic += '人からは、' + tr(11).essence + 'と見られがちです。';
             const cnt = [0, 0, 0, 0];
             for (const k of Object.keys(pos)) { if (+k === 11 || +k === 12) continue; cnt[sgn(+k) % 4]++; }
@@ -190,7 +209,7 @@
             basic += '人生を通して育っていくのは、' + tr(10).essence + 'な自分です。';
             let html = sect('🌟 基本人物');
             html += card('', basic + '<br><br><span style="color:#c5a880; font-weight:700;">強み</span><br>' + bullets(picks([0, 1, 11, 3, 5], 'strong', 6)) + '<br><br><span style="color:#c5a880; font-weight:700;">気をつけたいところ</span><br>' + bullets(picks([0, 1, 4, 6], 'weak', 5)), true);
-            if (b.unknown) html += '<p style="font-size:12.5px; color:#8a8178; margin-bottom:12px;">※出生時間が分からないため、月・ハウス・アセンダント・MCは省略しています（月は1日で大きく位置が動くためです）。</p>';
+            if (b.unknown) html += '<p style="font-size:12.5px; color:#8a8178; margin-bottom:12px;">※出生時間が分からないため、ハウス・アセンダント・MCは省略しています。月は、出生時間によって星座が変わらない場合のみ表示しています。</p>';
             // ---- 仕事面・恋愛面・金銭面・適職・やったらいいこと ----
             html += sect('💼 仕事面') + card('', bullets(picks([2, 0, 4, 12], 'work', 4)), false);
             html += sect('❤️ 恋愛面') + card('', bullets(picks([3, 1, 4], 'love', 4)), false);
@@ -198,7 +217,7 @@
             html += sect('🎯 適職') + card('', bullets(picks([12, 0, 2, 5], 'jobs', 6)), false);
             html += sect('✨ やったらいいこと') + card('', bullets(picks([0, 10, 5], 'advice', 4)), false);
             // ---- 詳しい解説 ----
-            const idxs = Object.keys(pos).map(Number);
+            const idxs = Object.keys(pos).map(Number).filter(i => !(b.unknown && i === 1));
             const hits = [];
             for (let a = 0; a < idxs.length; a++) for (let c = a + 1; c < idxs.length; c++) {
               const i = idxs[a], j = idxs[c];
@@ -221,6 +240,7 @@
             let det = '';
             if (pos[11] !== undefined) det += card('アセンダント ― ' + SGLYPH[sgn(11)] + SNAME[sgn(11)], PSIGN['asc_' + SKEY[sgn(11)]], false);
             if (pos[12] !== undefined) det += card('MC ― ' + SGLYPH[sgn(12)] + SNAME[sgn(12)], PSIGN['mc_' + SKEY[sgn(12)]], false);
+            if (moonDual) det += card('☽ 月 ― ' + SGLYPH[moonDual.a] + SNAME[moonDual.a] + ' か ' + SGLYPH[moonDual.b] + SNAME[moonDual.b] + ' のどちらか', '月は出生時間によって、この二つの星座のどちらかになります（境目は' + moonDual.hour + '時ごろ）。出生時間が分かると確定します。<br>【' + SNAME[moonDual.a] + 'の場合】' + PSIGN['moon_' + SKEY[moonDual.a]] + '<br>【' + SNAME[moonDual.b] + 'の場合】' + PSIGN['moon_' + SKEY[moonDual.b]], false);
             for (let i = 0; i <= 10; i++) {
               if (pos[i] === undefined) continue;
               const hs = cusps ? houseOf(pos[i], cusps) : null;
