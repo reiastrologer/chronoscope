@@ -37,7 +37,7 @@
     <div id="scanCharaChaser" class="scan-dash-chara"></div>
     <div class="container">
       <div class="header">
-        <h1>クロノスコープ運勢</h1>
+        <h1>個人の運勢</h1>
         <p class="notice-text">🔮 効果の保証はありません</p>
         <p class="author">produced by れいさん</p>
       </div>
