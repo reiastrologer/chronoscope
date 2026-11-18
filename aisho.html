@@ -408,10 +408,11 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
     let html = '';
     if (mode === 'month') {
       const sorted = [...days].sort((a, b2) => b2.score - a.score);
+      const byDate = (arr) => [...arr].sort((a, b2) => a.d - b2.d);
       const fmt = (x) => `${x.m}月${x.d}日（${x.score}）`;
       html = `<div class="scorebox"><div style="color:#8a8178;font-size:13px;">${year}年${month}月の二人の空模様</div><div class="score">${avg}</div>` +
         `<div class="verdict">${verdict(avg)}</div></div>` +
-        `<p class="counts">💞 おすすめの日: ${sorted.slice(0, 3).map(fmt).join(' ／ ')}<br>⚡ すれ違い注意: ${sorted.slice(-3).reverse().map(fmt).join(' ／ ')}</p>` +
+        `<p class="counts">💞 おすすめの日: ${byDate(sorted.slice(0, 3)).map(fmt).join(' ／ ')}<br>⚡ すれ違い注意: ${byDate(sorted.slice(-3)).map(fmt).join(' ／ ')}</p>` +
         `<h3 class="sec">✨ この月のハイライト</h3>` + topCards.map(cardFor).join('');
     } else {
       const rows = [];
