@@ -221,6 +221,7 @@
           }
         }
         document.addEventListener('click', (e) => {
+          if (e.target.closest && e.target.closest('.feelWrap')) return;
           const card = e.target.closest && e.target.closest('[data-mw-card]');
           if (card) openWheel(card).catch(() => {});
         });
@@ -406,6 +407,14 @@
           return { cfg: gm ? gm[0] : tx.slice(0, 24), start: start, end: end, peak: pm ? (+pm[1] + '月' + pm[2] + '日') : '' };
         }
         var PHASES = ['開始ごろ', 'ピークごろ', '終了ごろ'];
+        function refreshFeelCounts(bk, ym) {
+          var mine = feelLoad().filter(function (x) { return x.bk === bk && x.ym === ym; });
+          var c = [0, 0, 0];
+          mine.forEach(function (x) { var i = PHASES.indexOf(x.phase); if (i >= 0) c[i]++; });
+          var total = c[0] + c[1] + c[2];
+          var txt = total ? ('今月： 開始ごろ ' + c[0] + '件／ピークごろ ' + c[1] + '件／終了ごろ ' + c[2] + '件') : '';
+          document.querySelectorAll('.feelCount').forEach(function (el) { el.textContent = txt; });
+        }
         function addFeelButtons(Y, m, d) {
           var list = document.getElementById('scheduleList'); if (!list) return;
           var bk = birthKey();
@@ -429,13 +438,15 @@
                 b.style.color = on ? '#1a1712' : '#c5a880';
                 b.style.fontWeight = on ? '700' : '400';
               });
+              refreshFeelCounts(bk, ym);
             }
             PHASES.forEach(function (ph) {
               var btn = document.createElement('button');
               btn.type = 'button'; btn.className = 'feelBtn'; btn.dataset.ph = ph;
               btn.style.cssText = 'background:transparent;border:1px solid #8a8178;color:#c5a880;border-radius:999px;padding:4px 12px;font-size:12px;cursor:pointer;';
               btn.textContent = ph;
-              btn.addEventListener('click', function () {
+              btn.addEventListener('click', function (ev) {
+                ev.stopPropagation();
                 var arr = feelLoad();
                 var idx = arr.findIndex(function (x) { return x.bk === bk && x.cfg === sp.cfg && x.start === sp.start; });
                 if (idx >= 0 && arr[idx].phase === ph) arr.splice(idx, 1);
@@ -447,6 +458,10 @@
               });
               wrap.appendChild(btn);
             });
+            var cnt = document.createElement('span');
+            cnt.className = 'feelCount';
+            cnt.style.cssText = 'font-size:12px; color:#c5a880;';
+            wrap.appendChild(cnt);
             card.appendChild(wrap);
             paint();
           });
