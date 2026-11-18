@@ -270,12 +270,27 @@
       })();
     </script>
     
-            <script>
+                <script>
       (function () {
         function pad(n) { return (n < 10 ? '0' : '') + n; }
-        var dayTarget = null, dayAppliedFor = '', lastSig = '', directorOn = false, dayDeadline = 0;
+        var dayTarget = null, dayAppliedFor = '', lastSig = '', stableN = 0, directorOn = false, dayDeadline = 0;
+        var daySteps = [], stepIdx = 0, harvest = [], internalNav = false, currentScanYear = null;
+        function coversTarget(tx, Y, m, d, target) {
+          if (tx.indexOf('💻') < 0) return false;
+          var pm = tx.match(/🎯\s*(\d+)月(\d+)日/);
+          var sm = tx.match(/影響期間[:：]\s*(\d+)月(\d+)日\s*〜\s*(\d+)月(\d+)日/);
+          if (pm && +pm[1] === m && +pm[2] === d) return true;
+          if (sm) {
+            var s1 = Date.UTC(Y, +sm[1] - 1, +sm[2]), e1 = Date.UTC(Y, +sm[3] - 1, +sm[4]);
+            if (e1 < s1) {
+              if (target >= Date.UTC(Y - 1, +sm[1] - 1, +sm[2]) && target <= e1) return true;
+              if (target >= s1 && target <= Date.UTC(Y + 1, +sm[3] - 1, +sm[4])) return true;
+            } else if (target >= s1 && target <= e1) return true;
+          }
+          return false;
+        }
         function resetView() {
-          dayTarget = null;
+          dayTarget = null; daySteps = []; stepIdx = 0; harvest = [];
           var list = document.getElementById('scheduleList');
           if (list) { list.style.visibility = ''; list.querySelectorAll('.schedule-card').forEach(function (c) { c.style.display = ''; }); }
           var ld0 = document.getElementById('dayLoading'); if (ld0) ld0.remove();
@@ -289,46 +304,53 @@
           var kept = 0, nearest = null, nearestDiff = 1e15;
           var goodN = 0, hardN = 0;
           var THEME = { '☉': '自分らしさと勝負ごと', '☽': '気持ちと体調', '☿': '連絡と仕事の段取り', '♀': '恋愛とお金', '♂': '仕事の勢いと行動', '♃': 'チャンスと広がり', '♄': '責任と積み重ね', '♅': '変化と新しいこと', '♆': '直感とイメージ', '♇': '深い見直し' };
+          var GOODC = { '☉': '表に出ること・勝負ごと', '☽': '気持ちの安定・身近な人との時間', '☿': '連絡・交渉・手続きのスムーズさ', '♀': '恋愛の進展・嬉しい買い物・人からの誘い', '♂': 'やる気と行動力・先手の動き', '♃': 'チャンスの広がり・助けてくれる人', '♄': 'コツコツの成果・信頼が固まること', '♅': '新しいやり方・意外な出会い', '♆': '直感とイメージ・癒しの時間', '♇': '深い集中・本気の立て直し' };
+          var HARDC = { '☉': 'プライドがらみの意地の張り合い', '☽': '気分の波・体調の無理', '☿': '連絡ミス・書類の見落とし・言い間違い', '♀': '甘い誘い・衝動買い', '♂': 'ケンカ・せっかちさ・勢いだけの決断', '♃': '話が大きくなりすぎること・約束のしすぎ', '♄': '締め切りと責任の重さ・冷たい対応', '♅': '急な予定変更・機械やネットのトラブル', '♆': '曖昧な話・うまい話への流されやすさ', '♇': '執着と極端な決断・根深い疲れ' };
+          var bestDiff = 1e15, bestLead = '', bestLead2 = '', bestIsPeak = false;
           var goodThemes = {}, hardThemes = {};
           list.querySelectorAll('.schedule-card').forEach(function (card) {
             var tx = card.textContent || '';
             if (tx.indexOf('💻') < 0) { card.style.display = 'none'; return; }
             var pm = tx.match(/🎯\s*(\d+)月(\d+)日/);
-            var sm = tx.match(/影響期間[:：]\s*(\d+)月(\d+)日\s*〜\s*(\d+)月(\d+)日/);
-            var keep = false;
-            if (pm && +pm[1] === m && +pm[2] === d) keep = true;
-            if (sm) {
-              var s1 = Date.UTC(Y, +sm[1] - 1, +sm[2]), e1 = Date.UTC(Y, +sm[3] - 1, +sm[4]);
-              if (e1 < s1) {
-                if (target >= Date.UTC(Y - 1, +sm[1] - 1, +sm[2]) && target <= e1) keep = true;
-                if (target >= s1 && target <= Date.UTC(Y + 1, +sm[3] - 1, +sm[4])) keep = true;
-              } else if (target >= s1 && target <= e1) keep = true;
-            }
+            var keep = coversTarget(tx, Y, m, d, target);
             if (pm) { var pd = Date.UTC(Y, +pm[1] - 1, +pm[2]); var diff = Math.abs(pd - target); if (diff < nearestDiff) { nearestDiff = diff; nearest = pm[1] + '月' + pm[2] + '日'; } }
             card.style.display = keep ? '' : 'none';
             if (keep) {
               kept++;
               var gm = tx.match(/【\s*\S+\s+\S+\s+(\S+)\s*】/);
-              var theme = gm && THEME[gm[1]] ? THEME[gm[1]] : null;
-              if (tx.indexOf('⚠️') >= 0 || tx.indexOf('注意期') >= 0) { hardN++; if (theme) hardThemes[theme] = (hardThemes[theme] || 0) + 1; }
-              else { goodN++; if (theme) goodThemes[theme] = (goodThemes[theme] || 0) + 1; }
+              var glyph = gm ? gm[1] : null;
+              var isHard = tx.indexOf('⚠️') >= 0 || tx.indexOf('注意期') >= 0;
+              if (isHard) { hardN++; if (glyph) hardThemes[glyph] = (hardThemes[glyph] || 0) + 1; }
+              else { goodN++; if (glyph) goodThemes[glyph] = (goodThemes[glyph] || 0) + 1; }
+              var cdiff = pm ? Math.abs(Date.UTC(Y, +pm[1] - 1, +pm[2]) - target) : 9999;
+              if (cdiff < bestDiff) {
+                var li = tx.indexOf('】');
+                if (li >= 0) {
+                  var rest = tx.slice(li + 1); var cut = rest.indexOf('💻'); if (cut >= 0) rest = rest.slice(0, cut);
+                  var sents = rest.split('。').map(function (x) { return x.trim(); }).filter(function (x) { return x.length > 0; });
+                  if (sents.length) { bestDiff = cdiff; bestLead = sents[0]; bestLead2 = sents[1] || ''; bestIsPeak = cdiff === 0; }
+                }
+              }
             }
           });
-          function topThemes(obj) { return Object.keys(obj).sort(function (a, b) { return obj[b] - obj[a]; }).slice(0, 2); }
+          function topGlyphs(obj) { return Object.keys(obj).sort(function (a, b) { return obj[b] - obj[a]; }).slice(0, 2); }
           var summary = '';
           if (kept === 0) summary = 'つまりこの日は、表立った配置が少ない、静かな日です。いつも通り過ごすのが一番の日です。';
           else {
-            var air, tip;
-            if (goodN > 0 && hardN > 0 && Math.abs(goodN - hardN) < 2) { air = '追い風と注意が同居する日です。「どっち？」と迷う日は、使い分けが大事になります。'; tip = '良い話は進めて、衝動で決めることだけ避けてください。'; }
-            else if (goodN - hardN >= 2) { air = '追い風が多めの日です。'; tip = '動くならこの日です。'; }
-            else if (hardN - goodN >= 2) { air = '注意が多めの日です。'; tip = '大事な決めごとは、できれば別の日に。無理をしないのが吉です。'; }
-            else if (hardN === 0) { air = '追い風だけが目立つ日です。'; tip = '動くならこの日です。'; }
-            else { air = '注意だけが目立つ日です。'; tip = '大事な決めごとは、できれば別の日に。'; }
+            var air;
+            if (goodN > 0 && hardN > 0 && Math.abs(goodN - hardN) < 2) air = '追い風と注意が同居する日です。「どっち？」と迷う日は、使い分けが大事になります。';
+            else if (goodN - hardN >= 2) air = '追い風が多めの日です。';
+            else if (hardN - goodN >= 2) air = '注意が多めの日です。';
+            else if (hardN === 0) air = '追い風だけが目立つ日です。';
+            else air = '注意だけが目立つ日です。';
             summary = 'つまりこの日は、' + air;
-            var gt = topThemes(goodThemes), ht = topThemes(hardThemes);
-            if (gt.length) summary += ' 追い風のテーマは「' + gt.join('」「') + '」。';
-            if (ht.length) summary += ' 注意のテーマは「' + ht.join('」「') + '」。';
-            summary += ' ' + tip;
+            if (bestLead) summary += (bestIsPeak ? ' 今日がちょうどピークの配置は「' : ' 特に効いているのは「') + bestLead + '」。';
+            var gt = topGlyphs(goodThemes), ht = topGlyphs(hardThemes);
+            if (gt.length) summary += ' 追い風の面は「' + gt.map(function (g) { return GOODC[g] || THEME[g]; }).join('」「') + '」。';
+            if (ht.length) summary += ' 注意の面は「' + ht.map(function (g) { return HARDC[g] || THEME[g]; }).join('」「') + '」。';
+            if (bestLead2) summary += ' ' + bestLead2 + '。';
+            else if (hardN > goodN) summary += ' 大事な決めごとは、できれば別の日に。';
+            else if (goodN > 0) summary += ' 動くならこの日です。';
           }
           var tabs = document.getElementById('monthTabs'); if (tabs) tabs.style.display = 'none';
           var hs = document.getElementById('halfSumSection'); if (hs) hs.style.display = 'none';
@@ -348,6 +370,20 @@
           bn.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
         function sigOf(list) { return list.innerHTML.length + ':' + list.querySelectorAll('.schedule-card').length; }
+        function monthOf(list) { var h = list.querySelector('h2'); if (!h) return null; var mm = h.textContent.match(/(\d+)月の星/); return mm ? +mm[1] : null; }
+        function harvestFrom(list) {
+          var target = Date.UTC(dayTarget.Y, dayTarget.m - 1, dayTarget.d);
+          var seen = {}; harvest.forEach(function (c) { seen[c.textContent] = 1; });
+          list.querySelectorAll('.schedule-card').forEach(function (card) {
+            var tx = card.textContent || '';
+            if (seen[tx]) return;
+            if (coversTarget(tx, dayTarget.Y, dayTarget.m, dayTarget.d, target)) { harvest.push(card.cloneNode(true)); seen[tx] = 1; }
+          });
+        }
+        function appendHarvest(list) {
+          var seen = {}; list.querySelectorAll('.schedule-card').forEach(function (c) { seen[c.textContent] = 1; });
+          harvest.forEach(function (c) { if (!seen[c.textContent]) { list.appendChild(c.cloneNode(true)); seen[c.textContent] = 1; } });
+        }
         function ensureDirector() {
           if (directorOn) return;
           directorOn = true;
@@ -368,22 +404,50 @@
               var hs2 = document.getElementById('halfSumSection'); if (hs2) hs2.style.display = 'none';
             }
             var tabs = document.querySelectorAll('.month-tab-btn'); if (tabs.length !== 12) return;
-            var head = list.querySelector('h2'); if (!head) return;
-            var mm = head.textContent.match(/(\d+)月の星/); if (!mm) return;
-            if (+mm[1] !== dayTarget.m) {
-              var tab = document.querySelector('.month-tab-btn[data-month="' + dayTarget.m + '"]');
-              if (tab) tab.click();
-              dayAppliedFor = ''; lastSig = '';
+            if (stepIdx < daySteps.length) {
+              var step = daySteps[stepIdx];
+              if (currentScanYear !== step.scan) {
+                var sy = document.getElementById('scanyear'); var cb = document.getElementById('calcBtn');
+                if (sy && cb) { sy.value = step.scan; currentScanYear = step.scan; internalNav = true; lastSig = ''; stableN = 0; cb.click(); }
+                return;
+              }
+              var curM = monthOf(list); if (curM === null) return;
+              if (curM !== step.tab) {
+                var tab = document.querySelector('.month-tab-btn[data-month="' + step.tab + '"]');
+                if (tab) tab.click();
+                lastSig = ''; stableN = 0;
+                return;
+              }
+              var sig = sigOf(list);
+              if (sig === lastSig) stableN++; else { stableN = 0; lastSig = sig; }
+              if (stableN < 1) return;
+              if (step.harvest) harvestFrom(list);
+              if (step.final) {
+                appendHarvest(list);
+                applyDay(dayTarget.Y, dayTarget.m, dayTarget.d);
+                dayAppliedFor = sigOf(list);
+              }
+              stepIdx++; lastSig = ''; stableN = 0;
               return;
             }
-            var sig = sigOf(list);
-            if (dayAppliedFor === sig) return;
-            if (sig === lastSig) {
-              applyDay(dayTarget.Y, dayTarget.m, dayTarget.d);
-              dayAppliedFor = sigOf(list);
+            // watchdog: app re-rendered after we applied
+            var sig2 = sigOf(list);
+            if (dayAppliedFor && sig2 !== dayAppliedFor) {
+              var curM2 = monthOf(list);
+              if (curM2 !== dayTarget.m) {
+                var tab2 = document.querySelector('.month-tab-btn[data-month="' + dayTarget.m + '"]');
+                if (tab2) tab2.click();
+                lastSig = ''; stableN = 0;
+                return;
+              }
+              if (sig2 === lastSig) {
+                appendHarvest(list);
+                applyDay(dayTarget.Y, dayTarget.m, dayTarget.d);
+                dayAppliedFor = sigOf(list);
+                lastSig = ''; stableN = 0;
+              } else lastSig = sig2;
             }
-            lastSig = sig;
-          }, 500);
+          }, 400);
         }
         var tries = 0;
         var iv = setInterval(function () {
@@ -403,15 +467,24 @@
             var t = new Date();
             wd.value = t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate());
             cb.addEventListener('click', function () {
-              if (wd.value) sy.value = wd.value.split('-')[0];
+              if (internalNav) return;
+              if (wd.value) { sy.value = wd.value.split('-')[0]; currentScanYear = +wd.value.split('-')[0]; }
             }, true);
             cb.addEventListener('click', function () {
+              if (internalNav) { internalNav = false; return; }
               resetView();
               if (!wd.value) return;
               var parts = wd.value.split('-').map(Number);
               dayTarget = { Y: parts[0], m: parts[1], d: parts[2] };
-              dayAppliedFor = ''; lastSig = '';
+              dayAppliedFor = ''; lastSig = ''; stableN = 0;
               dayDeadline = Date.now() + 300000;
+              daySteps = [];
+              if (dayTarget.m > 1) daySteps.push({ scan: dayTarget.Y, tab: dayTarget.m - 1, harvest: true });
+              if (dayTarget.m < 12) daySteps.push({ scan: dayTarget.Y, tab: dayTarget.m + 1, harvest: true });
+              if (dayTarget.m === 12) daySteps.push({ scan: dayTarget.Y + 1, tab: 1, harvest: true });
+              if (dayTarget.m === 1) daySteps.push({ scan: dayTarget.Y - 1, tab: 12, harvest: true });
+              daySteps.push({ scan: dayTarget.Y, tab: dayTarget.m, final: true });
+              stepIdx = 0; harvest = [];
               var list0 = document.getElementById('scheduleList');
               if (list0 && list0.parentElement) {
                 list0.style.visibility = 'hidden';
