@@ -270,12 +270,15 @@
       })();
     </script>
     
-        <script>
+            <script>
       (function () {
         function pad(n) { return (n < 10 ? '0' : '') + n; }
+        var dayTarget = null, dayAppliedFor = '', lastSig = '', directorOn = false, dayDeadline = 0;
         function resetView() {
+          dayTarget = null;
           var list = document.getElementById('scheduleList');
-          if (list) list.querySelectorAll('.schedule-card').forEach(function (c) { c.style.display = ''; });
+          if (list) { list.style.visibility = ''; list.querySelectorAll('.schedule-card').forEach(function (c) { c.style.display = ''; }); }
+          var ld0 = document.getElementById('dayLoading'); if (ld0) ld0.remove();
           var tabs = document.getElementById('monthTabs'); if (tabs) tabs.style.display = '';
           var hs = document.getElementById('halfSumSection'); if (hs) hs.style.display = '';
           var old = document.getElementById('dayBanner'); if (old) old.remove();
@@ -339,8 +342,48 @@
             '<div style="font-size:14px; line-height:1.8; color:#faf6f0; margin-top:10px; text-align:left;">' + summary + '</div>' +
             '<button type="button" id="dayAllBtn" style="margin-top:10px;background:transparent;color:#ffd88a;border:1.5px solid #b98a2f;border-radius:999px;padding:8px 18px;font-size:13.5px;font-weight:700;cursor:pointer;">月全体を見る</button>';
           list.parentElement.insertBefore(bn, list);
+          list.style.visibility = '';
+          var ld2 = document.getElementById('dayLoading'); if (ld2) ld2.remove();
           document.getElementById('dayAllBtn').addEventListener('click', resetView);
           bn.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        function sigOf(list) { return list.innerHTML.length + ':' + list.querySelectorAll('.schedule-card').length; }
+        function ensureDirector() {
+          if (directorOn) return;
+          directorOn = true;
+          var iv = setInterval(function () {
+            if (!dayTarget || Date.now() > dayDeadline) {
+              clearInterval(iv); directorOn = false;
+              if (dayTarget && !document.getElementById('dayBanner')) {
+                var l9 = document.getElementById('scheduleList'); if (l9) l9.style.visibility = '';
+                var t9 = document.getElementById('monthTabs'); if (t9) t9.style.display = '';
+                var h9 = document.getElementById('halfSumSection'); if (h9) h9.style.display = '';
+                var d9 = document.getElementById('dayLoading'); if (d9) d9.remove();
+              }
+              return;
+            }
+            var list = document.getElementById('scheduleList'); if (!list) return;
+            if (!document.getElementById('dayBanner')) {
+              var mt2 = document.getElementById('monthTabs'); if (mt2) mt2.style.display = 'none';
+              var hs2 = document.getElementById('halfSumSection'); if (hs2) hs2.style.display = 'none';
+            }
+            var tabs = document.querySelectorAll('.month-tab-btn'); if (tabs.length !== 12) return;
+            var head = list.querySelector('h2'); if (!head) return;
+            var mm = head.textContent.match(/(\d+)月の星/); if (!mm) return;
+            if (+mm[1] !== dayTarget.m) {
+              var tab = document.querySelector('.month-tab-btn[data-month="' + dayTarget.m + '"]');
+              if (tab) tab.click();
+              dayAppliedFor = ''; lastSig = '';
+              return;
+            }
+            var sig = sigOf(list);
+            if (dayAppliedFor === sig) return;
+            if (sig === lastSig) {
+              applyDay(dayTarget.Y, dayTarget.m, dayTarget.d);
+              dayAppliedFor = sigOf(list);
+            }
+            lastSig = sig;
+          }, 500);
         }
         var tries = 0;
         var iv = setInterval(function () {
@@ -363,28 +406,25 @@
               if (wd.value) sy.value = wd.value.split('-')[0];
             }, true);
             cb.addEventListener('click', function () {
+              resetView();
               if (!wd.value) return;
               var parts = wd.value.split('-').map(Number);
-              var Y = parts[0], m = parts[1], d = parts[2];
-              resetView();
-              var n = 0;
-              var iv2 = setInterval(function () {
-                n++;
-                var tabs = document.querySelectorAll('.month-tab-btn');
-                var list = document.getElementById('scheduleList');
-                if (tabs.length === 12 && list && list.children.length > 0) {
-                  clearInterval(iv2);
-                  var tab = document.querySelector('.month-tab-btn[data-month="' + m + '"]');
-                  if (tab) tab.click();
-                  var n2 = 0;
-                  var iv3 = setInterval(function () {
-                    n2++;
-                    var head = list.querySelector('h2');
-                    if ((head && head.textContent.indexOf(m + '月の星') >= 0) || n2 > 20) { clearInterval(iv3); applyDay(Y, m, d); }
-                  }, 300);
-                }
-                if (n > 80) clearInterval(iv2);
-              }, 400);
+              dayTarget = { Y: parts[0], m: parts[1], d: parts[2] };
+              dayAppliedFor = ''; lastSig = '';
+              dayDeadline = Date.now() + 300000;
+              var list0 = document.getElementById('scheduleList');
+              if (list0 && list0.parentElement) {
+                list0.style.visibility = 'hidden';
+                var ld = document.createElement('div');
+                ld.id = 'dayLoading';
+                ld.style.cssText = 'max-width:880px;margin:18px auto 0;padding:22px 16px;border:1px dashed #c5a880;border-radius:12px;text-align:center;color:#c5a880;font-size:14px;scroll-margin-top:140px;';
+                ld.textContent = '🔮 計算中… その日の配置を集めています';
+                list0.parentElement.insertBefore(ld, list0);
+                ld.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+              var mt0 = document.getElementById('monthTabs'); if (mt0) mt0.style.display = 'none';
+              var hs0 = document.getElementById('halfSumSection'); if (hs0) hs0.style.display = 'none';
+              ensureDirector();
             });
           }
         }, 250);
