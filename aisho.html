@@ -82,7 +82,8 @@
   <div id="result"></div>
 
   <div id="periodSection" style="display:none; margin-top:36px;">
-    <h3 class="sec">🗓 現在の相性（期間予報）</h3>
+    <h3 class="sec" style="font-size:24px; text-align:center; color:#e8cf9f; background:linear-gradient(135deg, rgba(197,168,128,0.30), rgba(197,168,128,0.08)); border:1px solid #c5a880; border-radius:12px; padding:14px 10px; letter-spacing:0.06em;">🗓 現在の相性（期間予報）</h3>
+    <p style="text-align:center; font-size:13px; color:#c5a880; margin:-4px 0 12px;">― 二人の「いま」の流れは、こちらで分かります ―</p>
     <p class="note" style="margin-bottom:10px;">出生相性だけで決めつけなくて大丈夫。その時期の空模様しだいで、二人の流れは変わります。出生図に今の空の星を重ねて読む「その時期の相性」です。</p>
     <div class="row">
       <div class="fld"><label>見方</label><select id="periodMode"><option value="month">月間</option><option value="year">年間</option></select></div>
@@ -92,13 +93,14 @@
     <button id="periodBtn" style="width:100%; background:rgba(197,168,128,0.15); color:#c5a880; font-weight:700; font-size:15px; border:1px solid rgba(197,168,128,0.5); border-radius:10px; padding:12px; cursor:pointer;">期間の相性をみる ✨</button>
     <div id="periodResult"></div>
     <details style="margin-top:14px;">
-      <summary style="cursor:pointer; color:#c5a880; font-size:13px;">📊 点数のしくみ</summary>
-      <div style="font-size:13px; color:#b8b0a4; line-height:1.9; margin-top:8px;">
+      <summary style="cursor:pointer; color:#e8cf9f; font-size:16px; font-weight:700; text-decoration:underline; text-underline-offset:4px;">📊 点数のしくみ（タップで開きます）</summary>
+      <div style="font-size:14px; color:#b8b0a4; line-height:1.9; margin-top:8px;">
         ・1日の点数は5〜99点。その日の空の星が、二人の出生の星に作る角度（アスペクト）で計算しています。<br>
         ・基本点は、コンジャンクション+10点、トライン+8点、スクエア−6点、オポジション−7点。数えるのは正確な角度から3°以内（太陽・月が関わる場合は4°以内）で、ぴったり合う日ほど点の動きは大きくなります。<br>
         ・太陽・月・金星・火星が関わる角度は、点数を1.3倍して数えます（本人らしさと恋愛に直結する星のため）。<br>
         ・同じ空の星が二人両方の星に届く日は、二人の日としてさらに加点・減点します（片方が良い角度なら、良い方に寄ります）。<br>
-        ・月の点数は、その月の毎日の点数の平均です。
+        ・月の点数は、その月の毎日の点数の平均です。<br>
+        ・点数の目安：65点以上はめったにない追い風の日、55点以上は良い日、45〜54点は穏やかな日、35〜44点はふつうの日、35点未満は波のある日なので、大事なことは無理に進めず様子見がおすすめです。
       </div>
     </details>
   </div>
@@ -484,11 +486,25 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
       }
     }
     const crossCards = [...crossBest.values()].sort((x, y) => x.br.orbSum - y.br.orbSum).slice(0, 6);
+    // そのアスペクトが効いている期間（同じ角度が続く日の範囲）を返す
+    const spanFor = (it) => {
+      const has = (dy) => (it.owner === 'A' ? dy.hitsA : dy.hitsB).some(x => x.tb.id === it.h.tb.id && x.nb.id === it.h.nb.id && x.asp.angle === it.h.asp.angle);
+      let s = days.indexOf(it.day), e = s;
+      while (s > 0 && has(days[s - 1])) s--;
+      while (e < days.length - 1 && has(days[e + 1])) e++;
+      const f = (dy) => dy.m + '月' + dy.d + '日';
+      let label = f(days[s]) + '〜' + f(days[e]);
+      if (s === 0 && e === days.length - 1) label += '（この期間の前後も続きます）';
+      else if (s === 0) label += '（前から続いています）';
+      else if (e === days.length - 1) label += '（この先も続きます）';
+      return label;
+    };
     const cardFor = (it) => {
       const ownerName = it.owner === 'A' ? C.A.name : C.B.name;
       const otherName = it.owner === 'A' ? C.B.name : C.A.name;
       return `<div class="card ${it.h.asp.kind === 'hard' ? 'hard' : ''}"><div class="ttl">${it.day.m}月${it.day.d}日 ― ${esc(otherName)}のトランジット${it.h.tb.emoji}${it.h.tb.name} × ${esc(ownerName)}のネイタル${it.h.nb.emoji}${it.h.nb.name}</div>` +
         `<div class="asp">${it.h.asp.emoji} ${it.h.asp.name}（オーブ ${it.h.orb.toFixed(1)}°）</div>` +
+        `<div style="font-size:12px; color:#8a8178; margin-bottom:6px;">影響する期間：${spanFor(it)}（${it.day.m}月${it.day.d}日がピーク）</div>` +
         `<div class="desc">${coupleTextSingle(ownerName, otherName, it.h)}</div></div>`;
     };
     const cardForCross = (it) => {
