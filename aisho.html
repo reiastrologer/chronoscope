@@ -172,7 +172,8 @@ function computeChart(person) {
   const utHour = hh - 9 + mm / 60;
   const jd = juldayFn(y, mo, d, utHour, 1);
   const pos = {};
-  for (const b of BODIES.slice(0, 10)) pos[b.id] = calcPos(jd, b.id, 260);
+  // 出生時間不明の人は月を省く（正午計算だと1日で約13°動くため、出生時・現在相性とも使わない）
+  for (const b of BODIES.slice(0, 10)) { if (person.unknown && b.id === 1) continue; pos[b.id] = calcPos(jd, b.id, 260); }
   pos[10] = calcPos(jd, 11, 260);
   if (!person.unknown) {
     const h = calcHouses(jd, person.lat, person.lon);
@@ -287,7 +288,8 @@ document.getElementById('calcBtn').addEventListener('click', async () => {
     const hard = hits.filter(h => h.asp.kind === 'hard');
     const score = scoreOf(hits);
     const chartTable = (P, pos) => `<table class="chart"><tr><th colspan="2">${esc(P.name)} の星</th></tr>` +
-      BODIES.filter(b => pos[b.id] !== undefined).map(b => `<tr><td>${b.emoji} ${b.name}</td><td>${signOf(pos[b.id])} ${degOf(pos[b.id])}°</td></tr>`).join('') + '</table>';
+      BODIES.filter(b => pos[b.id] !== undefined).map(b => `<tr><td>${b.emoji} ${b.name}</td><td>${signOf(pos[b.id])} ${degOf(pos[b.id])}°</td></tr>`).join('') + '</table>' +
+      (P.unknown ? '<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※月は、出生時間がわからないと位置が1日で最大約13°も動くため、省略しています。</p>' : '');
     const card = (h) => {
       const info = synInfo(h);
       return `<div class="card ${h.asp.kind === 'hard' ? 'hard' : ''}"><div class="ttl">${esc(A.name)}の${h.a.emoji}${h.a.name} × ${esc(B.name)}の${h.b.emoji}${h.b.name}</div>` +
@@ -340,7 +342,9 @@ function coupleTail(tId, nIds, kind) {
   return love ? '二人でいると恋の熱がすれ違いやすい日。決めつけず、相手のペースを待つと◎です。' : '二人でいると少しギクシャクしやすい日。無理に進めず、距離感を大切にすると◎です。';
 }
 function coupleTextSingle(ownerName, h) {
-  return SKY_ACT[h.tb.id] + '、' + ownerName + 'さんの' + h.nb.name + '（' + TOUCH[h.nb.id] + '）に届く日。' + coupleTail(h.tb.id, [h.nb.id], h.asp.kind);
+  // ブレンド読み: 空の星 × 相手のネイタル のクロス接触を「二人のテーマ」として読む
+  const theme = synInfo({ a: h.tb, b: h.nb, asp: h.asp }).desc;
+  return SKY_ACT[h.tb.id] + '、' + ownerName + 'さんの' + h.nb.name + '（' + TOUCH[h.nb.id] + '）に届く日。空の星が' + ownerName + 'さんの星に触れて、二人の間にテーマが流れる日です。' + (theme ? theme + ' ' : '') + coupleTail(h.tb.id, [h.nb.id], h.asp.kind);
 }
 const THEME_T = {
   0: '二人の時間や予定', 1: '気持ちのやり取り', 2: '連絡や会話',
@@ -497,7 +501,8 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
         `<div class="verdict">${verdict(avg)}</div></div>` +
         `<p class="counts">💞 おすすめの日: ${byDate(sorted.slice(0, 3)).map(fmt).join(' ／ ')}<br>⚡ すれ違い注意: ${byDate(sorted.slice(-3)).map(fmt).join(' ／ ')}</p>` +
         `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※おすすめの日は「その日の二人の総合点」、ハイライトは「この期間で一番くっきり出る配置」で選んでいます。選び方が違うため、日付が重なることも、ずれることもあります。</p>` +
-        `<h3 class="sec">✨ この月のハイライト</h3>` + cardsHtml;
+        `<h3 class="sec">✨ この月のハイライト</h3>` +
+        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">🤝「二人をつなぐ日」は、同じ空の星が二人両方の星に届く日です。片方にはハードな角度でも、もう片方がソフトなら、二人でいれば良い方に働きます（ブレンド）。</p>` + cardsHtml;
     } else {
       const rows = [];
       for (let m = 1; m <= 12; m++) {
@@ -511,7 +516,8 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
         `<p class="counts">💞 ベスト月: ${bestM.m}月（${bestM.ma}） ／ ⚡ 注意月: ${worstM.m}月（${worstM.ma}）</p>` +
         rows.map(r => `<div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><span style="width:38px; font-size:13px;">${r.m}月</span><div style="flex:1; background:rgba(255,255,255,0.05); border-radius:4px;"><div style="width:${r.ma}%; background:linear-gradient(90deg,#9a7d55,#c5a880); height:14px; border-radius:4px;"></div></div><span style="width:30px; font-size:13px;">${r.ma}</span></div>`).join('') +
         `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ベスト月・注意月は「月ごとの平均点」、ハイライトは「この期間で一番くっきり出る配置」で選んでいます。選び方が違うため、月と日付がずれることもあります。</p>` +
-        `<h3 class="sec">✨ この年のハイライト</h3>` + cardsHtml;
+        `<h3 class="sec">✨ この年のハイライト</h3>` +
+        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">🤝「二人をつなぐ日」は、同じ空の星が二人両方の星に届く日です。片方にはハードな角度でも、もう片方がソフトなら、二人でいれば良い方に働きます（ブレンド）。</p>` + cardsHtml;
     }
     out.innerHTML = html;
     out.scrollIntoView({ behavior: 'smooth' });
