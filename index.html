@@ -166,7 +166,7 @@
           const box = document.getElementById('psResult');
           const b = pBirth();
           if (!b) { box.innerHTML = '<p style="color:#e8cf9f; text-align:center;">上のフォームで生年月日を選んでから押してください。</p>'; return; }
-          if (document.getElementById('psUnknown').checked) { b.unknown = true; b.hourUT = 12 - b.tz; }
+          if (document.getElementById('psUnknown').checked || (document.getElementById('unkMain') && document.getElementById('unkMain').checked)) { b.unknown = true; b.hourUT = 12 - b.tz; }
           box.innerHTML = '<p style="color:#8a8178; text-align:center;">読み取り中…</p>';
           try {
             await pInit();
@@ -258,7 +258,33 @@
         });
       } catch (e) {}
     </script>
-<!-- アスペクトの円（運勢盤の月別カードをタップで開く） -->
+    <script>
+      // 出生時間不明チェックを、通常の入力フォーム（出生時間の下）にも追加する
+      (function () {
+        function insert() {
+          var bt = document.getElementById('birthtime');
+          if (!bt || document.getElementById('unkMain')) return;
+          var lab = document.createElement('label');
+          lab.style.cssText = 'display:block; margin-top:8px; font-size:13.5px; color:#c5a880; cursor:pointer;';
+          lab.innerHTML = '<input type="checkbox" id="unkMain" style="transform:scale(1.2); margin-right:6px;">出生時間は不明（12:00で計算します）';
+          bt.parentElement.appendChild(lab);
+          lab.querySelector('input').addEventListener('change', function () {
+            var on = this.checked;
+            if (on) { bt.value = '12:00'; bt.disabled = true; } else { bt.disabled = false; }
+            var ps = document.getElementById('psUnknown');
+            if (ps) ps.checked = on;
+          });
+          var ps = document.getElementById('psUnknown');
+          if (ps) ps.addEventListener('change', function () {
+            var m = document.getElementById('unkMain');
+            if (m && m.checked !== this.checked) { m.checked = this.checked; m.dispatchEvent(new Event('change')); }
+          });
+        }
+        var iv = setInterval(function () { insert(); if (document.getElementById('unkMain')) clearInterval(iv); }, 400);
+        setTimeout(function () { clearInterval(iv); }, 15000);
+      })();
+    </script>
+    <!-- アスペクトの円（運勢盤の月別カードをタップで開く） -->
     <div id="mwModal" style="display:none; position:fixed; inset:0; background:rgba(5,5,12,0.88); z-index:60; align-items:center; justify-content:center; padding:18px;">
       <div style="background:#14121e; border:1px solid #c5a880; border-radius:16px; padding:18px; max-width:400px; width:100%; text-align:center;">
         <div id="mwTitle" style="font-weight:700; color:#e8cf9f; margin-bottom:10px; font-size:15px;"></div>
