@@ -69,6 +69,147 @@
         });
       })();
     </script>
+    <!-- アスペクトの円（運勢盤の月別カードをタップで開く） -->
+    <div id="mwModal" style="display:none; position:fixed; inset:0; background:rgba(5,5,12,0.88); z-index:60; align-items:center; justify-content:center; padding:18px;">
+      <div style="background:#14121e; border:1px solid #c5a880; border-radius:16px; padding:18px; max-width:400px; width:100%; text-align:center;">
+        <div id="mwTitle" style="font-weight:700; color:#e8cf9f; margin-bottom:10px; font-size:15px;"></div>
+        <div id="mwBody"></div>
+        <button type="button" id="mwClose" style="margin-top:12px; background:rgba(197,168,128,0.15); color:#c5a880; border:1px solid rgba(197,168,128,0.5); border-radius:999px; padding:9px 26px; font-size:14px; cursor:pointer;">閉じる</button>
+      </div>
+    </div>
+    <style>
+      .mwHint { text-align:right; font-size:11.5px; color:#c5a880; margin-top:8px; }
+      [data-mw-card] { cursor: pointer; }
+    </style>
+    <script type="module">
+      // 運勢盤の月別アスペクトカードに「タップで円」を後付けする（アプリ本体には触らない）
+      try {
+        const GLYPH_ID = { '☉':0,'☽':1,'☿':2,'♀':3,'♂':4,'♃':5,'♄':6,'♅':7,'♆':8,'♇':9,'☊':10 };
+        const ID_GLYPH = ['☉','☽','☿','♀','♂','♃','♄','♅','♆','♇','☊'];
+        const ID_NAME = ['太陽','月','水星','金星','火星','木星','土星','天王星','海王星','冥王星','ドラゴンヘッド'];
+        const SWISS_ID = [0,1,2,3,4,5,6,7,8,9,11]; // ☊は Swiss Ephemeris の 11 (TRUE_NODE)
+        const ASP_NAME = { '☌':'コンジャンクション','△':'トライン','□':'スクエア','☍':'オポジション' };
+        const ASP_RE = /【\s*([☉☽☿♀♂♃♄♅♆♇☊])\s*([☌△□☍])\s*([☉☽☿♀♂♃♄♅♆♇☊])\s*】/;
+        let M = null, juldayFn = null, natalCache = { key: '', pos: null };
+        async function initEngine() {
+          if (M) return;
+          const mod = await import('./assets/swisseph-BtfJwKK5.js');
+          const factory = typeof mod.default === 'function' ? mod.default : mod.SwissEphModule;
+          const wasmBinary = await (await fetch('./assets/swisseph-BmP0Bw24.wasm')).arrayBuffer();
+          M = await factory({ instantiateWasm: (imports, success) => { WebAssembly.instantiate(wasmBinary, imports).then(r => success(r.instance, r.module)); return {}; } });
+          juldayFn = M.cwrap('swe_julday_wrap', 'number', ['number','number','number','number','number']);
+        }
+        function calcPos(jd, planet) {
+          const out = M._malloc(48), err = M._malloc(256);
+          const rc = M.ccall('swe_calc_ut_wrap', 'number', ['number','number','number','number','number'], [jd, planet, 260, out, err]);
+          const lon = rc < 0 ? NaN : M.getValue(out, 'double');
+          M._free(out); M._free(err);
+          return lon;
+        }
+        function allPos(jd) {
+          const pos = {};
+          for (let i = 0; i <= 10; i++) pos[i] = calcPos(jd, SWISS_ID[i]);
+          return pos;
+        }
+        function selText(re) {
+          for (const s of document.querySelectorAll('select')) {
+            const o = s.selectedOptions && s.selectedOptions[0];
+            if (o && re.test(o.textContent.trim())) return o.textContent.trim();
+          }
+          return null;
+        }
+        function readBirth() {
+          const y = selText(/^\d{4}年$/), mo = selText(/^\d{1,2}月$/), d = selText(/^\d{1,2}日$/);
+          if (!y || !mo || !d) return null;
+          let hh = 12, mm = 0;
+          const t = document.querySelector('input[type="time"]');
+          if (t && t.value) { const p = t.value.split(':'); hh = +p[0] || 0; mm = +p[1] || 0; }
+          let tz = 9;
+          const tzs = selText(/UTC/);
+          if (tzs) { const m2 = tzs.match(/UTC\s*([+-])\s*(\d+(?:\.\d+)?)/); if (m2) tz = (m2[1] === '-' ? -1 : 1) * parseFloat(m2[2]); }
+          return { y: parseInt(y), m: parseInt(mo), d: parseInt(d), hourUT: hh + mm / 60 - tz };
+        }
+        function natalPos() {
+          const b = readBirth();
+          if (!b) return null;
+          const key = [b.y, b.m, b.d, b.hourUT].join('/');
+          if (natalCache.key === key && natalCache.pos) return natalCache.pos;
+          const pos = allPos(juldayFn(b.y, b.m, b.d, b.hourUT, 1));
+          natalCache = { key, pos };
+          return pos;
+        }
+        function wheelSVG(natal, transit, tId, aspGlyph, nId) {
+          const P = (lon, r) => [160 - r * Math.cos(lon * Math.PI / 180), 160 - r * Math.sin(lon * Math.PI / 180)];
+          const SG = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
+          let s = '<svg viewBox="0 0 320 320" style="width:100%; max-width:340px; display:block; margin:0 auto;">';
+          s += '<circle cx="160" cy="160" r="152" fill="none" stroke="#c5a880" stroke-opacity="0.5"/>';
+          s += '<circle cx="160" cy="160" r="128" fill="none" stroke="#c5a880" stroke-opacity="0.3"/>';
+          s += '<circle cx="160" cy="160" r="80" fill="none" stroke="#c5a880" stroke-opacity="0.3"/>';
+          for (let i = 0; i < 12; i++) {
+            const [x1, y1] = P(i * 30, 128), [x2, y2] = P(i * 30, 152);
+            s += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#c5a880" stroke-opacity="0.4"/>`;
+            const [gx, gy] = P(i * 30 + 15, 140);
+            s += `<text x="${gx.toFixed(1)}" y="${gy.toFixed(1)}" fill="#c5a880" font-size="13" text-anchor="middle" dominant-baseline="middle">${SG[i]}</text>`;
+          }
+          const [ax, ay] = P(natal[nId], 92), [bx, by] = P(transit[tId], 116);
+          const col = (aspGlyph === '□' || aspGlyph === '☍') ? '#e07856' : '#8fd0a8';
+          s += `<line x1="${ax.toFixed(1)}" y1="${ay.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${col}" stroke-width="2" stroke-opacity="0.9"/>`;
+          const dots = (pos, r, color, hl) => Object.keys(pos).map(k => {
+            const [x, y] = P(pos[k], r);
+            return (hl === +k ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13.5" fill="rgba(20,18,30,0.88)" stroke="${color}" stroke-width="1.8"/>` : '') +
+              `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" fill="${color}" font-size="${hl === +k ? 15 : 11}" text-anchor="middle" dominant-baseline="middle">${ID_GLYPH[k]}</text>`;
+          }).join('');
+          s += dots(transit, 116, '#a8c4e0', tId);
+          s += dots(natal, 92, '#e8cf9f', nId);
+          s += `<text x="160" y="152" fill="#e8cf9f" font-size="13" text-anchor="middle">${ID_GLYPH[tId]} ${aspGlyph} ${ID_GLYPH[nId]}</text>`;
+          s += `<text x="160" y="170" fill="#8a8178" font-size="10" text-anchor="middle">内側（金）＝あなたの星 ／ 外側（青）＝その日の空</text>`;
+          return s + '</svg>';
+        }
+        async function openWheel(card) {
+          const text = card.textContent || '';
+          const am = text.match(ASP_RE);
+          const dm = text.match(/🎯\s*(\d{1,2})月(\d{1,2})日/);
+          if (!am || !dm) return;
+          const h2 = [...document.querySelectorAll('h2')].map(e => e.textContent).join(' ');
+          const ym = h2.match(/(\d{4})年\s*運命のサイクル/);
+          if (!ym) return;
+          const year = +ym[1], month = +dm[1], day = +dm[2];
+          const tId = GLYPH_ID[am[1]], nId = GLYPH_ID[am[3]], aspGlyph = am[2];
+          await initEngine();
+          const natal = natalPos();
+          if (!natal) return;
+          const transit = allPos(juldayFn(year, month, day, 3.0, 1)); // その日の12:00(JST)
+          document.getElementById('mwTitle').textContent = `${year}年${month}月${day}日 ― 空の${ID_NAME[tId]} × あなたの${ID_NAME[nId]} ― ${ASP_NAME[aspGlyph]}`;
+          document.getElementById('mwBody').innerHTML = wheelSVG(natal, transit, tId, aspGlyph, nId);
+          document.getElementById('mwModal').style.display = 'flex';
+        }
+        function qualifies(el) {
+          const t = el.textContent || '';
+          return ASP_RE.test(t) && t.includes('影響期間') && (t.includes('💻') || t.includes('【仕事】'));
+        }
+        function enhance() {
+          const divs = document.querySelectorAll('#app div');
+          const cands = [...divs].filter(el => !el.dataset.mwCard && qualifies(el));
+          for (const el of cands) {
+            if ([...el.querySelectorAll('div')].some(d => qualifies(d))) continue; // 一番内側のカードだけ
+            el.dataset.mwCard = '1';
+            const hint = document.createElement('div');
+            hint.className = 'mwHint';
+            hint.textContent = '🔍 タップでこの配置の円を見る';
+            el.appendChild(hint);
+          }
+        }
+        document.addEventListener('click', (e) => {
+          const card = e.target.closest && e.target.closest('[data-mw-card]');
+          if (card) openWheel(card).catch(() => {});
+        });
+        document.getElementById('mwClose').addEventListener('click', () => { document.getElementById('mwModal').style.display = 'none'; });
+        document.getElementById('mwModal').addEventListener('click', (e) => { if (e.target.id === 'mwModal') e.target.style.display = 'none'; });
+        let mwTimer = null;
+        new MutationObserver(() => { clearTimeout(mwTimer); mwTimer = setTimeout(enhance, 400); }).observe(document.body, { childList: true, subtree: true });
+        setTimeout(enhance, 1500);
+      } catch (e) { /* 後付け機能が失敗してもアプリ本体には影響させない */ }
+    </script>
     <footer style="max-width: 880px; margin: 0 auto; padding: 28px 20px 40px; text-align: center; font-size: 12px; line-height: 1.9; color: #8a8178; border-top: 1px solid rgba(197,168,128,0.25);">
       本サイトは、Swiss Ephemeris（© Astrodienst AG）のライセンス規約（GNU AGPL）を厳格に守り、無償提供の理念に従って運営しております。有償で提供することはありません。どなたでも自由にお使いください。
       <br><a href="./privacy.html" target="_blank" rel="noopener noreferrer" style="color: #c5a880; text-decoration: underline;">プライバシーと安全性について（入力した情報は送信・保存されません）</a>
