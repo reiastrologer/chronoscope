@@ -24,14 +24,37 @@
     <script type="module" crossorigin src="./assets/index-DBhTetfo.js"></script>
   </head>
   <body>
+    <div style="max-width: 880px; margin: 0 auto; padding: 24px 16px 0;">
+      <div style="border: 1px solid #c5a880; outline: 3px double rgba(197,168,128,0.55); outline-offset: 5px; padding: 20px 12px 16px; text-align: center; background: radial-gradient(ellipse at center, rgba(197,168,128,0.10), rgba(197,168,128,0.02));">
+        <div style="font-family: 'Times New Roman', 'Noto Serif JP', serif; font-size: 12px; letter-spacing: 0.55em; color: #9a8d7a;">CHRONOSCOPE</div>
+        <div style="font-family: 'Noto Serif JP', serif; font-size: 32px; font-weight: 700; color: #e8cf9f; letter-spacing: 0.16em; margin-top: 6px;">クロノスコープ</div>
+        <div style="display: flex; align-items: center; gap: 10px; max-width: 340px; margin: 12px auto 8px;">
+          <span style="flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #c5a880);"></span>
+          <span style="color: #c5a880; font-size: 13px;">♄ ◆ ☉</span>
+          <span style="flex: 1; height: 1px; background: linear-gradient(90deg, #c5a880, transparent);"></span>
+        </div>
+        <div style="font-family: 'Times New Roman', serif; font-style: italic; font-size: 13.5px; color: #bdb098; letter-spacing: 0.08em;">Astra inclinant, non necessitant</div>
+        <div style="font-size: 11px; color: #8a8178; margin-top: 3px;">― 星は人を傾けるが、縛りはしない ―</div>
+      </div>
+    </div>
     <div style="max-width: 880px; margin: 0 auto; padding: 14px 16px 0; text-align: center;">
       <p style="font-size: 14px; color: #e8cf9f; font-weight: 700;">📜 見落とさないように、最後までスクロールしてね！</p>
     </div>
-    <div style="max-width: 880px; margin: 0 auto; padding: 16px 16px 0;">
-      <a href="./aisho.html" style="display: block; text-align: center; background: linear-gradient(135deg, #c5a880, #9a7d55); color: #141210; font-weight: 700; font-size: 16px; padding: 13px; border-radius: 10px; text-decoration: none;">💞 相性占い（二人の星読み）はこちら</a>
+    <div style="max-width: 880px; margin: 0 auto; padding: 14px 16px 0;">
+      <style>
+        .topTab { display: block; text-align: center; padding: 13px 8px; border-radius: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.28), rgba(197,168,128,0.10)); border: 1px solid #c5a880; color: #e8cf9f; font-weight: 700; font-size: 15px; text-decoration: none; }
+        html { scroll-behavior: smooth; }
+      </style>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <a href="#psNav" class="topTab">🌟 性格チェック</a>
+        <a href="#app" class="topTab">🔮 個人の運勢</a>
+        <a href="./aisho.html" class="topTab">💞 相性診断</a>
+        <a href="#mgNav" class="topTab">✨ クロノスくんのおまじない</a>
+      </div>
     </div>
         <div id="app"></div>
     <!-- クロノスくんのおまじない（運勢盤） -->
+    <div id="mgNav"></div>
     <style>
       .mgStage { position: relative; min-height: 300px; margin-top: 14px; }
       .mgImg { width: 158px; border-radius: 22px; border: 2px solid #c5a880; box-shadow: 0 0 26px rgba(232,207,159,0.35); animation: mgBob 1.6s ease-in-out infinite; }
@@ -43,7 +66,8 @@
     </style>
     <div style="max-width: 880px; margin: 0 auto; padding: 0 16px; text-align: center;">
       <p style="font-size: 13px; color: #8a8178; margin-bottom: 10px;">― 悩んでるあなたへ ―</p>
-      <button id="mgBtn" type="button" style="background: linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color: #e8cf9f; border: 1px solid #c5a880; border-radius: 999px; padding: 12px 26px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans JP', sans-serif;">✨ クロノスくんのおまじない ✨</button>
+      <button id="mgBtn" type="button" style="display: none; background: linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color: #e8cf9f; border: 1px solid #c5a880; border-radius: 999px; padding: 12px 26px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans JP', sans-serif;">✨ クロノスくんのおまじない ✨</button>
+      <p style="font-size: 12.5px; color: #9a8d7a;">※上のタブ「✨ クロノスくんのおまじない」を押すと、ここに動画が出ます（動画をタップすると引き直せます）</p>
       <div id="mgStage" class="mgStage" style="display: none;"></div>
     </div>
     <script>
@@ -77,9 +101,11 @@
     </script>
 
 <!-- あなたの星の性格（ネイタル性格チェック） -->
+    <div id="psNav"></div>
     <div style="max-width: 880px; margin: 26px auto 0; padding: 0 16px; text-align: center;">
       <p style="font-size: 13px; color: #8a8178; margin-bottom: 10px;">― あなたの星の性格 ―</p>
-      <button id="psBtn" type="button" style="background: linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color: #e8cf9f; border: 1px solid #c5a880; border-radius: 999px; padding: 12px 26px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans JP', sans-serif;">🌟 性格チェックを見る 🌟</button>
+      <button id="psBtn" type="button" style="display: none; background: linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color: #e8cf9f; border: 1px solid #c5a880; border-radius: 999px; padding: 12px 26px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans JP', sans-serif;">🌟 性格チェックを見る 🌟</button>
+      <p style="font-size: 12.5px; color: #9a8d7a; margin-top: 8px;">※上のタブ「🌟 性格チェック」を押すと、ここに結果が出ます</p>
       <p style="font-size: 12px; color: #8a8178; margin-top: 8px;">上のフォームに入力した生年月日・出生地で、生まれた日の星の配置から性格を読みます。</p>
       <div style="margin-top: 10px;">
         <label style="font-size: 13.5px; color: #c5a880; cursor: pointer;"><input type="checkbox" id="psUnknown" style="transform: scale(1.2); margin-right: 6px;">出生時間は不明（ハウス・アセンダント・MCは出ません）</label>
@@ -190,6 +216,8 @@
             }
             segs.push({ from: start, to: 1440, s: cur });
             let hh = '<h4 style="color:#ffd88a; margin:4px 0 6px;">出生時刻が不明な方へ</h4>';
+            hh += '<p style="font-size:15px; font-weight:700; color:#ffd88a; margin:0 0 4px;">' + b.y + '年' + b.m + '月' + b.d + '日生まれの、時刻ごとの違いです</p>';
+            hh += '<p style="font-size:12.5px; color:#9a8d7a; margin:0 0 8px;">※上のフォームに入っている生年月日の一覧です。別の日を見たい時は、先に生年月日を変えてから、もう一度ボタンを押してください。</p>';
             hh += '<p style="font-size:13.5px; color:#d8cbb2; line-height:1.7; margin:0 0 10px;">生まれた時刻で読みがどう変わるかの一覧です（時刻は目安です）。「それっぽい！」と感じるものを選んで、上のフォームにその時刻を入れて性格チェックをしてみるのもいいかも！とはいえ、感覚だけだと午前と午後を取り違えて半日ズレることもあります。正確な時刻は、母子手帳などで確認してみてください。母子手帳がない場合は、出生届の記録で分かることもあります（法務局での保管は約27年です）。</p>';
             hh += '<div style="max-height:420px; overflow-y:auto; display:grid; gap:6px;">';
             for (const s2 of segs) {
@@ -325,6 +353,21 @@
         }
         var iv = setInterval(function () { insert(); if (document.getElementById('unkMain')) clearInterval(iv); }, 400);
         setTimeout(function () { clearInterval(iv); }, 15000);
+      })();
+    </script>
+        <script>
+      // トップのタブは、スクロールだけでなくそのまま実行もする
+      (function () {
+        function wire() {
+          var ps = document.querySelector('a[href="#psNav"]');
+          var mg = document.querySelector('a[href="#mgNav"]');
+          if (ps) ps.addEventListener('click', function () { setTimeout(function () { var b = document.getElementById('psBtn'); if (b) b.click(); }, 700); });
+          if (mg) mg.addEventListener('click', function () { setTimeout(function () { var b = document.getElementById('mgBtn'); if (b) b.click(); }, 700); });
+          var stage = document.getElementById('mgStage');
+          var mgb = document.getElementById('mgBtn');
+          if (stage && mgb) stage.addEventListener('click', function () { mgb.click(); });
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
       })();
     </script>
     <!-- アスペクトの円（運勢盤の月別カードをタップで開く） -->
