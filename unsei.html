@@ -415,6 +415,23 @@
           var txt = total ? ('今月： 開始ごろ ' + c[0] + '件／ピークごろ ' + c[1] + '件／終了ごろ ' + c[2] + '件') : '';
           document.querySelectorAll('.feelCount').forEach(function (el) { el.textContent = txt; });
         }
+        function refreshFeelTendency(bk) {
+          var mine = feelLoad().filter(function (x) { return x.bk === bk; });
+          var c = [0, 0, 0];
+          mine.forEach(function (x) { var i = PHASES.indexOf(x.phase); if (i >= 0) c[i]++; });
+          var total = c[0] + c[1] + c[2];
+          var txt = '';
+          if (total > 0) {
+            txt = 'あなたの記録（全' + total + '件）： 開始ごろ ' + c[0] + '／ピークごろ ' + c[1] + '／終了ごろ ' + c[2];
+            if (total >= 5) {
+              var maxi = c.indexOf(Math.max(c[0], c[1], c[2]));
+              if (c[maxi] >= 3) txt += ' ― あなたは「' + PHASES[maxi] + '」に感じやすいタイプかもしれません。';
+            } else {
+              txt += ' ― もう少し溜まると、あなたがいつ頃感じやすいかが見えてきます。';
+            }
+          }
+          document.querySelectorAll('.feelTendency').forEach(function (el) { el.textContent = txt; });
+        }
         function addFeelButtons(Y, m, d) {
           var list = document.getElementById('scheduleList'); if (!list) return;
           var bk = birthKey();
@@ -439,6 +456,7 @@
                 b.style.fontWeight = on ? '700' : '400';
               });
               refreshFeelCounts(bk, ym);
+              refreshFeelTendency(bk);
             }
             PHASES.forEach(function (ph) {
               var btn = document.createElement('button');
@@ -462,6 +480,10 @@
             cnt.className = 'feelCount';
             cnt.style.cssText = 'font-size:12px; color:#c5a880;';
             wrap.appendChild(cnt);
+            var ten = document.createElement('div');
+            ten.className = 'feelTendency';
+            ten.style.cssText = 'flex-basis:100%; font-size:12px; color:#8a8178; line-height:1.6;';
+            wrap.appendChild(ten);
             card.appendChild(wrap);
             paint();
           });
