@@ -91,6 +91,16 @@
     </div>
     <button id="periodBtn" style="width:100%; background:rgba(197,168,128,0.15); color:#c5a880; font-weight:700; font-size:15px; border:1px solid rgba(197,168,128,0.5); border-radius:10px; padding:12px; cursor:pointer;">期間の相性をみる ✨</button>
     <div id="periodResult"></div>
+    <details style="margin-top:14px;">
+      <summary style="cursor:pointer; color:#c5a880; font-size:13px;">📊 点数のしくみ</summary>
+      <div style="font-size:13px; color:#b8b0a4; line-height:1.9; margin-top:8px;">
+        ・1日の点数は5〜99点。その日の空の星が、二人の出生の星に作る角度（アスペクト）で計算しています。<br>
+        ・基本点は、コンジャンクション+10点、トライン+8点、スクエア−6点、オポジション−7点。数えるのは正確な角度から3°以内（太陽・月が関わる場合は4°以内）で、ぴったり合う日ほど点の動きは大きくなります。<br>
+        ・太陽・月・金星・火星が関わる角度は、点数を1.3倍して数えます（本人らしさと恋愛に直結する星のため）。<br>
+        ・同じ空の星が二人両方の星に届く日は、二人の日としてさらに加点・減点します（片方が良い角度なら、良い方に寄ります）。<br>
+        ・月の点数は、その月の毎日の点数の平均です。
+      </div>
+    </details>
   </div>
 
   <div id="chartMap"></div>
@@ -341,10 +351,10 @@ function coupleTail(tId, nIds, kind) {
   if (kind === 'harmony') return love ? '二人でいると恋愛運が上がる日。素直に甘えたり、気持ちを言葉にすると◎です。' : '二人でいると運が上向く日。一緒の予定を入れるのに向いています。';
   return love ? '二人でいると恋の熱がすれ違いやすい日。決めつけず、相手のペースを待つと◎です。' : '二人でいると少しギクシャクしやすい日。無理に進めず、距離感を大切にすると◎です。';
 }
-function coupleTextSingle(ownerName, h) {
-  // ブレンド読み: 空の星 × 相手のネイタル のクロス接触を「二人のテーマ」として読む
+function coupleTextSingle(ownerName, otherName, h) {
+  // ブレンド読み: 「相手のトランジット × 自分のネイタル」のクロス接触として、方向を持たせて読む
   const theme = synInfo({ a: h.tb, b: h.nb, asp: h.asp }).desc;
-  return SKY_ACT[h.tb.id] + '、' + ownerName + 'さんの' + h.nb.name + '（' + TOUCH[h.nb.id] + '）に届く日。空の星が' + ownerName + 'さんの星に触れて、二人の間にテーマが流れる日です。' + (theme ? theme + ' ' : '') + coupleTail(h.tb.id, [h.nb.id], h.asp.kind);
+  return otherName + 'さんのトランジット' + h.tb.name + 'が、' + ownerName + 'さんのネイタル' + h.nb.name + '（' + TOUCH[h.nb.id] + '）に届く日。二人の間にテーマが流れる日です。' + (theme ? theme + ' ' : '') + coupleTail(h.tb.id, [h.nb.id], h.asp.kind);
 }
 const THEME_T = {
   0: '二人の時間や予定', 1: '気持ちのやり取り', 2: '連絡や会話',
@@ -473,12 +483,13 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
         if (!crossBest.has(key) || crossBest.get(key).br.orbSum > br.orbSum) crossBest.set(key, { day, br });
       }
     }
-    const crossCards = [...crossBest.values()].sort((x, y) => x.br.orbSum - y.br.orbSum).slice(0, 3);
+    const crossCards = [...crossBest.values()].sort((x, y) => x.br.orbSum - y.br.orbSum).slice(0, 6);
     const cardFor = (it) => {
       const ownerName = it.owner === 'A' ? C.A.name : C.B.name;
-      return `<div class="card ${it.h.asp.kind === 'hard' ? 'hard' : ''}"><div class="ttl">${it.day.m}月${it.day.d}日 ― 空の${it.h.tb.emoji}${it.h.tb.name} × ${esc(ownerName)}の${it.h.nb.emoji}${it.h.nb.name}</div>` +
+      const otherName = it.owner === 'A' ? C.B.name : C.A.name;
+      return `<div class="card ${it.h.asp.kind === 'hard' ? 'hard' : ''}"><div class="ttl">${it.day.m}月${it.day.d}日 ― ${esc(otherName)}のトランジット${it.h.tb.emoji}${it.h.tb.name} × ${esc(ownerName)}のネイタル${it.h.nb.emoji}${it.h.nb.name}</div>` +
         `<div class="asp">${it.h.asp.emoji} ${it.h.asp.name}（オーブ ${it.h.orb.toFixed(1)}°）</div>` +
-        `<div class="desc">${coupleTextSingle(ownerName, it.h)}</div></div>`;
+        `<div class="desc">${coupleTextSingle(ownerName, otherName, it.h)}</div></div>`;
     };
     const cardForCross = (it) => {
       const br = it.br;
@@ -487,11 +498,11 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
         `<div class="asp">${esc(C.A.name)}の${br.ha.nb.emoji}${br.ha.nb.name}に${br.ha.asp.emoji} ${br.ha.asp.name}（オーブ ${br.ha.orb.toFixed(1)}°）／ ${esc(C.B.name)}の${br.hb.nb.emoji}${br.hb.nb.name}に${br.hb.asp.emoji} ${br.hb.asp.name}（オーブ ${br.hb.orb.toFixed(1)}°）</div>` +
         `<div class="desc">${coupleTextCross(C.A.name, C.B.name, br)}</div></div>`;
     };
-    const allCards = [
-      ...crossCards.map(it => ({ m: it.day.m, d: it.day.d, html: cardForCross(it) })),
-      ...topCards.slice(0, Math.max(0, 6 - crossCards.length)).map(it => ({ m: it.day.m, d: it.day.d, html: cardFor(it) }))
-    ].sort((a, b2) => (a.m - b2.m) || (a.d - b2.d));
-    const cardsHtml = allCards.map(c => c.html).join('');
+    // ハイライトは「どちらかのトランジット × 相手のネイタル」のクロス接触だけにする
+    const allCards = topCards.map(it => ({ m: it.day.m, d: it.day.d, html: cardFor(it) }))
+      .sort((a, b2) => (a.m - b2.m) || (a.d - b2.d));
+    const cardsHtml = allCards.length ? allCards.map(c => c.html).join('') :
+      '<p style="font-size:13px; color:#8a8178;">この期間は、二人の星が触れ合う配置はありませんでした。</p>';
     let html = '';
     if (mode === 'month') {
       const sorted = [...days].sort((a, b2) => b2.score - a.score);
@@ -502,7 +513,7 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
         `<p class="counts">💞 おすすめの日: ${byDate(sorted.slice(0, 3)).map(fmt).join(' ／ ')}<br>⚡ すれ違い注意: ${byDate(sorted.slice(-3)).map(fmt).join(' ／ ')}</p>` +
         `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※おすすめの日は「その日の二人の総合点」、ハイライトは「この期間で一番くっきり出る配置」で選んでいます。選び方が違うため、日付が重なることも、ずれることもあります。</p>` +
         `<h3 class="sec">✨ この月のハイライト</h3>` +
-        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">🤝「二人をつなぐ日」は、同じ空の星が二人両方の星に届く日です。片方にはハードな角度でも、もう片方がソフトなら、二人でいれば良い方に働きます（ブレンド）。</p>` + cardsHtml;
+        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ハイライトは「相手のトランジット（空の星）が、あなたのネイタル（出生の星）に届く日」と、その逆を選んでいます。片方の空が、もう片方の星に触れる日です。</p>` + cardsHtml;
     } else {
       const rows = [];
       for (let m = 1; m <= 12; m++) {
@@ -517,7 +528,7 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
         rows.map(r => `<div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><span style="width:38px; font-size:13px;">${r.m}月</span><div style="flex:1; background:rgba(255,255,255,0.05); border-radius:4px;"><div style="width:${r.ma}%; background:linear-gradient(90deg,#9a7d55,#c5a880); height:14px; border-radius:4px;"></div></div><span style="width:30px; font-size:13px;">${r.ma}</span></div>`).join('') +
         `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ベスト月・注意月は「月ごとの平均点」、ハイライトは「この期間で一番くっきり出る配置」で選んでいます。選び方が違うため、月と日付がずれることもあります。</p>` +
         `<h3 class="sec">✨ この年のハイライト</h3>` +
-        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">🤝「二人をつなぐ日」は、同じ空の星が二人両方の星に届く日です。片方にはハードな角度でも、もう片方がソフトなら、二人でいれば良い方に働きます（ブレンド）。</p>` + cardsHtml;
+        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ハイライトは「相手のトランジット（空の星）が、あなたのネイタル（出生の星）に届く日」と、その逆を選んでいます。片方の空が、もう片方の星に触れる日です。</p>` + cardsHtml;
     }
     out.innerHTML = html;
     out.scrollIntoView({ behavior: 'smooth' });
