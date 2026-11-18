@@ -322,6 +322,19 @@ window.showWheel = (aid, bid) => {
   document.getElementById('wheelModal').style.display = 'flex';
 };
 window.closeWheel = () => { document.getElementById('wheelModal').style.display = 'none'; };
+// 期間予報のカード用: 内側=その人のネイタル、外側=その日の空（トランジット）
+window.showPeriodWheel = (i) => {
+  const it = (window.__period || [])[i];
+  const C = window.__charts || {};
+  if (!it || !C.posA || !it.day.tPos) return;
+  const ownerPos = it.owner === 'A' ? C.posA : C.posB;
+  const ownerName = it.owner === 'A' ? C.A.name : C.B.name;
+  const nb = BODIES.find(b => b.id === it.h.nb.id), tb = BODIES.find(b => b.id === it.h.tb.id);
+  const h2 = { a: nb, b: tb, asp: it.h.asp, orb: it.h.orb };
+  document.getElementById('wheelTitle').textContent = `${it.day.y}年${it.day.m}月${it.day.d}日 ― ${ownerName}のネイタル${nb.name} × 空の${tb.name} ― ${it.h.asp.name}（オーブ ${it.h.orb.toFixed(1)}°）`;
+  document.getElementById('wheelBody').innerHTML = wheelSVG(ownerPos, it.day.tPos, h2, ownerName + 'のネイタル', 'その日の空');
+  document.getElementById('wheelModal').style.display = 'flex';
+};
 function signOf(lon) { return SIGNS[Math.floor(((lon % 360) + 360) % 360 / 30)]; }
 function degOf(lon) { return (((lon % 30) + 30) % 30).toFixed(1); }
 function esc(s) { return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -369,6 +382,7 @@ document.getElementById('calcBtn').addEventListener('click', async () => {
       `<div class="scorebox"><div style="color:#8a8178;font-size:13px;">${esc(A.name)} × ${esc(B.name)} のシンクロ度</div><div class="score">${score}</div><div class="verdict">${verdict(score)}</div></div>` +
       (fateChecks(posA, posB, A.name, B.name).map(f => `<div style="background:linear-gradient(135deg, rgba(197,168,128,0.25), rgba(197,168,128,0.08)); border:1px solid #c5a880; border-radius:10px; padding:12px 14px; margin-bottom:12px;"><div style="font-weight:700; color:#c5a880; margin-bottom:4px;">💫 運命の人の配置 ― ${esc(f.fromName)}の${f.body === 0 ? '☉太陽' : '♀金星'} × ${esc(f.toName)}の☊ドラゴンヘッド ☌（オーブ ${f.orb.toFixed(1)}°）</div><div style="font-size:14px;">${f.text}<br><span style="color:#c5a880;">（割と多いですが相性良いのは間違いなし！）</span></div></div>`).join('')) +
       `<p class="counts">ハーモニー ${harmony.length}件 ／ 刺激・課題 ${hard.length}件</p>` +
+      '<p class="note" style="margin-top:0;">説明文をタップすると、そのアスペクトの円（チャート）が開きます。</p>' +
       ((A.unknown || B.unknown) ? '<p class="note">※出生時刻が不明な方については、ASC・MCを除いて計算しています。</p>' : '') +
       `<h3 class="sec">💞 ハーモニー</h3>` + (harmony.slice(0, 10).map(card).join('') || '<p class="note">該当するアスペクトはありませんでした。</p>') +
       `<h3 class="sec">⚡ 刺激・課題</h3>` + (hard.slice(0, 8).map(card).join('') || '<p class="note">該当するアスペクトはありませんでした。</p>') +
@@ -560,7 +574,7 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
         let bridgeTotal = bridges.reduce((s, b2) => s + b2.bonus, 0);
         bridgeTotal = Math.max(-8, Math.min(10, bridgeTotal));
         net += bridgeTotal;
-        days.push({ y: year, m, d, score: dayScore(net), hitsA, hitsB, bridges });
+        days.push({ y: year, m, d, score: dayScore(net), hitsA, hitsB, bridges, tPos });
       }
     }
     const avg = Math.round(days.reduce((s, x) => s + x.score, 0) / days.length);
@@ -609,7 +623,7 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
     const cardFor = (it) => {
       const ownerName = it.owner === 'A' ? C.A.name : C.B.name;
       const otherName = it.owner === 'A' ? C.B.name : C.A.name;
-      return `<div class="card ${it.h.asp.kind === 'hard' ? 'hard' : ''}"><div class="ttl">${it.day.m}月${it.day.d}日 ― ${esc(otherName)}のトランジット${it.h.tb.emoji}${it.h.tb.name} × ${esc(ownerName)}のネイタル${it.h.nb.emoji}${it.h.nb.name}</div>` +
+      return `<div class="card ${it.h.asp.kind === 'hard' ? 'hard' : ''}" style="cursor:pointer;" onclick="showPeriodWheel(${topCards.indexOf(it)})"><div class="ttl">${it.day.m}月${it.day.d}日 ― ${esc(otherName)}のトランジット${it.h.tb.emoji}${it.h.tb.name} × ${esc(ownerName)}のネイタル${it.h.nb.emoji}${it.h.nb.name}</div>` +
         `<div class="asp">${it.h.asp.emoji} ${it.h.asp.name}（オーブ ${it.h.orb.toFixed(1)}°）</div>` +
         `<div style="font-size:12px; color:#8a8178; margin-bottom:6px;">影響する期間：${spanFor(it)}（${it.day.m}月${it.day.d}日がピーク）</div>` +
         `<div class="desc">${coupleTextSingle(ownerName, otherName, it.h)}</div></div>`;
@@ -622,6 +636,7 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
         `<div class="desc">${coupleTextCross(C.A.name, C.B.name, br)}</div></div>`;
     };
     // ハイライトは「どちらかのトランジット × 相手のネイタル」のクロス接触だけにする
+    window.__period = topCards;
     const allCards = topCards.map(it => ({ m: it.day.m, d: it.day.d, html: cardFor(it) }))
       .sort((a, b2) => (a.m - b2.m) || (a.d - b2.d));
     const cardsHtml = allCards.length ? allCards.map(c => c.html).join('') :
@@ -636,7 +651,7 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
         `<p class="counts">💞 おすすめの日: ${byDate(sorted.slice(0, 3)).map(fmt).join(' ／ ')}<br>⚡ すれ違い注意: ${byDate(sorted.slice(-3)).map(fmt).join(' ／ ')}</p>` +
         `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※おすすめの日は「その日の二人の総合点」、ハイライトは「この期間で一番くっきり出る配置」で選んでいます。選び方が違うため、日付が重なることも、ずれることもあります。</p>` +
         `<h3 class="sec">✨ この月のハイライト</h3>` +
-        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ハイライトは「相手のトランジット（空の星）が、あなたのネイタル（出生の星）に届く日」と、その逆を選んでいます。片方の空が、もう片方の星に触れる日です。</p>` + cardsHtml;
+        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ハイライトは「相手のトランジット（空の星）が、あなたのネイタル（出生の星）に届く日」と、その逆を選んでいます。片方の空が、もう片方の星に触れる日です。説明文をタップすると、その日の円（チャート）が開きます。</p>` + cardsHtml;
     } else {
       const rows = [];
       for (let m = 1; m <= 12; m++) {
@@ -651,7 +666,7 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
         rows.map(r => `<div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><span style="width:38px; font-size:13px;">${r.m}月</span><div style="flex:1; background:rgba(255,255,255,0.05); border-radius:4px;"><div style="width:${r.ma}%; background:linear-gradient(90deg,#9a7d55,#c5a880); height:14px; border-radius:4px;"></div></div><span style="width:30px; font-size:13px;">${r.ma}</span></div>`).join('') +
         `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ベスト月・注意月は「月ごとの平均点」、ハイライトは「この期間で一番くっきり出る配置」で選んでいます。選び方が違うため、月と日付がずれることもあります。</p>` +
         `<h3 class="sec">✨ この年のハイライト</h3>` +
-        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ハイライトは「相手のトランジット（空の星）が、あなたのネイタル（出生の星）に届く日」と、その逆を選んでいます。片方の空が、もう片方の星に触れる日です。</p>` + cardsHtml;
+        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ハイライトは「相手のトランジット（空の星）が、あなたのネイタル（出生の星）に届く日」と、その逆を選んでいます。片方の空が、もう片方の星に触れる日です。説明文をタップすると、その日の円（チャート）が開きます。</p>` + cardsHtml;
     }
     out.innerHTML = html;
     out.scrollIntoView({ behavior: 'smooth' });
