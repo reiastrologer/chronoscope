@@ -284,6 +284,9 @@
           var list = document.getElementById('scheduleList'); if (!list) return;
           var target = Date.UTC(Y, m - 1, d);
           var kept = 0, nearest = null, nearestDiff = 1e15;
+          var goodN = 0, hardN = 0;
+          var THEME = { '☉': '自分らしさと勝負ごと', '☽': '気持ちと体調', '☿': '連絡と仕事の段取り', '♀': '恋愛とお金', '♂': '仕事の勢いと行動', '♃': 'チャンスと広がり', '♄': '責任と積み重ね', '♅': '変化と新しいこと', '♆': '直感とイメージ', '♇': '深い見直し' };
+          var goodThemes = {}, hardThemes = {};
           list.querySelectorAll('.schedule-card').forEach(function (card) {
             var tx = card.textContent || '';
             if (tx.indexOf('💻') < 0) { card.style.display = 'none'; return; }
@@ -300,8 +303,30 @@
             }
             if (pm) { var pd = Date.UTC(Y, +pm[1] - 1, +pm[2]); var diff = Math.abs(pd - target); if (diff < nearestDiff) { nearestDiff = diff; nearest = pm[1] + '月' + pm[2] + '日'; } }
             card.style.display = keep ? '' : 'none';
-            if (keep) kept++;
+            if (keep) {
+              kept++;
+              var gm = tx.match(/【\s*\S+\s+\S+\s+(\S+)\s*】/);
+              var theme = gm && THEME[gm[1]] ? THEME[gm[1]] : null;
+              if (tx.indexOf('⚠️') >= 0 || tx.indexOf('注意期') >= 0) { hardN++; if (theme) hardThemes[theme] = (hardThemes[theme] || 0) + 1; }
+              else { goodN++; if (theme) goodThemes[theme] = (goodThemes[theme] || 0) + 1; }
+            }
           });
+          function topThemes(obj) { return Object.keys(obj).sort(function (a, b) { return obj[b] - obj[a]; }).slice(0, 2); }
+          var summary = '';
+          if (kept === 0) summary = 'つまりこの日は、表立った配置が少ない、静かな日です。いつも通り過ごすのが一番の日です。';
+          else {
+            var air, tip;
+            if (goodN > 0 && hardN > 0 && Math.abs(goodN - hardN) < 2) { air = '追い風と注意が同居する日です。「どっち？」と迷う日は、使い分けが大事になります。'; tip = '良い話は進めて、衝動で決めることだけ避けてください。'; }
+            else if (goodN - hardN >= 2) { air = '追い風が多めの日です。'; tip = '動くならこの日です。'; }
+            else if (hardN - goodN >= 2) { air = '注意が多めの日です。'; tip = '大事な決めごとは、できれば別の日に。無理をしないのが吉です。'; }
+            else if (hardN === 0) { air = '追い風だけが目立つ日です。'; tip = '動くならこの日です。'; }
+            else { air = '注意だけが目立つ日です。'; tip = '大事な決めごとは、できれば別の日に。'; }
+            summary = 'つまりこの日は、' + air;
+            var gt = topThemes(goodThemes), ht = topThemes(hardThemes);
+            if (gt.length) summary += ' 追い風のテーマは「' + gt.join('」「') + '」。';
+            if (ht.length) summary += ' 注意のテーマは「' + ht.join('」「') + '」。';
+            summary += ' ' + tip;
+          }
           var tabs = document.getElementById('monthTabs'); if (tabs) tabs.style.display = 'none';
           var hs = document.getElementById('halfSumSection'); if (hs) hs.style.display = 'none';
           var old = document.getElementById('dayBanner'); if (old) old.remove();
@@ -310,6 +335,8 @@
           bn.style.cssText = 'max-width:880px;margin:18px auto 0;padding:14px 16px;border:1px solid #c5a880;border-radius:12px;background:rgba(197,168,128,0.08);text-align:center;scroll-margin-top:140px;';
           bn.innerHTML = '<div style="font-size:17px;font-weight:700;color:#e8cf9f;">📅 ' + Y + '年' + m + '月' + d + '日の運勢</div>' +
             '<div style="font-size:13px;color:#c5a880;margin-top:4px;">この日に効いている配置：' + kept + '件' + (kept === 0 && nearest ? '（一番近いピークは ' + nearest + ' です）' : '') + '</div>' +
+            '<div style="font-size:12px;color:#8a8178;margin-top:4px;">※その日がピークとは限りません。影響期間がその日を含む配置を表示していますので、前後の日もあわせてご覧ください。</div>' +
+            '<div style="font-size:14px; line-height:1.8; color:#faf6f0; margin-top:10px; text-align:left;">' + summary + '</div>' +
             '<button type="button" id="dayAllBtn" style="margin-top:10px;background:transparent;color:#ffd88a;border:1.5px solid #b98a2f;border-radius:999px;padding:8px 18px;font-size:13.5px;font-weight:700;cursor:pointer;">月全体を見る</button>';
           list.parentElement.insertBefore(bn, list);
           document.getElementById('dayAllBtn').addEventListener('click', resetView);
