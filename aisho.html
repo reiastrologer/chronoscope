@@ -547,10 +547,12 @@ function transitPositions(jd) {
   pos[10] = calcPos(jd, 11, 260);
   return pos;
 }
+let FAST_ONLY = false; // 月間モードでは速い惑星だけに絞る
 function dayAspects(tPos, natalPos) {
   const hits = [];
   for (const tb of BODIES.slice(0, 11)) {
     if (tb.id === 1) continue; // 運行の月は速すぎて毎日のように当たるため、点数にも入れない
+    if (FAST_ONLY && ![0, 2, 3, 4].includes(tb.id)) continue; // 月間: 太陽・水星・金星・火星のみ
     for (const nb of BODIES) {
       if (natalPos[nb.id] === undefined) continue;
       const diff = angDiff(tPos[tb.id], natalPos[nb.id]);
@@ -585,6 +587,7 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
   const btn = document.getElementById('periodBtn');
   const out = document.getElementById('periodResult');
   const mode = document.getElementById('periodMode').value;
+  FAST_ONLY = (mode === 'month');
   const year = parseInt(document.getElementById('periodYear').value, 10);
   const month = parseInt(monthSel.value, 10);
   btn.disabled = true; btn.textContent = '空模様を読んでいます... ⏳';
@@ -670,7 +673,7 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
       const ownerName = it.owner === 'A' ? C.A.name : C.B.name;
       const otherName = it.owner === 'A' ? C.B.name : C.A.name;
       return `<div class="card ${it.h.asp.kind === 'hard' ? 'hard' : ''}" style="cursor:pointer;" onclick="showPeriodWheel(${topCards.indexOf(it)})"><div class="ttl">${it.day.m}月${it.day.d}日 ― ${esc(otherName)}のトランジット${it.h.tb.emoji}${it.h.tb.name} × ${esc(ownerName)}のネイタル${it.h.nb.emoji}${it.h.nb.name}</div>` +
-        `<div class="asp">${it.h.asp.emoji} ${it.h.asp.name}（オーブ ${it.h.orb.toFixed(1)}°）</div>` +
+        `<div class="asp">${it.h.asp.kind === 'hard' ? '⚠️ 注意' : '💖 好調'} ― ${it.h.asp.emoji} ${it.h.asp.name}（オーブ ${it.h.orb.toFixed(1)}°）</div>` +
         `<div style="font-size:12px; color:#8a8178; margin-bottom:6px;">影響する期間：${spanFor(it)}（${it.day.m}月${it.day.d}日がピーク）</div>` +
         `<div class="desc">${coupleTextSingle(ownerName, otherName, it.h)}</div></div>`;
     };
@@ -694,6 +697,7 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
       const fmt = (x) => `${x.m}月${x.d}日（${x.score}）`;
       html = `<div class="scorebox"><div style="color:#8a8178;font-size:13px;">${year}年${month}月の二人の空模様</div><div class="score">${avg}</div>` +
         `<div class="verdict">${verdict(avg)}</div><div style="font-size:12px; color:#8a8178; margin-top:6px;">※シンクロ度（生まれ持った相性）とは別のものさしです。この点数は40前後が真ん中で、50あれば良い時期です。</div></div>` +
+        `<p style="font-size:12px; color:#8a8178; margin:2px 0 6px;">※月間は、動きの速い星（太陽・水星・金星・火星）だけで読んでいます。大きな星の流れは、年間で見てね。</p>` +
         `<p class="counts">💞 おすすめの日: ${byDate(sorted.slice(0, 3)).map(fmt).join(' ／ ')}<br>⚡ すれ違い注意: ${byDate(sorted.slice(-3)).map(fmt).join(' ／ ')}</p>` +
         `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※おすすめの日は「その日の二人の総合点」、ハイライトは「この期間で一番くっきり出る配置」で選んでいます。選び方が違うため、日付が重なることも、ずれることもあります。</p>` +
         `<h3 class="sec">✨ この月のハイライト</h3>` +

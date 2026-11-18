@@ -59,7 +59,14 @@
         <a href="./omajinai.html" class="topTab">✨ クロノスくんのおまじない</a>
       </div>
     </div>
-        <div id="app"></div>
+            <div style="max-width: 880px; margin: 14px auto 0; padding: 0 16px;">
+      <div style="display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; background: rgba(197,168,128,0.06); border: 1px solid rgba(197,168,128,0.25); border-radius: 12px; padding: 12px;">
+        <span style="font-size: 13.5px; color: #c5a880;">📅 見たい日</span>
+        <input type="date" id="jumpDate" style="padding: 8px; border-radius: 8px; background: #1c1a17; color: #faf6f0; border: 1px solid #4a4238; font-size: 15px; color-scheme: dark;">
+        <button id="jumpBtn" type="button" style="background: linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color: #e8cf9f; border: 1px solid #c5a880; border-radius: 999px; padding: 9px 18px; font-size: 14px; font-weight: 700; cursor: pointer;">その日へ飛ぶ 🚀</button>
+      </div>
+    </div>
+    <div id="app"></div>
     
 
 
@@ -266,6 +273,58 @@
         }, 250);
         document.addEventListener('change', function (e) {
           if (e.target && ['birth_year', 'birth_month', 'birth_day', 'birthtime', 'birthplace', 'unkMain'].indexOf(e.target.id) >= 0) save();
+        });
+      })();
+    </script>
+    <script>
+      (function () {
+        var jd = document.getElementById('jumpDate');
+        if (jd && !jd.value) { var t = new Date(); var pad = function (n) { return (n < 10 ? '0' : '') + n; }; jd.value = t.getFullYear() + '-' + pad(t.getMonth() + 1) + '-' + pad(t.getDate()); }
+        function monthHead(m) {
+          var hs = document.querySelectorAll('#app h2');
+          for (var i = 0; i < hs.length; i++) { if (hs[i].textContent.indexOf(m + '月の星') >= 0) return hs[i]; }
+          return null;
+        }
+        function findCard(m, d) {
+          var head = monthHead(m); if (!head) return null;
+          var re = new RegExp('🎯\\s*' + m + '月' + d + '日');
+          var reSpan = new RegExp('影響期間[\\s\\S]*?' + m + '月' + d + '日');
+          var divs = document.querySelectorAll('#app div');
+          var best = null, fallback = null;
+          for (var i = 0; i < divs.length; i++) {
+            var el = divs[i];
+            if (el.compareDocumentPosition(head) & 2) continue; // headより前は除く
+            var tx = el.textContent || '';
+            if (tx.indexOf('💻') < 0) continue;
+            if (re.test(tx) && (!best || tx.length < best.textContent.length)) best = el;
+            else if (!fallback && reSpan.test(tx)) fallback = el;
+          }
+          return best || fallback;
+        }
+        function jump(m, d) {
+          var card = findCard(m, d);
+          var target = card || monthHead(m);
+          if (!target) return false;
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (card) {
+            card.style.transition = 'box-shadow 0.4s';
+            var n = 0;
+            var iv = setInterval(function () { n++; card.style.boxShadow = (n % 2 ? '0 0 0 3px rgba(255,216,138,0.95)' : '0 0 0 0 rgba(255,216,138,0)'); if (n > 5) { clearInterval(iv); card.style.boxShadow = ''; } }, 450);
+          }
+          return true;
+        }
+        var btn = document.getElementById('jumpBtn');
+        if (btn) btn.addEventListener('click', function () {
+          if (!jd || !jd.value) return;
+          var parts = jd.value.split('-').map(Number);
+          var y = parts[0], m = parts[1], d = parts[2];
+          var sy = document.getElementById('scanyear');
+          if (monthHead(m) && sy && parseInt(sy.value, 10) === y) { jump(m, d); return; }
+          if (sy) sy.value = y;
+          var cb = document.getElementById('calcBtn');
+          if (cb) cb.click();
+          var tries = 0;
+          var iv = setInterval(function () { tries++; if (jump(m, d) || tries > 60) clearInterval(iv); }, 500);
         });
       })();
     </script>
