@@ -13,6 +13,9 @@
       .topTab { display: block; text-align: center; padding: 13px 8px; border-radius: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.28), rgba(197,168,128,0.10)); border: 1px solid #c5a880; color: #e8cf9f; font-weight: 700; font-size: 15px; text-decoration: none; }
       .topTab.active { background: linear-gradient(135deg, rgba(255,216,138,0.55), rgba(197,168,128,0.25)); color: #ffe9b8; border-color: #ffd88a; }
     </style>
+  <script>
+      try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __nav.type === 'reload') location.replace('./index.html'); } catch (e) {}
+    </script>
   </head>
   <body>
     <div style="max-width: 880px; margin: 0 auto; padding: 24px 16px 0;">
@@ -277,7 +280,33 @@
       } catch (e) {}
     </script>
     <div style="max-width: 880px; margin: 30px auto 0; padding: 0 16px 28px; text-align: center;">
-      <p style="font-size: 12px; color: #8a8178;"><a href="./privacy.html" style="color: #9a8d7a;">プライバシーと安全性について（入力した情報は送信・保存されません）</a></p>
+      <p style="font-size: 12px; color: #8a8178;"><a href="./privacy.html" style="color: #9a8d7a;">プライバシーと安全性について（入力した情報は送信されません）</a></p>
     </div>
+    <script>
+      (function () {
+        var KEY = 'chronoscope_birth_v1';
+        function $(id) { return document.getElementById(id); }
+        function save() {
+          try {
+            var data = { y: parseInt($('skY').value), m: parseInt($('skM').value), d: parseInt($('skD').value), time: $('skT').value || '12:00', pref: $('skPref').value, unknown: !!$('psUnknown').checked };
+            if (data.y && data.m && data.d) localStorage.setItem(KEY, JSON.stringify(data));
+          } catch (e) {}
+        }
+        function restore() {
+          try {
+            var raw = localStorage.getItem(KEY); if (!raw) return;
+            var data = JSON.parse(raw);
+            if (data.y) $('skY').value = data.y + '年';
+            if (data.m) $('skM').value = data.m + '月';
+            if (data.d) $('skD').value = data.d + '日';
+            if (data.time) $('skT').value = data.time;
+            if (data.pref) $('skPref').value = data.pref;
+            if (data.unknown) $('psUnknown').checked = true;
+          } catch (e) {}
+        }
+        restore();
+        ['skY', 'skM', 'skD', 'skT', 'skPref', 'psUnknown'].forEach(function (id) { var el = $(id); if (el) el.addEventListener('change', save); });
+      })();
+    </script>
   </body>
 </html>

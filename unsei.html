@@ -22,6 +22,9 @@
       }
     </style>
     <script type="module" crossorigin src="./assets/index-DBhTetfo.js"></script>
+  <script>
+      try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __nav.type === 'reload') location.replace('./index.html'); } catch (e) {}
+    </script>
   </head>
   <body>
     <div style="max-width: 880px; margin: 0 auto; padding: 24px 16px 0;">
@@ -230,7 +233,41 @@
     </script>
     <footer style="max-width: 880px; margin: 0 auto; padding: 28px 20px 40px; text-align: center; font-size: 12px; line-height: 1.9; color: #8a8178; border-top: 1px solid rgba(197,168,128,0.25);">
       本サイトは、Swiss Ephemeris（© Astrodienst AG）のライセンス規約（GNU AGPL）を厳格に守り、無償提供の理念に従って運営しております。有償で提供することはありません。どなたでも自由にお使いください。
-      <br><a href="./privacy.html" target="_blank" rel="noopener noreferrer" style="color: #c5a880; text-decoration: underline;">プライバシーと安全性について（入力した情報は送信・保存されません）</a>
+      <br><a href="./privacy.html" target="_blank" rel="noopener noreferrer" style="color: #c5a880; text-decoration: underline;">プライバシーと安全性について（入力した情報は送信されません）</a>
     </footer>
+    <script>
+      (function () {
+        var KEY = 'chronoscope_birth_v1';
+        function $(id) { return document.getElementById(id); }
+        function selText(id) { var el = $(id); if (!el || el.selectedIndex < 0) return ''; return el.options[el.selectedIndex].textContent.trim(); }
+        function setByText(id, text) { var el = $(id); if (!el) return; for (var i = 0; i < el.options.length; i++) { if (el.options[i].textContent.trim() === text) { el.selectedIndex = i; return; } } }
+        function save() {
+          try {
+            var data = { y: parseInt(selText('birth_year')), m: parseInt(selText('birth_month')), d: parseInt(selText('birth_day')), time: ($('birthtime') && $('birthtime').value) || '12:00', pref: selText('birthplace'), unknown: !!($('unkMain') && $('unkMain').checked) };
+            if (data.y && data.m && data.d) localStorage.setItem(KEY, JSON.stringify(data));
+          } catch (e) {}
+        }
+        function restore() {
+          try {
+            var raw = localStorage.getItem(KEY); if (!raw) return;
+            var data = JSON.parse(raw);
+            if (data.y) setByText('birth_year', data.y + '年');
+            if (data.m) setByText('birth_month', data.m + '月');
+            if (data.d) setByText('birth_day', data.d + '日');
+            if (data.time && $('birthtime')) $('birthtime').value = data.time;
+            if (data.pref) setByText('birthplace', data.pref);
+            if (data.unknown && $('unkMain') && !$('unkMain').checked) { $('unkMain').checked = true; $('unkMain').dispatchEvent(new Event('change')); }
+          } catch (e) {}
+        }
+        var tries = 0;
+        var iv = setInterval(function () {
+          tries++;
+          if (($('birth_year') && $('birthplace')) || tries > 60) { clearInterval(iv); restore(); }
+        }, 250);
+        document.addEventListener('change', function (e) {
+          if (e.target && ['birth_year', 'birth_month', 'birth_day', 'birthtime', 'birthplace', 'unkMain'].indexOf(e.target.id) >= 0) save();
+        });
+      })();
+    </script>
   </body>
 </html>

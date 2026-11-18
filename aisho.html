@@ -49,6 +49,9 @@
   .backlink a, footer a { color: #c5a880; }
   footer { max-width: 880px; margin: 0 auto; padding: 28px 20px 40px; text-align: center; font-size: 12px; line-height: 1.9; color: #8a8178; border-top: 1px solid rgba(197,168,128,0.25); }
 </style>
+<script>
+  try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __nav.type === 'reload') location.replace('./index.html'); } catch (e) {}
+</script>
 </head>
 <body>
 <div class="wrap">
@@ -139,7 +142,7 @@
 </div>
 <footer>
   本サイトは、Swiss Ephemeris（© Astrodienst AG）のライセンス規約（GNU AGPL）を厳格に守り、無償提供の理念に従って運営しております。有償で提供することはありません。どなたでも自由にお使いください。
-  <br><a href="./privacy.html" target="_blank" rel="noopener noreferrer">プライバシーと安全性について（入力した情報は送信・保存されません）</a>
+  <br><a href="./privacy.html" target="_blank" rel="noopener noreferrer">プライバシーと安全性について（入力した情報は送信されません）</a>
 </footer>
 
 <script>
@@ -720,6 +723,27 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
   }
 });
 
+</script>
+<script>
+  (function () {
+    var KEY = 'chronoscope_aisho_v1', SHARED = 'chronoscope_birth_v1';
+    function $(id) { return document.getElementById(id); }
+    function setPlace(id, name) { var el = $(id); if (!el || !name) return; for (var i = 0; i < el.options.length; i++) { if (el.options[i].textContent.trim() === name) { el.selectedIndex = i; return; } } }
+    function placeName(id) { var el = $(id); if (!el || el.selectedIndex < 0) return ''; return el.options[el.selectedIndex].textContent.trim(); }
+    function read(sfx) { return { name: $('name' + sfx).value, date: $('date' + sfx).value, time: $('time' + sfx).value, place: placeName('place' + sfx), unknown: !!$('unknown' + sfx).checked }; }
+    function apply(sfx, d) { if (!d) return; if (d.name) $('name' + sfx).value = d.name; if (d.date) $('date' + sfx).value = d.date; if (d.time) $('time' + sfx).value = d.time; if (d.place) setPlace('place' + sfx, d.place); if (d.unknown) $('unknown' + sfx).checked = true; }
+    function save() { try { localStorage.setItem(KEY, JSON.stringify({ A: read('A'), B: read('B') })); } catch (e) {} }
+    function restore() {
+      try {
+        var raw = localStorage.getItem(KEY);
+        if (raw) { var d = JSON.parse(raw); apply('A', d.A); apply('B', d.B); return; }
+        var sh = localStorage.getItem(SHARED);
+        if (sh) { var s2 = JSON.parse(sh); if (s2.y && s2.m && s2.d) { var pad = function (n) { return (n < 10 ? '0' : '') + n; }; apply('A', { date: s2.y + '-' + pad(s2.m) + '-' + pad(s2.d), time: s2.time, place: s2.pref, unknown: s2.unknown }); } }
+      } catch (e) {}
+    }
+    restore();
+    ['nameA', 'dateA', 'timeA', 'placeA', 'unknownA', 'nameB', 'dateB', 'timeB', 'placeB', 'unknownB'].forEach(function (id) { var el = $(id); if (el) el.addEventListener('change', save); });
+  })();
 </script>
 </body>
 </html>
