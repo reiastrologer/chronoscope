@@ -275,9 +275,10 @@
         function pad(n) { return (n < 10 ? '0' : '') + n; }
         var dayTarget = null, dayAppliedFor = '', lastSig = '', stableN = 0, directorOn = false, dayDeadline = 0;
         var daySteps = [], stepIdx = 0, harvest = [], internalNav = false, currentScanYear = null;
+        var scrolledKey = '';
         function coversTarget(tx, Y, m, d, target) {
           if (tx.indexOf('💻') < 0) return false;
-          var pm = tx.match(/🎯\s*(\d+)月(\d+)日/);
+          var pm = tx.match(/ピーク\s*(\d+)月(\d+)日/) || tx.match(/🎯[^0-9]*(\d+)月(\d+)日/);
           var sm = tx.match(/影響期間[:：]\s*(\d+)月(\d+)日\s*〜\s*(\d+)月(\d+)日/);
           if (pm && +pm[1] === m && +pm[2] === d) return true;
           if (sm) {
@@ -290,7 +291,7 @@
           return false;
         }
         function resetView() {
-          dayTarget = null; daySteps = []; stepIdx = 0; harvest = [];
+          dayTarget = null; daySteps = []; stepIdx = 0; harvest = []; scrolledKey = '';
           var list = document.getElementById('scheduleList');
           if (list) { list.style.visibility = ''; list.querySelectorAll('.schedule-card').forEach(function (c) { c.style.display = ''; }); }
           var ld0 = document.getElementById('dayLoading'); if (ld0) ld0.remove();
@@ -311,7 +312,7 @@
           list.querySelectorAll('.schedule-card').forEach(function (card) {
             var tx = card.textContent || '';
             if (tx.indexOf('💻') < 0) { card.style.display = 'none'; return; }
-            var pm = tx.match(/🎯\s*(\d+)月(\d+)日/);
+            var pm = tx.match(/ピーク\s*(\d+)月(\d+)日/) || tx.match(/🎯[^0-9]*(\d+)月(\d+)日/);
             var keep = coversTarget(tx, Y, m, d, target);
             if (pm) { var pd = Date.UTC(Y, +pm[1] - 1, +pm[2]); var diff = Math.abs(pd - target); if (diff < nearestDiff) { nearestDiff = diff; nearest = pm[1] + '月' + pm[2] + '日'; } }
             card.style.display = keep ? '' : 'none';
@@ -367,7 +368,10 @@
           list.style.visibility = '';
           var ld2 = document.getElementById('dayLoading'); if (ld2) ld2.remove();
           document.getElementById('dayAllBtn').addEventListener('click', resetView);
-          bn.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          addFeelButtons(Y, m, d);
+          renderFeelStats();
+          var skey = Y + '-' + m + '-' + d;
+          if (scrolledKey !== skey) { scrolledKey = skey; bn.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
         }
         function sigOf(list) { return list.innerHTML.length + ':' + list.querySelectorAll('.schedule-card').length; }
         function monthOf(list) { var h = list.querySelector('h2'); if (!h) return null; var mm = h.textContent.match(/(\d+)月の星/); return mm ? +mm[1] : null; }
@@ -383,6 +387,72 @@
         function appendHarvest(list) {
           var seen = {}; list.querySelectorAll('.schedule-card').forEach(function (c) { seen[c.textContent] = 1; });
           harvest.forEach(function (c) { if (!seen[c.textContent]) { list.appendChild(c.cloneNode(true)); seen[c.textContent] = 1; } });
+        }
+        var FEEL_KEY = 'chronoscope_feel_v1';
+        function feelLoad() { try { return JSON.parse(localStorage.getItem(FEEL_KEY) || '[]'); } catch (e) { return []; } }
+        function feelSave(arr) { try { localStorage.setItem(FEEL_KEY, JSON.stringify(arr)); } catch (e) {} }
+        function birthKey() {
+          var y = document.getElementById('birth_year'), m = document.getElementById('birth_month'), d = document.getElementById('birth_day');
+          return (y && m && d) ? (y.value + '-' + m.value + '-' + d.value) : 'unknown';
+        }
+        function cardSpan(card, Y) {
+          var tx = card.textContent || '';
+          var gm = tx.match(/【[^】]*】/);
+          var sm = tx.match(/影響期間[:：]\s*(\d+)月(\d+)日\s*〜\s*(\d+)月(\d+)日/);
+          var pm = tx.match(/ピーク\s*(\d+)月(\d+)日/) || tx.match(/🎯[^0-9]*(\d+)月(\d+)日/);
+          if (!sm) return null;
+          var start = Date.UTC(Y, +sm[1] - 1, +sm[2]), end = Date.UTC(Y, +sm[3] - 1, +sm[4]);
+          if (end < start) end = Date.UTC(Y + 1, +sm[3] - 1, +sm[4]);
+          return { cfg: gm ? gm[0] : tx.slice(0, 24), start: start, end: end, peak: pm ? (+pm[1] + '月' + pm[2] + '日') : '' };
+        }
+        function feelPhase(rec, feltMs) {
+          if (rec.end <= rec.start) return 'ピーク付近';
+          var r = (feltMs - rec.start) / (rec.end - rec.start);
+          if (r < 0.34) return '開始寄り';
+          if (r > 0.67) return '終わり寄り';
+          return 'ピーク付近';
+        }
+        function addFeelButtons(Y, m, d) {
+          var list = document.getElementById('scheduleList'); if (!list) return;
+          var bk = birthKey();
+          var feltMs = Date.UTC(Y, m - 1, d);
+          var arr = feelLoad();
+          list.querySelectorAll('.schedule-card').forEach(function (card) {
+            if (card.style.display === 'none' || card.querySelector('.feelBtn')) return;
+            var sp = cardSpan(card, Y); if (!sp) return;
+            var rec = { bk: bk, cfg: sp.cfg, start: sp.start, end: sp.end, peak: sp.peak, felt: feltMs };
+            var has = arr.some(function (x) { return x.bk === bk && x.cfg === rec.cfg && x.start === rec.start && x.felt === feltMs; });
+            var btn = document.createElement('button');
+            btn.type = 'button'; btn.className = 'feelBtn';
+            btn.style.cssText = 'margin:8px 0 2px;background:transparent;border:1px solid #8a8178;color:#c5a880;border-radius:999px;padding:4px 12px;font-size:12px;cursor:pointer;';
+            btn.textContent = has ? '✓ 感じた記録あり（取消）' : 'この配置、感じた日に記録';
+            btn.addEventListener('click', function () {
+              var a2 = feelLoad();
+              var idx = a2.findIndex(function (x) { return x.bk === bk && x.cfg === rec.cfg && x.start === rec.start && x.felt === feltMs; });
+              if (idx >= 0) { a2.splice(idx, 1); btn.textContent = 'この配置、感じた日に記録'; }
+              else { rec.phase = feelPhase(rec, feltMs); a2.push(rec); btn.textContent = '✓ 感じた記録あり（取消）'; }
+              feelSave(a2);
+              renderFeelStats();
+            });
+            card.appendChild(btn);
+          });
+        }
+        function renderFeelStats() {
+          var bn = document.getElementById('dayBanner'); if (!bn || !dayTarget) return;
+          var old = document.getElementById('feelStats'); if (old) old.remove();
+          var bk = birthKey();
+          var mine = feelLoad().filter(function (x) { return x.bk === bk; });
+          if (!mine.length) return;
+          var c = { '開始寄り': 0, 'ピーク付近': 0, '終わり寄り': 0 };
+          mine.forEach(function (x) { if (c[x.phase] !== undefined) c[x.phase]++; });
+          var line = 'あなたの感じた記録（' + mine.length + '件）： 開始寄り ' + c['開始寄り'] + '件／ピーク付近 ' + c['ピーク付近'] + '件／終わり寄り ' + c['終わり寄り'] + '件';
+          var maxK = Object.keys(c).sort(function (a, b) { return c[b] - c[a]; })[0];
+          if (mine.length >= 5 && c[maxK] >= 3) line += ' ― あなたは「' + maxK + '」に感じやすいタイプかもしれません。';
+          var div = document.createElement('div');
+          div.id = 'feelStats';
+          div.style.cssText = 'font-size:12px;color:#8a8178;margin-top:8px;';
+          div.textContent = line;
+          bn.appendChild(div);
         }
         function ensureDirector() {
           if (directorOn) return;
@@ -501,6 +571,34 @@
             });
           }
         }, 250);
+      })();
+    </script>
+
+        <script>
+      (function () {
+        function enhanceCards(root) {
+          (root || document).querySelectorAll('.schedule-card').forEach(function (card) {
+            if (card.dataset.enh) return;
+            var gold = card.querySelector('.peak-day-gold-badge');
+            var per = card.querySelector('.card-badge-period');
+            if (!gold || !per) { card.dataset.enh = '1'; return; }
+            var gt = gold.textContent || '', pt = per.textContent || '';
+            var pm = gt.match(/(\d+)月(\d+)日/);
+            var sm = pt.match(/(\d+)月(\d+)日\s*〜\s*(\d+)月(\d+)日/);
+            card.dataset.enh = '1';
+            if (!pm || !sm) return;
+            gold.textContent = '🎯 ' + sm[1] + '月' + sm[2] + '日';
+            per.textContent = pt + '（ピーク ' + pm[1] + '月' + pm[2] + '日）';
+          });
+        }
+        var iv = setInterval(function () {
+          var list = document.getElementById('scheduleList');
+          if (list) {
+            clearInterval(iv);
+            enhanceCards(list);
+            new MutationObserver(function () { enhanceCards(list); }).observe(list, { childList: true, subtree: true });
+          }
+        }, 400);
       })();
     </script>
   </body>
