@@ -38,6 +38,13 @@
   table.chart td, table.chart th { border-bottom: 1px solid rgba(255,255,255,0.07); padding: 5px 6px; text-align: left; }
   table.chart th { color: #c5a880; font-weight: 500; }
   .note { color: #8a8178; font-size: 12.5px; margin-top: 10px; }
+  .magic-stage { position: relative; min-height: 300px; margin-top: 14px; }
+  .magic-img { width: 158px; border-radius: 22px; border: 2px solid #c5a880; box-shadow: 0 0 26px rgba(232,207,159,0.35); animation: magicBob 1.6s ease-in-out infinite; }
+  .sparkle { position: absolute; animation: magicTwinkle 1.1s ease-in-out infinite; }
+  .magic-msg { font-family: 'Noto Serif JP', serif; font-size: 17px; color: #e8cf9f; margin-top: 10px; opacity: 0; animation: magicMsgIn 0.9s ease 0.7s forwards; }
+  @keyframes magicBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+  @keyframes magicTwinkle { 0%, 100% { opacity: 0.15; transform: scale(0.7) rotate(0deg); } 50% { opacity: 1; transform: scale(1.25) rotate(20deg); } }
+  @keyframes magicMsgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   .backlink { text-align: center; margin-top: 28px; }
   .backlink a, footer a { color: #c5a880; }
   footer { max-width: 880px; margin: 0 auto; padding: 28px 20px 40px; text-align: center; font-size: 12px; line-height: 1.9; color: #8a8178; border-top: 1px solid rgba(197,168,128,0.25); }
@@ -100,12 +107,14 @@
         ・太陽・月・金星・火星が関わる角度は、点数を1.3倍して数えます（本人らしさと恋愛に直結する星のため）。<br>
         ・同じ空の星が二人両方の星に届く日は、二人の日としてさらに加点・減点します（片方が良い角度なら、良い方に寄ります）。<br>
         ・月の点数は、その月の毎日の点数の平均です。<br>
+        ・シンクロ度（生まれ持った相性）とは別のものさしです。相性が良い二人でも、その時期の空模様しだいで点は上下します。<br>
         ・点数の目安：65点以上はめったにない追い風の日、55点以上は良い日、45〜54点は穏やかな日、35〜44点はふつうの日、35点未満は波のある日なので、大事なことは無理に進めず様子見がおすすめです。
       </div>
     </details>
   </div>
 
   <div id="chartMap"></div>
+  <div id="magicArea"></div>
 
   <p class="backlink"><a href="./index.html">← クロノスコープ（年間星読み）へ</a></p>
 </div>
@@ -317,6 +326,38 @@ document.getElementById('calcBtn').addEventListener('click', async () => {
       `<h3 class="sec">⚡ 刺激・課題</h3>` + (hard.slice(0, 8).map(card).join('') || '<p class="note">該当するアスペクトはありませんでした。</p>') +
       '<p class="note">※相性は星の響き合いの傾向です。実際の関係は、二人の歩み寄りでいくらでも育ちます。</p>';
     document.getElementById('chartMap').innerHTML = `<h3 class="sec">🗺 二人の星マップ</h3>` + chartTable(A, posA) + chartTable(B, posB);
+    // クロノスくんのおまじない（結果の一番最後に、悩んでる人への魔法）
+    const MAGIC_MSGS = [
+      'だいじょうぶ。星は、ちゃんと回ってるよ。',
+      '今日はゆっくりでいい日。焦らなくて大丈夫。',
+      '悪い流れは、長くは続かないよ。',
+      '二人の星は、ちゃんと響き合ってる。ぼくが見たもん。',
+      '悩むのは、大事に思ってる証拠だよ。',
+      '深呼吸して。クロノスが、そばにいるよ。',
+      '大丈夫。明日は、今日よりちょっとだけ軽くなるよ。'
+    ];
+    const magicHtml = () => {
+      const sp = [[6, 8], [16, 72], [26, 30], [38, 84], [50, 14], [62, 76], [72, 26], [84, 66], [92, 40], [30, 58], [56, 44], [78, 88]]
+        .map(([t, l], i) => `<span class="sparkle" style="top:${t}%; left:${l}%; font-size:${13 + (i % 4) * 5}px; animation-delay:${(i % 6) * 0.18}s;">${i % 3 === 0 ? '⭐' : '✨'}</span>`).join('');
+      return `<div style="text-align:center; margin:30px 0 6px;">
+        <p style="font-size:13px; color:#8a8178; margin-bottom:10px;">― 悩んでるあなたへ ―</p>
+        <button id="magicBtn" type="button" style="background:linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color:#e8cf9f; border:1px solid #c5a880; border-radius:999px; padding:12px 26px; font-size:16px; font-weight:700; cursor:pointer;">✨ クロノスくんのおまじない ✨</button>
+        <div id="magicStage" class="magic-stage" style="display:none;">${sp}
+          <div style="padding-top:18px;"><img class="magic-img" src="./chronos_magic.jpg" alt="クロノスくん"></div>
+          <div class="magic-msg" id="magicMsg"></div>
+        </div></div>`;
+    };
+    const magicArea = document.getElementById('magicArea');
+    magicArea.innerHTML = magicHtml();
+    document.getElementById('magicBtn').addEventListener('click', () => {
+      const st = document.getElementById('magicStage');
+      const msg = document.getElementById('magicMsg');
+      msg.textContent = MAGIC_MSGS[Math.floor(Math.random() * MAGIC_MSGS.length)];
+      st.style.display = 'none';
+      void st.offsetWidth; // アニメーションを最初から再生し直す
+      st.style.display = 'block';
+      st.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
     window.__charts = { A, B, posA, posB };
     document.getElementById('periodSection').style.display = 'block';
     res.scrollIntoView({ behavior: 'smooth' });
@@ -525,7 +566,7 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
       const byDate = (arr) => [...arr].sort((a, b2) => a.d - b2.d);
       const fmt = (x) => `${x.m}月${x.d}日（${x.score}）`;
       html = `<div class="scorebox"><div style="color:#8a8178;font-size:13px;">${year}年${month}月の二人の空模様</div><div class="score">${avg}</div>` +
-        `<div class="verdict">${verdict(avg)}</div></div>` +
+        `<div class="verdict">${verdict(avg)}</div><div style="font-size:12px; color:#8a8178; margin-top:6px;">※シンクロ度（生まれ持った相性）とは別のものさしです。この点数は40前後が真ん中で、50あれば良い時期です。</div></div>` +
         `<p class="counts">💞 おすすめの日: ${byDate(sorted.slice(0, 3)).map(fmt).join(' ／ ')}<br>⚡ すれ違い注意: ${byDate(sorted.slice(-3)).map(fmt).join(' ／ ')}</p>` +
         `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※おすすめの日は「その日の二人の総合点」、ハイライトは「この期間で一番くっきり出る配置」で選んでいます。選び方が違うため、日付が重なることも、ずれることもあります。</p>` +
         `<h3 class="sec">✨ この月のハイライト</h3>` +
@@ -539,7 +580,7 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
       }
       const bestM = rows.reduce((a, b2) => b2.ma > a.ma ? b2 : a), worstM = rows.reduce((a, b2) => b2.ma < a.ma ? b2 : a);
       html = `<div class="scorebox"><div style="color:#8a8178;font-size:13px;">${year}年の二人の空模様</div><div class="score">${avg}</div>` +
-        `<div class="verdict">${verdict(avg)}</div></div>` +
+        `<div class="verdict">${verdict(avg)}</div><div style="font-size:12px; color:#8a8178; margin-top:6px;">※シンクロ度（生まれ持った相性）とは別のものさしです。この点数は40前後が真ん中で、50あれば良い時期です。</div></div>` +
         `<p class="counts">💞 ベスト月: ${bestM.m}月（${bestM.ma}） ／ ⚡ 注意月: ${worstM.m}月（${worstM.ma}）</p>` +
         rows.map(r => `<div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><span style="width:38px; font-size:13px;">${r.m}月</span><div style="flex:1; background:rgba(255,255,255,0.05); border-radius:4px;"><div style="width:${r.ma}%; background:linear-gradient(90deg,#9a7d55,#c5a880); height:14px; border-radius:4px;"></div></div><span style="width:30px; font-size:13px;">${r.ma}</span></div>`).join('') +
         `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ベスト月・注意月は「月ごとの平均点」、ハイライトは「この期間で一番くっきり出る配置」で選んでいます。選び方が違うため、月と日付がずれることもあります。</p>` +
