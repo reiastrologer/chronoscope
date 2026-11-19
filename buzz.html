@@ -171,29 +171,38 @@ weeks.forEach(function (wk) {
 var best = null;
 weeks.forEach(function (wk) { if (wk.good > 0 && (!best || wk.score > best.score)) best = wk;});
 var maxGood = Math.max.apply(null, weeks.map(function (wk) { return wk.good;}).concat([0.01]));
+var flat = [];
+Object.keys(events).forEach(function (key) { var ev = events[key]; if (ev.peakOff < 0 || ev.peakOff >= 56) return; flat.push({ off: ev.peakOff, good: ev.good, mult: ev.mult, w: (1 - ev.minOrb / 4) * ev.mult, label: ev.label });});
+var hero = null;
+for (var ws = 0; ws <= 49; ws++) {
+  var hg = 0, hr = 0, hgN = 0, hgS = 0, hrN = 0, htds = [];
+  flat.forEach(function (ev) { if (ev.off < ws || ev.off > ws + 6) return; if (ev.good) { hg += ev.w; hgN++; if (ev.mult === 1) hgS++; htds.push({ off: ev.off, w: ev.w, bestHit: { label: ev.label } }); } else { hr += ev.w; hrN++; } });
+  var hsc = hg - hr;
+  if (hg > 0 && (!hero || hsc > hero.score)) { htds.sort(function (a, b) { return b.w - a.w; }); var hsD = new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + ws)); var heD = new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + ws + 6)); hero = { s: ws, score: hsc, good: hg, risk: hr, gN: hgN, gS: hgS, rN: hrN, label: fmtD(hsD) + ' 〜 ' + fmtD(heD), topDays: htds.slice(0, 3), sv: bv }; }
+}
 var html = '';
-if (best) {
+if (hero) {
 html += '<div style="border:1.5px solid #ffd88a; border-radius:14px; padding:18px 16px; background:rgba(255,216,138,0.07); text-align:center;">' +
 '<div style="font-size:13px; color:#ffd88a; font-weight:700;">📣 あなたのバズ週間はこの週！</div>' +
-'<div style="font-family:\'Noto Serif JP\',serif; font-size:24px; font-weight:700; color:#ffe9b8; margin-top:6px;">' + best.label + '</div>' +
-'<div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.8;">追い風の配置 ' + best.gN + '件（うち強いもの ' + best.gS + '件）・' + verdictOf(Math.round(best.good), Math.round(best.risk)) + (best.rN? '／炎上注意の配置も ' + best.rN + '件ある週。言葉選びは丁寧に。': '') + '</div>' +
-(best.topDays.length? '<div style="font-size:13px; color:#c5a880; margin-top:6px;">特にバズ日和の日：' + best.topDays.map(function (dy) { var dt = new Date(Date.UTC(+best.sv[0], +best.sv[1] - 1, +best.sv[2] + dy.off)); return fmtD(dt) + '（' + '日月火水木金土'[dt.getUTCDay()] + '）' + (dy.bestHit? ' ' + dy.bestHit.label: '');}).join('、') + '</div>': '') +
+'<div style="font-family:\'Noto Serif JP\',serif; font-size:24px; font-weight:700; color:#ffe9b8; margin-top:6px;">' + hero.label + '</div>' +
+'<div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.8;">追い風の配置 ' + hero.gN + '件（うち強いもの ' + hero.gS + '件）・' + verdictOf(Math.round(hero.good), Math.round(hero.risk)) + (hero.rN? '／炎上注意の配置も ' + hero.rN + '件ある週。言葉選びは丁寧に。': '') + '</div>' +
+(hero.topDays.length? '<div style="font-size:13px; color:#c5a880; margin-top:6px;">特にバズ日和の日：' + hero.topDays.map(function (dy) { var dt = new Date(Date.UTC(+hero.sv[0], +hero.sv[1] - 1, +hero.sv[2] + dy.off)); return fmtD(dt) + '（' + '日月火水木金土'[dt.getUTCDay()] + '）' + (dy.bestHit? ' ' + dy.bestHit.label: '');}).join('、') + '</div>': '') +
 '</div>';
 } else {
 html += '<div style="border:1px solid #4a4238; border-radius:14px; padding:16px; text-align:center; color:#c5a880; font-size:14px;">この8週間は、目立ったバズ配置が集まる週はありませんでした。地道な投稿が実を結ぶ期間です。</div>';
 }
 html += '<div style="margin-top:16px;">';
 weeks.forEach(function (wk) {
-var isBest = best && wk.i === best.i;
+var isBest = hero && (wk.i * 7 <= hero.s + 6) && (wk.i * 7 + 6 >= hero.s);
 html += '<div style="border:1px solid ' + (isBest? '#ffd88a': '#4a4238') + '; border-radius:12px; padding:12px 14px; margin-bottom:10px; background:rgba(255,255,255,0.02);">' +
-'<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;"><span style="font-weight:700; color:' + (isBest? '#ffe9b8': '#faf6f0') + ';">' + (isBest? '👑 ': '') + wk.label + '</span><span style="font-size:12.5px; color:#ffd88a;">' + verdictOf(Math.round(wk.good), Math.round(wk.risk)) + '</span></div>' +
+'<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;"><span style="font-weight:700; color:' + (isBest? '#ffe9b8': '#faf6f0') + ';">' + (isBest? '🔥 ': '') + wk.label + '</span><span style="font-size:12.5px; color:#ffd88a;">' + verdictOf(Math.round(wk.good), Math.round(wk.risk)) + '</span></div>' +
 '<div style="height:8px; border-radius:99px; background:#262019; margin-top:8px; overflow:hidden;"><div style="height:100%; width:' + Math.round(wk.good / maxGood * 100) + '%; background:linear-gradient(90deg,#b98a2f,#ffd88a);"></div></div>' +
 '<div style="font-size:12.5px; color:#9a8d7a; margin-top:6px;">追い風の配置 ' + wk.gN + '件（うち強いもの ' + wk.gS + '件）' + (wk.rN? ' ／ 炎上注意 ' + wk.rN + '件': '') + '</div>' +
 (wk.evs.length? '<button type="button" onclick="var d=this.nextElementSibling; d.style.display = d.style.display === \'none\'? \'block\': \'none\';" style="margin-top:8px; background:transparent; color:#ffd88a; border:1px solid #b98a2f; border-radius:999px; padding:5px 14px; font-size:12.5px; font-weight:700; cursor:pointer;">📅 期間内の「いつ」を見る</button><div style="display:none; margin-top:8px; font-size:13px; line-height:2;">' + wk.evs.map(function (ev) { var dt = new Date(Date.UTC(+wk.sv[0], +wk.sv[1] - 1, +wk.sv[2] + ev.off)); return fmtD(dt) + '（' + '日月火水木金土'[dt.getUTCDay()] + '） ' + ev.label + (ev.good? ' <span style="color:#ffd88a;">追い風</span>': ' <span style="color:#ff9d85;">炎上注意</span>');}).join('<br>') + '</div>': '') +
 '</div>';
 });
 html += '</div>';
-html += '<p style="font-size:12px; color:#8a8178; line-height:1.8;">週は月曜〜日曜で数えています。判定のしかた：配置のピークがその週に来るものを数えています。好調の配置で「広がり・拡散の星（木星・天王星）」と「自分・言葉・魅力の星（太陽・水星・金星）」が組んだものは強く、それ以外の追い風は弱めに数えています。注意の配置で水星・木星・天王星や発信の星が絡むものは「炎上注意」。空の月は除いています。星は傾けるが、縛りはしない——あくまで投稿計画の目安に。</p>';
+html += '<p style="font-size:12px; color:#8a8178; line-height:1.8;">いちばん上の表示は、週の区切りにこだわらず、配置がいちばん集まる7日間です。下の週リストは月曜〜日曜で数えています。判定のしかた：配置のピークがその週に来るものを数えています。好調の配置で「広がり・拡散の星（木星・天王星）」と「自分・言葉・魅力の星（太陽・水星・金星）」が組んだものは強く、それ以外の追い風は弱めに数えています。注意の配置で水星・木星・天王星や発信の星が絡むものは「炎上注意」。空の月は除いています。星は傾けるが、縛りはしない——あくまで投稿計画の目安に。</p>';
 box.innerHTML = html;
 box.scrollIntoView({ behavior: 'smooth', block: 'start'});
 } catch (err) {
