@@ -351,7 +351,7 @@
     if (document.getElementById('yearNote')) { clearInterval(iv); return; }
     var sp = document.createElement('span');
     sp.id = 'yearNote';
-    sp.textContent = '見たい月は、計算のあと下のタブをタップ';
+    sp.textContent = '選んだ1年分のテーマを計算します';
     sp.style.cssText = 'font-size:11.5px;color:#c5a880;margin-left:8px;';
     inp.parentElement.insertBefore(sp, inp.nextSibling);
     clearInterval(iv);
@@ -396,5 +396,6 @@
   setTimeout(function () { clearInterval(iv); }, 600000);
 })();
 </script>
+<style>#monthTabs, #scheduleList { display: none !important; }</style>
 </body>
 </html>
