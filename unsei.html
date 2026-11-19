@@ -857,7 +857,7 @@ var key = label + '|' + sp.start;
 if (seen[key]) return;
 seen[key] = 1;
 rows.push({
-label: label, start: sp.start, end: sp.end, peak: sp.peak,
+label: label, start: sp.start, end: sp.end, peak: sp.peak, el: card,
 hard: tx.indexOf('⚠️') >= 0 || tx.indexOf('注意期') >= 0
 });
 });
@@ -904,6 +904,18 @@ if (!best || score > best.score) best = { s: s, e: e, gU: gU, hU: hU, peaks: pea
 }
 return best;
 }
+function dayNets(rows, winStart, winEnd) {
+var out = [];
+for (var ms = winStart; ms <= winEnd; ms += DAY) {
+var g = 0, h = 0, peaks = [];
+rows.forEach(function (r) {
+if (r.start <= ms && ms <= r.end) { if (r.hard) h++; else g++;}
+if (r.peak === ms) peaks.push(r);
+});
+out.push({ ms: ms, g: g, h: h, net: g - h, peaks: peaks});
+}
+return out;
+}
 function verdictOf(g, r) {
 var df = g - r;
 if (df >= 2) return 'プラス強め';
@@ -912,16 +924,76 @@ if (df === 0) return '互角';
 if (df === -1) return '注意寄り';
 return '注意強め';
 }
+var lastRows = [], lastHero = null;
 function ensureSection(list) {
 var sec = document.getElementById('flowMap');
 if (sec) return sec;
 sec = document.createElement('div');
 sec.id = 'flowMap';
 sec.style.cssText = 'max-width:880px;margin:26px auto 0;padding:16px 16px 12px;border:1px solid #c5a880;border-radius:12px;background:rgba(197,168,128,0.05);scroll-margin-top:140px;';
+sec.addEventListener('click', function (e) {
+var col = e.target.closest? e.target.closest('.fmDay'): null;
+if (col) openDay(+col.getAttribute('data-ms'));
+});
 var hs = document.getElementById('halfSumSection');
 if (hs && hs.parentElement) hs.parentElement.insertBefore(sec, hs);
 else if (list.parentElement) list.parentElement.appendChild(sec);
 return sec;
+}
+function ensureModal() {
+var md = document.getElementById('flowModal');
+if (md) return md;
+md = document.createElement('div');
+md.id = 'flowModal';
+md.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(5,5,12,0.88);z-index:70;align-items:center;justify-content:center;padding:14px;';
+md.innerHTML = '<div style="width:100%;max-width:680px;max-height:86vh;overflow-y:auto;background:#14120e;border:1px solid #c5a880;border-radius:14px;padding:16px;position:relative;">'
++ '<button type="button" id="flowModalClose" style="position:absolute;top:8px;right:10px;background:transparent;border:none;color:#c5a880;font-size:20px;cursor:pointer;line-height:1;">✕</button>'
++ '<div id="flowModalBody"></div></div>';
+document.body.appendChild(md);
+function hide() { md.style.display = 'none'; document.body.style.overflow = '';}
+md.querySelector('#flowModalClose').addEventListener('click', hide);
+md.addEventListener('click', function (e) {
+if (e.target === md) { hide(); return;}
+if (e.target.closest && e.target.closest('[data-mw-card]')) hide();
+});
+return md;
+}
+function openDay(ms) {
+var md = ensureModal();
+var body = md.querySelector('#flowModalBody');
+var WD = ['日', '月', '火', '水', '木', '金', '土'];
+var cover = lastRows.filter(function (r) { return r.start <= ms && ms <= r.end;});
+cover.sort(function (a, b) {
+var pa = a.peak === ms? 0: 1, pb = b.peak === ms? 0: 1;
+if (pa!== pb) return pa - pb;
+if (a.hard!== b.hard) return a.hard? 1: -1;
+return a.start - b.start;
+});
+var g = 0, h = 0, pk = 0;
+cover.forEach(function (r) { if (r.hard) h++; else g++; if (r.peak === ms) pk++;});
+var html = '<div style="font-size:17px;font-weight:700;color:#e8cf9f;">📅 ' + fmtFull(ms) + '（' + WD[new Date(ms).getUTCDay()] + '）</div>';
+html += '<div style="font-size:12.5px;color:#c5a880;margin-top:4px;">この日にかかる配置： 良い流れ ' + g + '件 ／ 注意 ' + h + '件' + (pk? ' ／ ◆この日がピーク ' + pk + '件': '') + '</div>';
+html += '<div style="font-size:11.5px;color:#8a8178;margin-top:2px;">説明文をタップすると、ホロスコープ円が開きます。</div>';
+body.innerHTML = html;
+if (!cover.length) {
+var none = document.createElement('div');
+none.style.cssText = 'font-size:13.5px;color:#faf6f0;margin-top:12px;line-height:1.8;';
+none.textContent = 'この日にかかる配置はありません。静かな日です。';
+body.appendChild(none);
+}
+cover.forEach(function (r) {
+var c = r.el.cloneNode(true);
+c.style.display = '';
+c.style.marginTop = '10px';
+c.removeAttribute('id');
+c.querySelectorAll('[id]').forEach(function (x) { x.removeAttribute('id');});
+var fw = c.querySelector('.feelWrap');
+if (fw) fw.remove();
+body.appendChild(c);
+});
+md.style.display = 'flex';
+document.body.style.overflow = 'hidden';
+md.querySelector('#flowModalBody').parentElement.scrollTop = 0;
 }
 var lastSig = '';
 function build() {
@@ -936,7 +1008,7 @@ var hs0 = document.getElementById('halfSumSection');
 var sig = (dayMode? 'D': 'M') + Y + ':' + list.innerHTML.length + ':' + list.querySelectorAll('.schedule-card').length + ':' + (hs0? hs0.innerHTML.length: 0);
 if (sig === lastSig && sec) return;
 var rows = collectRows(list, Y);
-if (!rows.length) { if (sec) sec.style.display = 'none'; lastSig = sig; return;}
+if (!rows.length) { if (sec) sec.style.display = 'none'; lastSig = sig; lastRows = []; return;}
 var winStart, winEnd, winLabel;
 if (dayMode) {
 winStart = Math.min.apply(null, rows.map(function (r) { return r.start;}));
@@ -955,11 +1027,10 @@ var nowD = new Date();
 var todayMs = Date.UTC(nowD.getFullYear(), nowD.getMonth(), nowD.getDate());
 var showToday = todayMs >= winStart && todayMs <= winEnd;
 var marks = dayMode? []: collectRoadmap(Y, winStart, winEnd);
+var hero = rows.length >= 2? heroWindow(rows, winStart, winEnd): null;
+lastRows = rows; lastHero = hero;
 sec = ensureSection(list);
 var html = '<div style="font-size:16px;font-weight:700;color:#e8cf9f;">🧭 流れマップ <span style="font-size:12px;font-weight:400;color:#8a8178;">' + winLabel + '</span></div>';
-// hero (checker style)
-if (rows.length >= 2) {
-var hero = heroWindow(rows, winStart, winEnd);
 if (hero) {
 html += '<div style="margin-top:12px;border:1.5px solid #b98a2f;border-radius:12px;padding:12px 14px;background:rgba(185,138,47,0.10);">';
 html += '<div style="font-size:15.5px;font-weight:700;color:#ffd88a;">🔥 ' + (dayMode? 'この期間で': 'この月で') + 'いちばん濃い' + (Math.round((hero.e - hero.s) / DAY) + 1) + '日間： ' + fmtFull(hero.s) + ' 〜 ' + fmtFull(hero.e) + '</div>';
@@ -973,9 +1044,31 @@ html += '<div style="font-size:12.5px;color:#ff9d85;margin-top:2px;line-height:1
 }
 html += '</div>';
 }
+// daily meter
+if (totalDays <= 62) {
+var nets = dayNets(rows, winStart, winEnd);
+var maxAbs = 1;
+nets.forEach(function (n) { if (Math.abs(n.net) > maxAbs) maxAbs = Math.abs(n.net);});
+html += '<div style="font-size:12.5px;font-weight:700;color:#e8cf9f;margin-top:14px;">📊 日ごとの波</div>';
+html += '<div style="display:flex;gap:1px;margin-top:4px;">';
+nets.forEach(function (n, idx) {
+var inHeroW = hero && n.ms >= hero.s && n.ms <= hero.e;
+var isToday = n.ms === todayMs;
+var barH = n.net === 0? 2: 8 + Math.round(Math.abs(n.net) / maxAbs * 30);
+var barBg = n.net > 0? 'linear-gradient(180deg,#d8b45a,#b98a2f)': (n.net < 0? 'linear-gradient(180deg,#7a9fc5,#54708f)': '#38332c');
+var num = '';
+if (dayMode) { if (idx === 0 || idx === Math.floor(totalDays / 2) || idx === totalDays - 1) num = fmt(n.ms);}
+else { var dd = new Date(n.ms).getUTCDate(); if (dd === 1 || dd % 5 === 0 || n.ms === winEnd) num = String(dd);}
+html += '<div class="fmDay" data-ms="' + n.ms + '" title="' + fmtFull(n.ms) + '" style="flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:80px;cursor:pointer;border-radius:6px;padding-top:2px;' + (inHeroW? 'background:rgba(185,138,47,0.13);': '') + (isToday? 'box-shadow:inset 0 0 0 1px rgba(255,216,138,0.6);': '') + '">';
+html += '<div style="font-size:9px;color:#ffd88a;height:11px;line-height:11px;">' + (n.peaks.length? '◆': '') + '</div>';
+html += '<div style="width:70%;max-width:14px;border-radius:3px 3px 0 0;background:' + barBg + ';height:' + barH + 'px;"></div>';
+html += '<div style="font-size:9.5px;margin-top:2px;height:13px;' + (isToday? 'color:#ffd88a;font-weight:700;': 'color:#8a8178;') + '">' + num + '</div>';
+html += '</div>';
+});
+html += '</div>';
+html += '<div style="font-size:11px;color:#8a8178;margin-top:3px;line-height:1.6;">バーの高さは、その日に重なる配置の波（良い流れ−注意）です。金色の帯は「いちばん濃い期間」。日をタップすると、その日の配置が詳しく開きます。</div>';
 }
-html += '<div style="font-size:12px;color:#8a8178;margin-top:10px;line-height:1.6;">配置の影響期間をバーで並べました。◆はピークの日、金は良い流れ・青は注意の流れです。</div>';
-// axis
+html += '<div style="font-size:12px;color:#8a8178;margin-top:12px;line-height:1.6;">配置の影響期間をバーで並べました。◆はピークの日、金は良い流れ・青は注意の流れです。</div>';
 html += '<div style="display:flex;margin-top:8px;"><div style="width:132px;flex:none;"></div><div style="position:relative;flex:1;height:14px;font-size:10.5px;color:#8a8178;">';
 if (dayMode) {
 var midMs = winStart + Math.floor(totalDays / 2) * DAY;
