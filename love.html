@@ -35,7 +35,7 @@ try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __
 <a href="./omajinai.html" class="topTab">✨ クロノスくんのおまじない</a>
         <a href="./buzz.html" class="topTab" style="grid-column: 1 / -1;">📣 バズ週間チェッカー（配信者向け）</a>
 </div>
-<div style="display: flex; gap: 8px; justify-content: center; margin-top: 10px; flex-wrap: wrap;"><span style="font-size: 11px; color: #8a8178; align-self: center;">チェッカー：</span><a href="./buzz.html" style="font-size: 12px; padding: 5px 12px; border-radius: 999px; border: 1px solid; text-decoration: none; border-color: #4a4238; color: #9a8d7a;">📣 バズ週間</a><a href="./love.html" style="font-size: 12px; padding: 5px 12px; border-radius: 999px; border: 1px solid; text-decoration: none; border-color: #ffd88a; color: #ffd88a; background: rgba(255,216,138,0.08);">💘 恋愛</a><a href="./money.html" style="font-size: 12px; padding: 5px 12px; border-radius: 999px; border: 1px solid; text-decoration: none; border-color: #4a4238; color: #9a8d7a;">💰 金運</a></div>
+<div style="display: flex; gap: 8px; justify-content: center; margin-top: 10px; flex-wrap: wrap;"><span style="font-size: 11px; color: #8a8178; align-self: center;">チェッカー：</span><a href="./buzz.html" style="font-size: 12px; padding: 5px 12px; border-radius: 999px; border: 1px solid; text-decoration: none; border-color: #4a4238; color: #9a8d7a;">📣 バズ週間</a><a href="./love.html" style="font-size: 12px; padding: 5px 12px; border-radius: 999px; border: 1px solid; text-decoration: none; border-color: #ffd88a; color: #ffd88a; background: rgba(255,216,138,0.08);">💘 恋愛</a><a href="./money.html" style="font-size: 12px; padding: 5px 12px; border-radius: 999px; border: 1px solid; text-decoration: none; border-color: #4a4238; color: #9a8d7a;">💰 金運</a><a href="./work.html" style="font-size: 12px; padding: 5px 12px; border-radius: 999px; border: 1px solid; text-decoration: none; border-color: #4a4238; color: #9a8d7a;">💼 仕事</a></div>
 </div>
 <div style="max-width: 880px; margin: 10px auto 0; padding: 0 16px; text-align: center;">
 <h1 style="font-family: 'Noto Serif JP', serif; font-size: 22px; color: #e8cf9f; margin-bottom: 6px;">💘 恋愛チェッカー</h1>
@@ -188,18 +188,37 @@ html += '<div style="border:1.5px solid #ffd88a; border-radius:14px; padding:18p
 '<div style="font-family:\'Noto Serif JP\',serif; font-size:24px; font-weight:700; color:#ffe9b8; margin-top:6px;">' + hero.label + '</div>' +
 '<div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.8;">恋の追い風の配置 ' + hero.gN + '件（うち強いもの ' + hero.gS + '件）・' + verdictOf(Math.round(hero.good), Math.round(hero.risk)) + (hero.rN? '／すれ違い注意の配置も ' + hero.rN + '件ある週。言葉選びは丁寧に。': '') + '</div>' +
 (hero.topDays.length? '<div style="font-size:13px; color:#c5a880; margin-top:6px;">特に恋が動きやすい日：' + hero.topDays.map(function (dy) { var dt = new Date(Date.UTC(+hero.sv[0], +hero.sv[1] - 1, +hero.sv[2] + dy.off)); return fmtD(dt) + '（' + '日月火水木金土'[dt.getUTCDay()] + '）' + (dy.bestHit? ' ' + dy.bestHit.label: '');}).join('、') + '</div>': '') +
+'<div style="font-size:12px; color:#9a8d7a; margin-top:8px;">※上の期間は、週の区切りをまたぐいちばん濃い7日間。下の週は月曜〜日曜で数えています。</div>' +
 '</div>';
 } else {
 html += '<div style="border:1px solid #4a4238; border-radius:14px; padding:16px; text-align:center; color:#c5a880; font-size:14px;">この8週間は、目立った恋の配置が集まる時期はありませんでした。自分磨きが実を結ぶ期間です。</div>';
 }
+var maxPos = Math.max.apply(null, weeks.map(function (wk) { return wk.score; }).concat([0.01]));
+var maxNeg = Math.min.apply(null, weeks.map(function (wk) { return wk.score; }).concat([-0.01]));
+html += '<div style="font-size:12.5px; font-weight:700; color:#e8cf9f; margin-top:14px;">📊 8週間の波</div>';
+html += '<div style="display:flex; gap:2px; margin-top:4px;">';
+weeks.forEach(function (wk) {
+var isB = hero && (wk.i * 7 <= hero.s + 6) && (wk.i * 7 + 6 >= hero.s);
+var bh = wk.score > 0 ? 8 + Math.round(wk.score / maxPos * 32) : (wk.score < 0 ? 8 + Math.round(wk.score / maxNeg * 32) : 2);
+var bg = wk.score > 0 ? 'linear-gradient(180deg,#ffd88a,#b98a2f)' : (wk.score < 0 ? 'linear-gradient(180deg,#7a9fc5,#54708f)' : '#38332c');
+var sd = wk.label.split('〜')[0].trim().replace('月', '/').replace('日', '');
+html += '<div onclick="var r=document.getElementById(\'wkRow' + wk.i + '\'); if(r) r.scrollIntoView({behavior:\'smooth\', block:\'center\'}); var d=document.getElementById(\'wkDet' + wk.i + '\'); if(d) d.style.display=\'block\';" style="flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:74px; cursor:pointer; border-radius:6px; padding-top:2px;' + (isB ? ' background:rgba(255,216,138,0.10);' : '') + '">'
++ '<div style="font-size:9px; height:11px; line-height:11px;">' + (isB ? '🔥' : '') + '</div>'
++ '<div style="width:64%; max-width:20px; border-radius:3px 3px 0 0; background:' + bg + '; height:' + bh + 'px;"></div>'
++ '<div style="font-size:9.5px; color:#9a8d7a; margin-top:2px; height:13px;">' + sd + '</div>'
++ '<div style="font-size:9px; color:#8a8178; height:12px;">' + (wk.gN ? wk.gN + '件' : '') + '</div>'
++ '</div>';
+});
+html += '</div>';
+html += '<div style="font-size:11px; color:#8a8178; margin-top:3px; line-height:1.6;">バーの高さはその週の濃さ（追い風−注意）です。週をタップすると、その週の内容が開きます。</div>';
 html += '<div style="margin-top:16px;">';
 weeks.forEach(function (wk) {
 var isBest = hero && (wk.i * 7 <= hero.s + 6) && (wk.i * 7 + 6 >= hero.s);
-html += '<div style="border:1px solid ' + (isBest? '#ffd88a': '#4a4238') + '; border-radius:12px; padding:12px 14px; margin-bottom:10px; background:rgba(255,255,255,0.02);">' +
+html += '<div id="wkRow' + wk.i + '" style="border:1px solid ' + (isBest? '#ffd88a': '#4a4238') + '; border-radius:12px; padding:12px 14px; margin-bottom:10px; background:rgba(255,255,255,0.02);">' +
 '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;"><span style="font-weight:700; color:' + (isBest? '#ffe9b8': '#faf6f0') + ';">' + (isBest? '🔥 ': '') + wk.label + '</span><span style="font-size:12.5px; color:#ffd88a;">' + verdictOf(Math.round(wk.good), Math.round(wk.risk)) + '</span></div>' +
 '<div style="height:8px; border-radius:99px; background:#262019; margin-top:8px; overflow:hidden;"><div style="height:100%; width:' + Math.round(wk.good / maxGood * 100) + '%; background:linear-gradient(90deg,#b98a2f,#ffd88a);"></div></div>' +
 '<div style="font-size:12.5px; color:#9a8d7a; margin-top:6px;">恋の追い風の配置 ' + wk.gN + '件（うち強いもの ' + wk.gS + '件）' + (wk.rN? ' ／ すれ違い注意 ' + wk.rN + '件': '') + '</div>' +
-(wk.evs.length? '<button type="button" onclick="var d=this.nextElementSibling; d.style.display = d.style.display === \'none\'? \'block\': \'none\';" style="margin-top:8px; background:transparent; color:#ffd88a; border:1px solid #b98a2f; border-radius:999px; padding:5px 14px; font-size:12.5px; font-weight:700; cursor:pointer;">📅 期間内の「いつ」を見る</button><div style="display:none; margin-top:8px; font-size:13px; line-height:2;">' + wk.evs.map(function (ev) { var dt = new Date(Date.UTC(+wk.sv[0], +wk.sv[1] - 1, +wk.sv[2] + ev.off)); return fmtD(dt) + '（' + '日月火水木金土'[dt.getUTCDay()] + '） ' + ev.label + (ev.good? ' <span style="color:#ffd88a;">恋の追い風</span>': ' <span style="color:#ff9d85;">すれ違い注意</span>');}).join('<br>') + '</div>': '') +
+(wk.evs.length? '<button type="button" onclick="var d=this.nextElementSibling; d.style.display = d.style.display === \'none\'? \'block\': \'none\';" style="margin-top:8px; background:transparent; color:#ffd88a; border:1px solid #b98a2f; border-radius:999px; padding:5px 14px; font-size:12.5px; font-weight:700; cursor:pointer;">🔍 内容を詳しく見る</button><div id="wkDet' + wk.i + '" style="display:none; margin-top:8px; font-size:13px; line-height:2;">' + wk.evs.map(function (ev) { var dt = new Date(Date.UTC(+wk.sv[0], +wk.sv[1] - 1, +wk.sv[2] + ev.off)); return fmtD(dt) + '（' + '日月火水木金土'[dt.getUTCDay()] + '） ' + ev.label + (ev.good? ' <span style="color:#ffd88a;">恋の追い風</span>': ' <span style="color:#ff9d85;">すれ違い注意</span>');}).join('<br>') + '</div>': '') +
 '</div>';
 });
 html += '</div>';
