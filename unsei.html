@@ -925,6 +925,7 @@ if (df === -1) return '注意寄り';
 return '注意強め';
 }
 var lastRows = [], lastHero = null;
+var selectedMs = null, lastWinStart = null, lastWinEnd = null;
 function ensureSection(list) {
 var sec = document.getElementById('flowMap');
 if (sec) return sec;
@@ -933,7 +934,15 @@ sec.id = 'flowMap';
 sec.style.cssText = 'max-width:880px;margin:26px auto 0;padding:16px 16px 12px;border:1px solid #c5a880;border-radius:12px;background:rgba(197,168,128,0.05);scroll-margin-top:140px;';
 sec.addEventListener('click', function (e) {
 var col = e.target.closest? e.target.closest('.fmDay'): null;
-if (col) openDay(+col.getAttribute('data-ms'));
+if (col) {
+selectedMs = +col.getAttribute('data-ms');
+sec.querySelectorAll('.fmDay').forEach(function (c) {
+var on = +c.getAttribute('data-ms') === selectedMs;
+c.style.background = on ? 'rgba(255,216,138,0.25)' : '';
+c.style.boxShadow = on ? 'inset 0 0 0 1.5px #ffd88a' : '';
+});
+openDay(selectedMs);
+}
 });
 var hs = document.getElementById('halfSumSection');
 if (hs && hs.parentElement) hs.parentElement.insertBefore(sec, hs);
@@ -958,11 +967,62 @@ if (e.target.closest && e.target.closest('[data-mw-card]')) hide();
 });
 return md;
 }
+var THEME = { '☉': '自分らしさと勝負ごと', '☽': '気持ちと体調', '☿': '連絡と仕事の段取り', '♀': '恋愛とお金', '♂': '仕事の勢いと行動', '♃': 'チャンスと広がり', '♄': '責任と積み重ね', '♅': '変化と新しいこと', '♆': '直感とイメージ', '♇': '深い見直し' };
+          var GOODC = { '☉': '表に出ること・勝負ごと', '☽': '気持ちの安定・身近な人との時間', '☿': '連絡・交渉・手続きのスムーズさ', '♀': '恋愛の進展・嬉しい買い物・人からの誘い', '♂': 'やる気と行動力・先手の動き', '♃': 'チャンスの広がり・助けてくれる人', '♄': 'コツコツの成果・信頼が固まること', '♅': '新しいやり方・意外な出会い', '♆': '直感とイメージ・癒しの時間', '♇': '深い集中・本気の立て直し' };
+          var HARDC = { '☉': 'プライドがらみの意地の張り合い', '☽': '気分の波・体調の無理', '☿': '連絡ミス・書類の見落とし・言い間違い', '♀': '甘い誘い・衝動買い', '♂': 'ケンカ・せっかちさ・勢いだけの決断', '♃': '話が大きくなりすぎること・約束のしすぎ', '♄': '締め切りと責任の重さ・冷たい対応', '♅': '急な予定変更・機械やネットのトラブル', '♆': '曖昧な話・うまい話への流されやすさ', '♇': '執着と極端な決断・根深い疲れ' };
+          var GOODACT = { '☉': '目立つ場面では前に出て正解', '☽': '身近な人との時間を優先して', '☿': '連絡や手続きは今日のうちに片付けると後が楽', '♀': '誘いには乗って正解、欲しい物も買い時', '♂': '先手で動くと流れが掴めます', '♃': '誘いや頼みごとは広がりに繋がります', '♄': 'コツコツ作業が一番進む日', '♅': '新しいやり方を試すと当たりです', '♆': '直感で選んで正解', '♇': '本気の立て直しに着手するなら今日' };
+          var HARDACT = { '☉': '意地の張り合いは避けて', '☽': '無理せず、早めに休むのも大事', '☿': '大事な連絡は送信前にもう一度確認を', '♀': '甘い話と衝動買いは一晩寝かせて', '♂': '返事は一拍置いて、勢いだけで決めないで', '♃': '約束は欲張らず、少なめに', '♄': '締め切りは前倒しで、冷たい返事に注意', '♅': '予定変更に備えて、予備の段取りを', '♆': 'うまい話は鵜呑みにしないで', '♇': '極端な決断と執着は今日は封印' };
+function natalGlyph(tx) {
+var re = new RegExp('\\u3010\\s*\\S+\\s+\\S+\\s+(\\S+)\\s*\\u3011');
+var m = tx.match(re);
+if (!m) return null;
+var g = m[1].replace(/️/g, '');
+return THEME[g]? g: null;
+}
+function topGlyphs(obj) { return Object.keys(obj).sort(function (a, b) { return obj[b] - obj[a];}).slice(0, 2);}
+function daySummaryHtml(cover, g, h) {
+var goodThemes = {}, hardThemes = {};
+cover.forEach(function (r) {
+if (!r._glyph) return;
+if (r.hard) hardThemes[r._glyph] = (hardThemes[r._glyph] || 0) + 1;
+else goodThemes[r._glyph] = (goodThemes[r._glyph] || 0) + 1;
+});
+var gtG = topGlyphs(goodThemes), htG = topGlyphs(hardThemes);
+var air;
+if (g > 0 && h > 0 && Math.abs(g - h) < 2) air = '良い流れと注意が同居する日です。「どっち？」と迷う日は、使い分けが大事になります。';
+else if (g - h >= 2) air = '良い流れが多めの日です。';
+else if (h - g >= 2) air = '注意が多めの日です。';
+else if (h === 0) air = '良い流れだけが目立つ日です。';
+else air = '注意だけが目立つ日です。';
+var html = '<div style="margin-top:10px;border:1px solid rgba(197,168,128,0.5);border-radius:10px;padding:10px 12px;background:rgba(197,168,128,0.06);">';
+html += '<div style="font-size:13px;font-weight:700;color:#e8cf9f;">この日のまとめ</div>';
+html += '<div style="font-size:13.5px;color:#faf6f0;line-height:1.8;margin-top:4px;">' + air + '</div>';
+if (gtG.length) html += '<div style="font-size:13px;color:#faf6f0;line-height:1.8;margin-top:2px;">活かしどころ：「' + gtG.map(function (x) { return GOODC[x] || THEME[x];}).join('」「') + '」</div>';
+if (htG.length) html += '<div style="font-size:13px;color:#faf6f0;line-height:1.8;margin-top:2px;">注意どころ：「' + htG.map(function (x) { return HARDC[x] || THEME[x];}).join('」「') + '」</div>';
+var act = '';
+if (gtG.length && htG.length) {
+var leadGood = g >= h;
+if (leadGood) act = (GOODACT[gtG[0]] || '') + (HARDACT[htG[0]]? ' その分、' + HARDACT[htG[0]] + '。': '');
+else act = (HARDACT[htG[0]] || '') + (GOODACT[gtG[0]]? ' その分、' + GOODACT[gtG[0]] + '。': '');
+if (act && act.charAt(act.length - 1)!== '。') act += '。';
+} else if (gtG.length && GOODACT[gtG[0]]) act = GOODACT[gtG[0]] + '。';
+else if (htG.length && HARDACT[htG[0]]) act = HARDACT[htG[0]] + '。';
+if (act) html += '<div style="font-size:13.5px;color:#ffd88a;line-height:1.8;margin-top:4px;">→ こうして： ' + act + '</div>';
+html += '</div>';
+return html;
+}
 function openDay(ms) {
 var md = ensureModal();
 var body = md.querySelector('#flowModalBody');
+var secEl = document.getElementById('flowMap');
+if (secEl) secEl.querySelectorAll('.fmDay').forEach(function (c) {
+var on = +c.getAttribute('data-ms') === ms;
+c.style.background = on ? 'rgba(255,216,138,0.25)' : '';
+c.style.boxShadow = on ? 'inset 0 0 0 1.5px #ffd88a' : '';
+});
 var WD = ['日', '月', '火', '水', '木', '金', '土'];
 var cover = lastRows.filter(function (r) { return r.start <= ms && ms <= r.end;});
+cover.forEach(function (r) { r._glyph = natalGlyph(r.el.textContent || '');});
 cover.sort(function (a, b) {
 var pa = a.peak === ms? 0: 1, pb = b.peak === ms? 0: 1;
 if (pa!== pb) return pa - pb;
@@ -973,8 +1033,15 @@ var g = 0, h = 0, pk = 0;
 cover.forEach(function (r) { if (r.hard) h++; else g++; if (r.peak === ms) pk++;});
 var html = '<div style="font-size:17px;font-weight:700;color:#e8cf9f;">📅 ' + fmtFull(ms) + '（' + WD[new Date(ms).getUTCDay()] + '）</div>';
 html += '<div style="font-size:12.5px;color:#c5a880;margin-top:4px;">この日にかかる配置： 良い流れ ' + g + '件 ／ 注意 ' + h + '件' + (pk? ' ／ ◆この日がピーク ' + pk + '件': '') + '</div>';
-html += '<div style="font-size:11.5px;color:#8a8178;margin-top:2px;">説明文をタップすると、ホロスコープ円が開きます。</div>';
+if (cover.length) html += daySummaryHtml(cover, g, h);
+html += '<div style="display:flex;gap:8px;margin-top:10px;">'
++ '<button type="button" id="fmPrev" style="flex:1;background:transparent;color:#ffd88a;border:1px solid #b98a2f;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:700;cursor:pointer;' + (lastWinStart !== null && ms <= lastWinStart ? 'opacity:0.35;' : '') + '">◀ 前の日</button>'
++ '<button type="button" id="fmNext" style="flex:1;background:transparent;color:#ffd88a;border:1px solid #b98a2f;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:700;cursor:pointer;' + (lastWinEnd !== null && ms >= lastWinEnd ? 'opacity:0.35;' : '') + '">次の日 ▶</button></div>';
+html += '<div style="font-size:11.5px;color:#8a8178;margin-top:8px;">各配置の詳しい説明です。説明文をタップすると、ホロスコープ円が開きます。</div>';
 body.innerHTML = html;
+var pvB = body.querySelector('#fmPrev'), nxB = body.querySelector('#fmNext');
+if (pvB) pvB.addEventListener('click', function () { if (lastWinStart === null || ms > lastWinStart) { selectedMs = ms - DAY; openDay(selectedMs); } });
+if (nxB) nxB.addEventListener('click', function () { if (lastWinEnd === null || ms < lastWinEnd) { selectedMs = ms + DAY; openDay(selectedMs); } });
 if (!cover.length) {
 var none = document.createElement('div');
 none.style.cssText = 'font-size:13.5px;color:#faf6f0;margin-top:12px;line-height:1.8;';
@@ -982,20 +1049,42 @@ none.textContent = 'この日にかかる配置はありません。静かな日
 body.appendChild(none);
 }
 cover.forEach(function (r) {
+var wrap = document.createElement('div');
+wrap.style.marginTop = '14px';
+var chip = '';
+if (r.peak) {
+var diff = Math.round((r.peak - ms) / DAY);
+if (diff === 0) chip = '◆ 今日がピーク';
+else if (diff > 0) chip = 'ピークまであと' + diff + '日';
+else chip = 'ピーク過ぎ' + (-diff) + '日目';
+}
+chip += (chip? '（': '（') + fmt(r.start) + '〜' + fmt(r.end) + '）';
+var chipDiv = document.createElement('div');
+chipDiv.style.cssText = 'font-size:11.5px;color:#c5a880;margin-bottom:4px;';
+chipDiv.textContent = chip;
+wrap.appendChild(chipDiv);
 var c = r.el.cloneNode(true);
 c.style.display = '';
-c.style.marginTop = '10px';
 c.removeAttribute('id');
 c.querySelectorAll('[id]').forEach(function (x) { x.removeAttribute('id');});
 var fw = c.querySelector('.feelWrap');
 if (fw) fw.remove();
-body.appendChild(c);
+wrap.appendChild(c);
+if (r._glyph) {
+var adv = document.createElement('div');
+adv.style.cssText = 'font-size:12.5px;line-height:1.7;margin-top:5px;color:' + (r.hard? '#ff9d85': '#ffd88a') + ';';
+adv.textContent = r.hard
+? ('注意どころ： ' + (HARDC[r._glyph] || THEME[r._glyph]) + (HARDACT[r._glyph]? ' ― ' + HARDACT[r._glyph]: ''))
+: ('活かしどころ： ' + (GOODC[r._glyph] || THEME[r._glyph]) + (GOODACT[r._glyph]? ' ― ' + GOODACT[r._glyph]: ''));
+wrap.appendChild(adv);
+}
+body.appendChild(wrap);
 });
 md.style.display = 'flex';
 document.body.style.overflow = 'hidden';
 md.querySelector('#flowModalBody').parentElement.scrollTop = 0;
 }
-var lastSig = '';
+        var lastSig = '';
 function build() {
 var list = document.getElementById('scheduleList');
 if (!list) return;
@@ -1022,6 +1111,7 @@ winEnd = Date.UTC(Y, m, 0);
 winLabel = Y + '年' + m + '月';
 }
 var totalDays = Math.round((winEnd - winStart) / DAY) + 1;
+lastWinStart = winStart; lastWinEnd = winEnd;
 function pct(ms) { return ((ms - winStart) / DAY) / totalDays * 100;}
 var nowD = new Date();
 var todayMs = Date.UTC(nowD.getFullYear(), nowD.getMonth(), nowD.getDate());
@@ -1030,7 +1120,7 @@ var marks = dayMode? []: collectRoadmap(Y, winStart, winEnd);
 var hero = rows.length >= 2? heroWindow(rows, winStart, winEnd): null;
 lastRows = rows; lastHero = hero;
 sec = ensureSection(list);
-var html = '<div style="font-size:16px;font-weight:700;color:#e8cf9f;">🧭 流れマップ <span style="font-size:12px;font-weight:400;color:#8a8178;">' + winLabel + '</span></div>';
+var html = '<style>.fmDay:active{background:rgba(255,216,138,0.35) !important;}</style><div style="font-size:16px;font-weight:700;color:#e8cf9f;">🧭 流れマップ <span style="font-size:12px;font-weight:400;color:#8a8178;">' + winLabel + '</span></div>';
 if (hero) {
 html += '<div style="margin-top:12px;border:1.5px solid #b98a2f;border-radius:12px;padding:12px 14px;background:rgba(185,138,47,0.10);">';
 html += '<div style="font-size:15.5px;font-weight:700;color:#ffd88a;">🔥 ' + (dayMode? 'この期間で': 'この月で') + 'いちばん濃い' + (Math.round((hero.e - hero.s) / DAY) + 1) + '日間： ' + fmtFull(hero.s) + ' 〜 ' + fmtFull(hero.e) + '</div>';
@@ -1050,23 +1140,22 @@ var nets = dayNets(rows, winStart, winEnd);
 var maxAbs = 1;
 nets.forEach(function (n) { if (Math.abs(n.net) > maxAbs) maxAbs = Math.abs(n.net);});
 html += '<div style="font-size:12.5px;font-weight:700;color:#e8cf9f;margin-top:14px;">📊 日ごとの波</div>';
-html += '<div style="display:flex;gap:1px;margin-top:4px;">';
+html += '<div id="fmMeter" style="display:flex;gap:2px;margin-top:4px;overflow-x:auto;padding-bottom:4px;">';
 nets.forEach(function (n, idx) {
 var inHeroW = hero && n.ms >= hero.s && n.ms <= hero.e;
 var isToday = n.ms === todayMs;
 var barH = n.net === 0? 2: 8 + Math.round(Math.abs(n.net) / maxAbs * 30);
 var barBg = n.net > 0? 'linear-gradient(180deg,#d8b45a,#b98a2f)': (n.net < 0? 'linear-gradient(180deg,#7a9fc5,#54708f)': '#38332c');
-var num = '';
-if (dayMode) { if (idx === 0 || idx === Math.floor(totalDays / 2) || idx === totalDays - 1) num = fmt(n.ms);}
-else { var dd = new Date(n.ms).getUTCDate(); if (dd === 1 || dd % 5 === 0 || n.ms === winEnd) num = String(dd);}
-html += '<div class="fmDay" data-ms="' + n.ms + '" title="' + fmtFull(n.ms) + '" style="flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:80px;cursor:pointer;border-radius:6px;padding-top:2px;' + (inHeroW? 'background:rgba(185,138,47,0.13);': '') + (isToday? 'box-shadow:inset 0 0 0 1px rgba(255,216,138,0.6);': '') + '">';
+var num = String(new Date(n.ms).getUTCDate());
+var sel = n.ms === selectedMs;
+html += '<div class="fmDay" data-ms="' + n.ms + '" title="' + fmtFull(n.ms) + '" style="flex:0 0 27px;width:27px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:92px;cursor:pointer;border-radius:6px;padding-top:2px;' + (sel ? 'background:rgba(255,216,138,0.25);box-shadow:inset 0 0 0 1.5px #ffd88a;' : (inHeroW ? 'background:rgba(185,138,47,0.13);' : '') + (isToday ? 'box-shadow:inset 0 0 0 1px rgba(255,216,138,0.6);' : '')) + '">';
 html += '<div style="font-size:9px;color:#ffd88a;height:11px;line-height:11px;">' + (n.peaks.length? '◆': '') + '</div>';
 html += '<div style="width:70%;max-width:14px;border-radius:3px 3px 0 0;background:' + barBg + ';height:' + barH + 'px;"></div>';
-html += '<div style="font-size:9.5px;margin-top:2px;height:13px;' + (isToday? 'color:#ffd88a;font-weight:700;': 'color:#8a8178;') + '">' + num + '</div>';
+html += '<div style="font-size:9.5px;margin-top:2px;height:13px;' + ((isToday || sel) ? 'color:#ffd88a;font-weight:700;' : 'color:#8a8178;') + '">' + num + '</div>';
 html += '</div>';
 });
 html += '</div>';
-html += '<div style="font-size:11px;color:#8a8178;margin-top:3px;line-height:1.6;">バーの高さは、その日に重なる配置の波（良い流れ−注意）です。金色の帯は「いちばん濃い期間」。日をタップすると、その日の配置が詳しく開きます。</div>';
+html += '<div style="font-size:11px;color:#8a8178;margin-top:3px;line-height:1.6;">バーの高さは、その日に重なる配置の波（良い流れ−注意）です。金色の帯は「いちばん濃い期間」。横にスクロールでき、日をタップすると、その日の配置が詳しく開きます。</div>';
 }
 html += '<div style="font-size:12px;color:#8a8178;margin-top:12px;line-height:1.6;">配置の影響期間をバーで並べました。◆はピークの日、金は良い流れ・青は注意の流れです。</div>';
 html += '<div style="display:flex;margin-top:8px;"><div style="width:132px;flex:none;"></div><div style="position:relative;flex:1;height:14px;font-size:10.5px;color:#8a8178;">';
@@ -1116,6 +1205,11 @@ html += '<div style="font-size:11px;color:#8a8178;margin-top:4px;">転換日： 
 }
 sec.innerHTML = html;
 sec.style.display = '';
+var fmM = sec.querySelector('#fmMeter');
+if (fmM) {
+var tMs = (selectedMs !== null && selectedMs >= winStart && selectedMs <= winEnd) ? selectedMs : (showToday ? todayMs : null);
+if (tMs !== null) fmM.scrollLeft = Math.max(0, Math.round((tMs - winStart) / DAY) * 29 - fmM.clientWidth / 2 + 13);
+}
 lastSig = sig;
 }
 var iv = setInterval(function () {
