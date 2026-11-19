@@ -267,10 +267,7 @@ function spreadGlyphs(items) {
   var sorted = items.slice().sort(function (a, b) { return a.lon - b.lon; });
   var placed = [];
   sorted.forEach(function (it) {
-    var disp = it.lon, guard = 0;
-    var clash = function (v) { return placed.some(function (p) { return circDist(p, v) < 7.5; }); };
-    while (clash(disp) && guard < 40) { disp = (disp + 3) % 360; guard++; }
-    it.disp = disp; placed.push(disp);
+    it.disp = it.lon; placed.push(it.lon);
   });
   return items;
 }
