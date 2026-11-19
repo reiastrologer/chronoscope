@@ -230,7 +230,7 @@ document.getElementById('kBtn').addEventListener('click', async function () {
       var ci = pool.splice(idx, 1)[0];
       var rev = rng() < 0.3;
       var c = TAROT[ci];
-      cards.push({ c: c, rev: rev, text: rev ? c.rev : c.up, w: rev ? c.wr : c.wu });
+      cards.push({ c: c, ci: ci, rev: rev, text: rev ? c.rev : c.up, w: rev ? c.wr : c.wu });
     }
     var tSum = cards[0].w + cards[1].w + cards[2].w;
     var aw = syn.warmth;
@@ -257,6 +257,7 @@ document.getElementById('kBtn').addEventListener('click', async function () {
     cards.forEach(function (cd, i2) {
       html += '<div style="border:1px solid #4a4238; border-radius:12px; padding:12px 10px; background:rgba(255,255,255,0.02);">'
         + '<div style="font-size:11.5px; color:#9a8d7a;">' + posNames[i2] + '</div>'
+        + '<img src="./tarot' + (cd.ci < 10 ? '0' : '') + cd.ci + '.webp" alt="' + cd.c.n + '" loading="lazy" style="width:100%; border-radius:8px; margin-top:6px; display:block;' + (cd.rev ? ' transform:rotate(180deg);' : '') + '">'
         + '<div style="font-size:15px; font-weight:700; color:#ffe9b8; margin-top:4px;">' + cd.c.n + '</div>'
         + '<div style="font-size:12px; color:' + (cd.rev ? '#7a9fc5' : '#ffd88a') + '; margin-top:2px;">' + (cd.rev ? '逆位置' : '正位置') + '</div>'
         + '<div style="font-size:12.5px; color:#faf6f0; line-height:1.75; margin-top:6px;">' + cd.text + '</div>'
