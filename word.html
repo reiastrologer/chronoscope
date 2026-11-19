@@ -41,6 +41,7 @@ try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __
 <div style="max-width: 880px; margin: 10px auto 0; padding: 0 16px; text-align: center;">
 <h1 style="font-family: 'Noto Serif JP', serif; font-size: 22px; color: #e8cf9f; margin-bottom: 6px;">🔤 ワード占い</h1>
 <p style="font-size: 13px; color: #9a8d7a;">知りたいことを言葉で入れると、そのテーマに合った星の配置から、追い風の時期をこれから8週間の中から探します。人の気持ちや、時期じゃないお願いごとは読めないので、下の例みたいに聞いてね。</p>
+<p style="font-size: 12px; color: #8a8178; margin-top: 6px;">※年齢制限や応募条件があるテーマでも、時期の結果はそのまま出ます。条件の確認は公式でお願いします。あしからずご了承ください。</p>
 </div>
 <div style="max-width: 880px; margin: 14px auto 0; padding: 0 16px;">
 <label class="fld">聞きたいこと（言葉で入力）<input type="text" id="wdWord" placeholder="例：旅にいい時期、資格を取りたい" style="font-size: 16px;"></label><div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; margin-bottom: 12px;"><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='旅にいい時期';">旅にいい時期</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='資格を取りたい';">資格を取りたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='転職したい';">転職したい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='金持ちになりたい';">金持ちになりたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='引っ越ししたい';">引っ越ししたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='バズりたい';">バズりたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='髪を切りたい';">髪を切りたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='仕事行きたくない';">仕事行きたくない</button></div>
@@ -111,25 +112,32 @@ var THEMES = [
  { label: '旅', icon: '✈️', keys: ['旅', '遠出', 'ドライブ', '帰省', 'ツーリング', '飛行機', '船旅', 'ツアー'], spread: [2, 5], voice: [0, 2], risk: [2, 6], riskWord: '足止め注意' },
  { label: '恋愛', icon: '💘', keys: ['恋', '告白', 'デート', '結婚', 'プロポーズ', 'モテ', '婚活'], spread: [0, 5, 7], voice: [3, 4], risk: [2, 3, 4], riskWord: 'すれ違い注意' },
  { label: '金運', icon: '💰', keys: ['金', '収入', '副業', '投資', '貯金', '宝くじ', 'ギャンブル', '稼', '商売', '売上'], spread: [5], voice: [0, 3], risk: [3, 5, 8], riskWord: '散財注意' },
- { label: '勉強・資格', icon: '📚', keys: ['勉強', '資格', '試験', '受験', '学び', '習い事', '免許', '合格'], spread: [2, 5], voice: [0, 2], risk: [6], riskWord: '詰まり注意' },
+ { label: '勉強・資格', icon: '📚', keys: ['勉強', '資格', '試験', '受験', '学び', '習い事', '免許', '合格', '警察', '医者', '看護師', '教師', '公務員', '弁護士', '保育士', '薬剤師'], spread: [2, 5], voice: [0, 2], risk: [6], riskWord: '詰まり注意' },
  { label: '引っ越し', icon: '🏠', keys: ['引っ越し', '引越し', '移住', '転居', '新生活'], spread: [2, 7], voice: [0, 2], risk: [6, 8], riskWord: 'ドタバタ注意' },
  { label: '配信・発信', icon: '📣', keys: ['配信', 'バズ', '投稿', '動画', 'ライブ', 'フォロワー', 'SNS', 'ブログ'], spread: [5, 7], voice: [0, 2, 3], risk: [2, 5, 7], riskWord: '炎上注意' },
  { label: '美容', icon: '💇', keys: ['美容', '髪', 'ダイエット', '痩せ', 'キレイ', 'きれい', '美'], spread: [3, 5], voice: [0, 3], risk: [6], riskWord: '注意' }
 ];
+var DREAM = { label: '夢・挑戦', icon: '🌟', keys: [], spread: [5, 7], voice: [0, 4], risk: [6], riskWord: '壁注意' };
 function resolveWord(raw) {
   var t = (raw || '').replace(/\s+/g, '');
   if (!t) return { type: 'empty' };
+  if (/妊娠|出産|子宝|妊活|不妊/.test(t)) return { type: 'pregnancy' };
   if (/気持ち|私のこと|僕のこと|俺のこと|あの人|片思い|振り向|嫌われ/.test(t)) return { type: 'feelings' };
   if (/抱き|抱きたい|セックス|エッチ|エロ|風俗|ソープ|援交|パパ活|ヤリ|やらせて/.test(t)) return { type: 'crude' };
   if (/食べたい|飲みたい|寿司|ラーメン|焼肉|美味しい店|店探し/.test(t)) return { type: 'food' };
   var best = null, bestLen = 0;
   THEMES.forEach(function (th) { th.keys.forEach(function (k) { if (t.indexOf(k) >= 0 && k.length > bestLen) { best = th; bestLen = k.length; } }); });
-  if (!best) return { type: 'nomatch' };
   var neg = /たくない|辞めたい|やめたい|疲れ|しんど|つら|嫌|イヤ/.test(t);
+  if (!best) {
+    var specific = /の社員|の職員|のメンバー|の一員|の学生|の生徒|の部員|株式会社|有限会社|に入社|に入りたい/.test(t);
+    if (!specific && /になりたい|になってみたい|を目指し|の夢/.test(t)) return { type: 'theme', theme: DREAM, negative: neg };
+    return { type: 'nomatch' };
+  }
   return { type: 'theme', theme: best, negative: neg };
 }
 function deflectHtml(type) {
   var card = function (inner) { return '<div style="border:1px solid #b98a2f; border-radius:14px; padding:18px 16px; text-align:center; background:rgba(255,216,138,0.05);">' + inner + '</div>'; };
+  if (type === 'pregnancy') return card('<div style="font-size:15px; color:#ffe9b8; font-weight:700;">妊娠・出産のことは、ここでは読まないことにしてるよ</div><div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.9;">大事なことだから、時期のことも含めて星では扱わないよ。心配なことがあったら、お医者さんに相談してね。</div>');
   if (type === 'feelings') return card('<div style="font-size:15px; color:#ffe9b8; font-weight:700;">誰かの気持ちは、ワード占いでは読まないことにしてるよ</div><div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.9;">相手の気持ちは、専用のページで星とタロットから読んでね。</div><a href="./kimochi.html" style="display:inline-block; margin-top:10px; background:linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color:#e8cf9f; border:1px solid #c5a880; border-radius:999px; padding:10px 22px; font-size:14.5px; font-weight:700; text-decoration:none;">💗 相手の気持ちで見る</a>');
   if (type === 'crude') return card('<img src="./chronos_hayai.webp" alt="クロノスくん" style="width:170px; max-width:60%; border-radius:12px;"><div style="font-family:\'Noto Serif JP\',serif; font-size:19px; color:#ffe9b8; font-weight:700; margin-top:10px;">ぼ、僕にはちょっと早い…！</div><div style="font-size:13.5px; color:#faf6f0; margin-top:6px;">その言葉は、星でも読めないや。他の言葉で聞いてみて。</div>');
   if (type === 'food') return card('<div style="font-size:15px; color:#ffe9b8; font-weight:700;">それは星じゃなくて、検索の仕事だよ(笑)</div><div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.9;">ワード占いは「いつがいい？」に答える道具。お店探しは地図アプリでどうぞ。</div>');
