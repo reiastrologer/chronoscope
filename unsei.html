@@ -1,942 +1,306 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>クロノスコープ | あなただけの年間星読みスケジュール</title>
-    <!--
-      🔧 修正: フォントのURLが googleapis.com になっていて読み込めていませんでした。
-      正しくは fonts.googleapis.com / fonts.gstatic.com です。
-      （これが原因で 'Noto Serif JP' が効かず、見出しがゴシックのままになります）
-    -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Serif+JP:wght@500;700&display=swap" rel="stylesheet">
-    <style>
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body {
-        background-color: #0d0c0a;
-        font-family: 'Noto Sans JP', sans-serif;
-        color: #faf6f0;
-        line-height: 1.6;
-      }
-    </style>
-    <script type="module" crossorigin src="./assets/index-DBhTetfo.js"></script>
-  <script>
-      try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __nav.type === 'reload') location.replace('./index.html'); } catch (e) {}
-    </script>
-  </head>
-  <body>
-    <div style="max-width: 880px; margin: 0 auto; padding: 24px 16px 0;">
-      <div style="border: 1px solid #c5a880; outline: 3px double rgba(197,168,128,0.55); outline-offset: 5px; padding: 20px 12px 16px; text-align: center; background: radial-gradient(ellipse at center, rgba(197,168,128,0.10), rgba(197,168,128,0.02));">
-        <div style="font-family: 'Times New Roman', 'Noto Serif JP', serif; font-size: 12px; letter-spacing: 0.55em; color: #9a8d7a;">CHRONOSCOPE</div>
-        <div style="font-family: 'Noto Serif JP', serif; font-size: 32px; font-weight: 700; color: #e8cf9f; letter-spacing: 0.16em; margin-top: 6px;">クロノスコープ</div>
-        <div style="display: flex; align-items: center; gap: 10px; max-width: 340px; margin: 12px auto 8px;">
-          <span style="flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #c5a880);"></span>
-          <span style="color: #c5a880; font-size: 13px;">♄ ◆ ☉</span>
-          <span style="flex: 1; height: 1px; background: linear-gradient(90deg, #c5a880, transparent);"></span>
-        </div>
-        <div style="font-family: 'Times New Roman', serif; font-style: italic; font-size: 13.5px; color: #bdb098; letter-spacing: 0.08em;">Astra inclinant, non necessitant</div>
-        <div style="font-size: 11px; color: #8a8178; margin-top: 3px;">― 星は人を傾けるが、縛りはしない ―</div>
-      </div>
-    </div>
-    <div style="max-width: 880px; margin: 0 auto; padding: 14px 16px 0; text-align: center;">
-      <p style="font-size: 14px; color: #e8cf9f; font-weight: 700;">📜 見落とさないように、最後までスクロールしてね！</p>
-    </div>
-    <div style="max-width: 880px; margin: 0 auto; padding: 14px 16px 10px; position: sticky; top: 0; z-index: 60; background: #0d0c0a; box-shadow: 0 6px 14px rgba(0,0,0,0.45);">
-      <style>
-        .topTab.active { background: linear-gradient(135deg, rgba(255,216,138,0.55), rgba(197,168,128,0.25)); color: #ffe9b8; border-color: #ffd88a; }
-        .topTab { display: block; text-align: center; padding: 13px 8px; border-radius: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.28), rgba(197,168,128,0.10)); border: 1px solid #c5a880; color: #e8cf9f; font-weight: 700; font-size: 15px; text-decoration: none; }
-        html { scroll-behavior: smooth; }
-        #app { scroll-margin-top: 118px; }
-        .psPulse { animation: psPulseAnim 1.1s ease-in-out 2; border-radius: 12px; }
-        @keyframes psPulseAnim { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,216,138,0); } 50% { box-shadow: 0 0 0 4px rgba(255,216,138,0.9); } }
-      </style>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <a href="./seikaku.html" class="topTab">🌟 性格チェック</a>
-        <a href="./unsei.html" class="topTab active">🔮 個人の運勢</a>
-        <a href="./aisho.html" class="topTab">💞 相性診断</a>
-        <a href="./omajinai.html" class="topTab">✨ クロノスくんのおまじない</a>
-        <a href="./buzz.html" class="topTab" style="grid-column: 1 / -1;">📣 バズ週間チェッカー（配信者向け）</a>
-      </div>
-    </div>
-            <div id="app"></div>
-    
-
-
-    <script>
-      // 出生時間不明チェックを、通常の入力フォーム（出生時間の下）にも追加する
-      (function () {
-        function insert() {
-          var bt = document.getElementById('birthtime');
-          if (!bt || document.getElementById('unkMain')) return;
-          var lab = document.createElement('label');
-          lab.style.cssText = 'display:block; margin-top:8px; font-size:13.5px; color:#c5a880; cursor:pointer;';
-          lab.innerHTML = '<input type="checkbox" id="unkMain" style="transform:scale(1.2); margin-right:6px;">出生時間は不明（12:00で計算します）';
-          bt.parentElement.appendChild(lab);
-          lab.querySelector('input').addEventListener('change', function () {
-            var on = this.checked;
-            if (on) { bt.value = '12:00'; bt.disabled = true; } else { bt.disabled = false; }
-            var ps = document.getElementById('psUnknown');
-            if (ps) ps.checked = on;
-          });
-          var ps = document.getElementById('psUnknown');
-          if (ps) ps.addEventListener('change', function () {
-            var m = document.getElementById('unkMain');
-            if (m && m.checked !== this.checked) { m.checked = this.checked; m.dispatchEvent(new Event('change')); }
-          });
-        }
-        var iv = setInterval(function () { insert(); if (document.getElementById('unkMain')) clearInterval(iv); }, 400);
-        setTimeout(function () { clearInterval(iv); }, 15000);
-      })();
-    </script>
-        
-    <!-- アスペクトの円（運勢盤の月別カードをタップで開く） -->
-    <div id="mwModal" style="display:none; position:fixed; inset:0; background:rgba(5,5,12,0.88); z-index:60; align-items:center; justify-content:center; padding:18px;">
-      <div style="background:#14121e; border:1px solid #c5a880; border-radius:16px; padding:18px; max-width:400px; width:100%; text-align:center;">
-        <div id="mwTitle" style="font-weight:700; color:#e8cf9f; margin-bottom:10px; font-size:15px;"></div>
-        <div id="mwBody"></div>
-        <button type="button" id="mwClose" style="margin-top:12px; background:rgba(197,168,128,0.15); color:#c5a880; border:1px solid rgba(197,168,128,0.5); border-radius:999px; padding:9px 26px; font-size:14px; cursor:pointer;">閉じる</button>
-      </div>
-    </div>
-    <style>
-      .mwHint { text-align:right; font-size:11.5px; color:#c5a880; margin-top:8px; }
-      [data-mw-card] { cursor: pointer; }
-    </style>
-    <script type="module">
-      // 運勢盤の月別アスペクトカードに「タップで円」を後付けする（アプリ本体には触らない）
-      try {
-        const GLYPH_ID = { '☉':0,'☽':1,'☿':2,'♀':3,'♂':4,'♃':5,'♄':6,'♅':7,'♆':8,'♇':9,'☊':10 };
-        const ID_GLYPH = ['☉','☽','☿','♀','♂','♃','♄','♅','♆','♇','☊'];
-        const ID_NAME = ['太陽','月','水星','金星','火星','木星','土星','天王星','海王星','冥王星','ドラゴンヘッド'];
-        const SWISS_ID = [0,1,2,3,4,5,6,7,8,9,11]; // ☊は Swiss Ephemeris の 11 (TRUE_NODE)
-        const ASP_NAME = { '☌':'コンジャンクション','△':'トライン','□':'スクエア','☍':'オポジション' };
-        const ASP_RE = /【\s*([☉☽☿♀♂♃♄♅♆♇☊])\s*([☌△□☍])\s*([☉☽☿♀♂♃♄♅♆♇☊])\s*】/;
-        let M = null, juldayFn = null, natalCache = { key: '', pos: null };
-        async function initEngine() {
-          if (M) return;
-          const mod = await import('./assets/swisseph-BtfJwKK5.js');
-          const factory = typeof mod.default === 'function' ? mod.default : mod.SwissEphModule;
-          const wasmBinary = await (await fetch('./assets/swisseph-BmP0Bw24.wasm')).arrayBuffer();
-          M = await factory({ instantiateWasm: (imports, success) => { WebAssembly.instantiate(wasmBinary, imports).then(r => success(r.instance, r.module)); return {}; } });
-          juldayFn = M.cwrap('swe_julday_wrap', 'number', ['number','number','number','number','number']);
-        }
-        function calcPos(jd, planet) {
-          const out = M._malloc(48), err = M._malloc(256);
-          const rc = M.ccall('swe_calc_ut_wrap', 'number', ['number','number','number','number','number'], [jd, planet, 260, out, err]);
-          const lon = rc < 0 ? NaN : M.getValue(out, 'double');
-          M._free(out); M._free(err);
-          return lon;
-        }
-        function allPos(jd) {
-          const pos = {};
-          for (let i = 0; i <= 10; i++) pos[i] = calcPos(jd, SWISS_ID[i]);
-          return pos;
-        }
-        function selText(re) {
-          for (const s of document.querySelectorAll('select')) {
-            const o = s.selectedOptions && s.selectedOptions[0];
-            if (o && re.test(o.textContent.trim())) return o.textContent.trim();
-          }
-          return null;
-        }
-        function readBirth() {
-          const y = selText(/^\d{4}年$/), mo = selText(/^\d{1,2}月$/), d = selText(/^\d{1,2}日$/);
-          if (!y || !mo || !d) return null;
-          let hh = 12, mm = 0;
-          const t = document.querySelector('input[type="time"]');
-          if (t && t.value) { const p = t.value.split(':'); hh = +p[0] || 0; mm = +p[1] || 0; }
-          let tz = 9;
-          const tzs = selText(/UTC/);
-          if (tzs) { const m2 = tzs.match(/UTC\s*([+-])\s*(\d+(?:\.\d+)?)/); if (m2) tz = (m2[1] === '-' ? -1 : 1) * parseFloat(m2[2]); }
-          return { y: parseInt(y), m: parseInt(mo), d: parseInt(d), hourUT: hh + mm / 60 - tz };
-        }
-        function natalPos() {
-          const b = readBirth();
-          if (!b) return null;
-          const key = [b.y, b.m, b.d, b.hourUT].join('/');
-          if (natalCache.key === key && natalCache.pos) return natalCache.pos;
-          const pos = allPos(juldayFn(b.y, b.m, b.d, b.hourUT, 1));
-          natalCache = { key, pos };
-          return pos;
-        }
-        function wheelSVG(natal, transit, tId, aspGlyph, nId) {
-          const P = (lon, r) => [160 - r * Math.cos(lon * Math.PI / 180), 160 + r * Math.sin(lon * Math.PI / 180)]; // 通常のチャートと同じ反時計回り
-          const SG = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
-          let s = '<svg viewBox="0 0 320 320" style="width:100%; max-width:340px; display:block; margin:0 auto;">';
-          s += '<circle cx="160" cy="160" r="152" fill="none" stroke="#c5a880" stroke-opacity="0.5"/>';
-          s += '<circle cx="160" cy="160" r="128" fill="none" stroke="#c5a880" stroke-opacity="0.3"/>';
-          s += '<circle cx="160" cy="160" r="80" fill="none" stroke="#c5a880" stroke-opacity="0.3"/>';
-          for (let i = 0; i < 12; i++) {
-            const [x1, y1] = P(i * 30, 128), [x2, y2] = P(i * 30, 152);
-            s += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#c5a880" stroke-opacity="0.4"/>`;
-            const [gx, gy] = P(i * 30 + 15, 140);
-            s += `<text x="${gx.toFixed(1)}" y="${gy.toFixed(1)}" fill="#c5a880" font-size="13" text-anchor="middle" dominant-baseline="middle">${SG[i]}</text>`;
-          }
-          const [ax, ay] = P(natal[nId], 92), [bx, by] = P(transit[tId], 116);
-          const col = (aspGlyph === '□' || aspGlyph === '☍') ? '#e07856' : '#8fd0a8';
-          s += `<line x1="${ax.toFixed(1)}" y1="${ay.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${col}" stroke-width="2" stroke-opacity="0.9"/>`;
-          const dots = (pos, r, color, hl) => Object.keys(pos).map(k => {
-            const [x, y] = P(pos[k], r);
-            return (hl === +k ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13.5" fill="rgba(20,18,30,0.88)" stroke="${color}" stroke-width="1.8"/>` : '') +
-              `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" fill="${color}" font-size="${hl === +k ? 15 : 11}" text-anchor="middle" dominant-baseline="middle">${ID_GLYPH[k]}</text>`;
-          }).join('');
-          s += dots(transit, 116, '#a8c4e0', tId);
-          s += dots(natal, 92, '#e8cf9f', nId);
-          s += `<text x="160" y="152" fill="#e8cf9f" font-size="13" text-anchor="middle">${ID_GLYPH[tId]} ${aspGlyph} ${ID_GLYPH[nId]}</text>`;
-          s += `<text x="160" y="170" fill="#8a8178" font-size="10" text-anchor="middle">内側（金）＝あなたの星 ／ 外側（青）＝その日の空</text>`;
-          return s + '</svg>';
-        }
-        async function openWheel(card) {
-          const text = card.textContent || '';
-          const am = text.match(ASP_RE);
-          const dm = text.match(/🎯\s*(\d{1,2})月(\d{1,2})日/);
-          if (!am || !dm) return;
-          const h2 = [...document.querySelectorAll('h2')].map(e => e.textContent).join(' ');
-          const ym = h2.match(/(\d{4})年\s*運命のサイクル/);
-          if (!ym) return;
-          const year = +ym[1], month = +dm[1], day = +dm[2];
-          const tId = GLYPH_ID[am[1]], nId = GLYPH_ID[am[3]], aspGlyph = am[2];
-          await initEngine();
-          const natal = natalPos();
-          if (!natal) return;
-          const transit = allPos(juldayFn(year, month, day, 3.0, 1)); // その日の12:00(JST)
-          document.getElementById('mwTitle').textContent = `${year}年${month}月${day}日 ― 空の${ID_NAME[tId]} × あなたの${ID_NAME[nId]} ― ${ASP_NAME[aspGlyph]}`;
-          document.getElementById('mwBody').innerHTML = wheelSVG(natal, transit, tId, aspGlyph, nId);
-          document.getElementById('mwModal').style.display = 'flex';
-        }
-        function qualifies(el) {
-          const t = el.textContent || '';
-          return ASP_RE.test(t) && t.includes('影響期間') && (t.includes('💻') || t.includes('【仕事】'));
-        }
-        function enhance() {
-          const divs = document.querySelectorAll('#app div');
-          const cands = [...divs].filter(el => !el.dataset.mwCard && qualifies(el));
-          for (const el of cands) {
-            if ([...el.querySelectorAll('div')].some(d => qualifies(d))) continue; // 一番内側のカードだけ
-            el.dataset.mwCard = '1';
-            const hint = document.createElement('div');
-            hint.className = 'mwHint';
-            hint.textContent = '🔍 タップでこの配置の円を見る';
-            el.appendChild(hint);
-          }
-        }
-        document.addEventListener('click', (e) => {
-          if (e.target.closest && e.target.closest('.feelWrap')) return;
-          const card = e.target.closest && e.target.closest('[data-mw-card]');
-          if (card) openWheel(card).catch(() => {});
-        });
-        document.getElementById('mwClose').addEventListener('click', () => { document.getElementById('mwModal').style.display = 'none'; });
-        document.getElementById('mwModal').addEventListener('click', (e) => { if (e.target.id === 'mwModal') e.target.style.display = 'none'; });
-        let mwTimer = null;
-        new MutationObserver(() => { clearTimeout(mwTimer); mwTimer = setTimeout(enhance, 400); }).observe(document.body, { childList: true, subtree: true });
-        setTimeout(enhance, 1500);
-      } catch (e) { /* 後付け機能が失敗してもアプリ本体には影響させない */ }
-    </script>
-    <footer style="max-width: 880px; margin: 0 auto; padding: 28px 20px 40px; text-align: center; font-size: 12px; line-height: 1.9; color: #8a8178; border-top: 1px solid rgba(197,168,128,0.25);">
-      本サイトは、Swiss Ephemeris（© Astrodienst AG）のライセンス規約（GNU AGPL）を厳格に守り、無償提供の理念に従って運営しております。有償で提供することはありません。どなたでも自由にお使いください。
-      <br><a href="./privacy.html" target="_blank" rel="noopener noreferrer" style="color: #c5a880; text-decoration: underline;">プライバシーと安全性について（入力した情報は送信されません）</a>
-    </footer>
-    <script>
-      (function () {
-        var KEY = 'chronoscope_birth_v1';
-        function $(id) { return document.getElementById(id); }
-        function selText(id) { var el = $(id); if (!el || el.selectedIndex < 0) return ''; return el.options[el.selectedIndex].textContent.trim(); }
-        function setByText(id, text) { var el = $(id); if (!el) return; for (var i = 0; i < el.options.length; i++) { if (el.options[i].textContent.trim() === text) { el.selectedIndex = i; return; } } }
-        function save() {
-          try {
-            var data = { y: parseInt(selText('birth_year')), m: parseInt(selText('birth_month')), d: parseInt(selText('birth_day')), time: ($('birthtime') && $('birthtime').value) || '12:00', pref: selText('birthplace'), unknown: !!($('unkMain') && $('unkMain').checked) };
-            if (data.y && data.m && data.d) localStorage.setItem(KEY, JSON.stringify(data));
-          } catch (e) {}
-        }
-        function restore() {
-          try {
-            var raw = localStorage.getItem(KEY); if (!raw) return;
-            var data = JSON.parse(raw);
-            if (data.y) setByText('birth_year', data.y + '年');
-            if (data.m) setByText('birth_month', data.m + '月');
-            if (data.d) setByText('birth_day', data.d + '日');
-            if (data.time && $('birthtime')) $('birthtime').value = data.time;
-            if (data.pref) setByText('birthplace', data.pref);
-            if (data.unknown && $('unkMain') && !$('unkMain').checked) { $('unkMain').checked = true; $('unkMain').dispatchEvent(new Event('change')); }
-          } catch (e) {}
-        }
-        var tries = 0;
-        var iv = setInterval(function () {
-          tries++;
-          if (($('birth_year') && $('birthplace')) || tries > 60) { clearInterval(iv); restore(); }
-        }, 250);
-        document.addEventListener('change', function (e) {
-          if (e.target && ['birth_year', 'birth_month', 'birth_day', 'birthtime', 'birthplace', 'unkMain'].indexOf(e.target.id) >= 0) save();
-        });
-      })();
-    </script>
-    
-                
-
-        <script>
-      (function () {
-        function enhanceCards(root) {
-          (root || document).querySelectorAll('.schedule-card').forEach(function (card) {
-            if (card.dataset.enh) return;
-            var gold = card.querySelector('.peak-day-gold-badge');
-            var per = card.querySelector('.card-badge-period');
-            if (!gold || !per) { card.dataset.enh = '1'; return; }
-            var gt = gold.textContent || '', pt = per.textContent || '';
-            var pm = gt.match(/(\d+)月(\d+)日/);
-            var sm = pt.match(/(\d+)月(\d+)日\s*〜\s*(\d+)月(\d+)日/);
-            card.dataset.enh = '1';
-            if (!pm || !sm) return;
-            gold.textContent = '🎯 ' + sm[1] + '月' + sm[2] + '日 〜 ' + sm[3] + '月' + sm[4] + '日（ピーク ' + pm[1] + '月' + pm[2] + '日）';
-            per.textContent = pt + '（ピーク ' + pm[1] + '月' + pm[2] + '日）';
-            per.style.display = 'none';
-            var bm = (card.textContent || '').match(/【\s*(\S+)\s+\S+\s+(\S+)\s*】/);
-            if (bm) {
-              var tg = bm[1].replace(/\uFE0F/g, ''), ng = bm[2].replace(/\uFE0F/g, '');
-              var hard = (card.textContent || '').indexOf('注意期') >= 0;
-              var pairArr = [tg, ng];
-              function hasPair(a, b) { return (pairArr[0] === a && pairArr[1] === b) || (pairArr[0] === b && pairArr[1] === a); }
-              var tags = [];
-              var spread = ['♃', '♅'], voice = ['☉', '☿', '♀'];
-              if (!hard && ((spread.indexOf(tg) >= 0 && voice.indexOf(ng) >= 0) || (voice.indexOf(tg) >= 0 && spread.indexOf(ng) >= 0))) tags.push(['📣 バズ日和', '#b98a2f', '#ffd88a']);
-              if (hard && (['☿', '♃', '♅'].indexOf(tg) >= 0 || ['☿', '♃', '♅'].indexOf(ng) >= 0)) tags.push(['📣 炎上注意', '#a8543f', '#ff9d85']);
-              if (hasPair('♄', '☉') || hasPair('♄', '☿')) tags.push(hard ? ['👔 目上注意', '#a8543f', '#ff9d85'] : ['👔 上司ウケ', '#7a6a9f', '#c9bfff']);
-              if (hasPair('♀', '☿') || hasPair('♀', '♃')) tags.push(hard ? ['🤝 対人注意', '#a8543f', '#ff9d85'] : ['🤝 顧客グッド', '#4f7d5a', '#a8e6b0']);
-              var anchorEl = gold;
-              tags.forEach(function (t) {
-                var tag = document.createElement('span');
-                tag.className = 'lensTag';
-                tag.style.cssText = 'display:inline-block;margin-left:6px;font-size:11px;border-radius:999px;padding:2px 8px;border:1px solid ' + t[1] + ';color:' + t[2] + ';';
-                tag.textContent = t[0];
-                anchorEl.parentElement.insertBefore(tag, anchorEl.nextSibling);
-                anchorEl = tag;
-              });
-            }
-          });
-        }
-        var iv = setInterval(function () {
-          var list = document.getElementById('scheduleList');
-          if (list) {
-            clearInterval(iv);
-            enhanceCards(list);
-            new MutationObserver(function () { enhanceCards(list); }).observe(list, { childList: true, subtree: true });
-          }
-        }, 400);
-      })();
-    </script>
-      <script>
-      (function () {
-        var iv = setInterval(function () {
-          var btn = document.getElementById('calcBtn');
-          if (!btn || document.getElementById('buzzLink')) { if (btn) clearInterval(iv); return; }
-          var a = document.createElement('a');
-          a.id = 'buzzLink';
-          a.href = './buzz.html';
-          a.textContent = '📣 配信者の方へ：バズ週間チェッカー（この先8週間で発信が伸びやすい週を探す）';
-          a.style.cssText = 'display:block;text-align:center;margin-top:14px;color:#ffd88a;font-size:13px;';
-          btn.parentElement.insertBefore(a, btn.nextSibling);
-          clearInterval(iv);
-        }, 400);
-        setTimeout(function () { clearInterval(iv); }, 30000);
-      })();
-    </script>
-  <script>
-(function () {
-var DAY = 86400000;
-function fmt(ms) { var d = new Date(ms); return (d.getUTCMonth() + 1) + '/' + d.getUTCDate();}
-function fmtFull(ms) { var d = new Date(ms); return (d.getUTCMonth() + 1) + '月' + d.getUTCDate() + '日';}
-function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');}
-function parseSpanMs(tx, Y) {
-var sm = tx.match(/影響期間[:：]\s*(\d+)月(\d+)日\s*〜\s*(\d+)月(\d+)日/);
-if (!sm) return null;
-var start = Date.UTC(Y, +sm[1] - 1, +sm[2]);
-var end = Date.UTC(Y, +sm[3] - 1, +sm[4]);
-if (end < start) end = Date.UTC(Y + 1, +sm[3] - 1, +sm[4]);
-var pm = tx.match(/ピーク\s*(\d+)月(\d+)日/);
-var peak = null;
-if (pm) {
-var mid = (start + end) / 2;
-var cands = [Date.UTC(Y - 1, +pm[1] - 1, +pm[2]), Date.UTC(Y, +pm[1] - 1, +pm[2]), Date.UTC(Y + 1, +pm[1] - 1, +pm[2])];
-peak = cands[0];
-for (var i = 1; i < 3; i++) if (Math.abs(cands[i] - mid) < Math.abs(peak - mid)) peak = cands[i];
-}
-return { start: start, end: end, peak: peak};
-}
-function scanYear() {
-var sy = document.getElementById('scanyear');
-var v = sy? parseInt(sy.value, 10): NaN;
-return isNaN(v)? new Date().getFullYear(): v;
-}
-function monthOfList(list) {
-var h = list.querySelector('h2');
-if (!h) return null;
-var mm = h.textContent.match(/(\d+)月の星/);
-return mm? +mm[1]: null;
-}
-function collectRows(list, Y) {
-var rows = [], seen = {};
-list.querySelectorAll('.schedule-card').forEach(function (card) {
-if (card.style.display === 'none') return;
-var tx = card.textContent || '';
-if (tx.indexOf('💻') < 0) return;
-var sp = parseSpanMs(tx, Y);
-if (!sp) return;
-var li = tx.indexOf('\u3010');
-            var ri = tx.indexOf('\u3011');
-var label = (li >= 0 && ri > li)? tx.slice(li + 1, ri).replace(/\s+/g, ' ').trim(): tx.slice(0, 20);
-var key = label + '|' + sp.start;
-if (seen[key]) return;
-seen[key] = 1;
-rows.push({
-label: label, start: sp.start, end: sp.end, peak: sp.peak, el: card,
-hard: tx.indexOf('⚠️') >= 0 || tx.indexOf('注意期') >= 0
-});
-});
-rows.sort(function (a, b) { return a.start - b.start || ((a.peak || a.start) - (b.peak || b.start));});
-return rows;
-}
-function collectRoadmap(Y, winStart, winEnd) {
-var hs = document.getElementById('halfSumSection');
-if (!hs || hs.style.display === 'none') return [];
-var out = [];
-hs.querySelectorAll('.roadmap-card').forEach(function (card) {
-var badge = card.querySelector('.roadmap-date-badge');
-if (!badge) return;
-var mm = (badge.textContent || '').match(/(\d+)月(\d+)日/);
-if (!mm) return;
-var ms = Date.UTC(Y, +mm[1] - 1, +mm[2]);
-if (ms < winStart || ms > winEnd) return;
-var t = card.querySelector('.roadmap-card-title');
-out.push({ ms: ms, title: t? t.textContent.trim(): ''});
-});
-return out;
-}
-function heroWindow(rows, winStart, winEnd) {
-var totalDays = Math.round((winEnd - winStart) / DAY) + 1;
-var span = Math.min(7, totalDays);
-var best = null;
-for (var s = winStart; s + (span - 1) * DAY <= winEnd; s += DAY) {
-var e = s + (span - 1) * DAY;
-var density = 0, gU = 0, hU = 0, peaks = [];
-rows.forEach(function (r) {
-if (r.end < s || r.start > e) return;
-if (r.hard) hU++; else gU++;
-if (r.peak && r.peak >= s && r.peak <= e) peaks.push(r);
-});
-for (var d = 0; d < span; d++) {
-var day = s + d * DAY, net = 0;
-rows.forEach(function (r) {
-if (r.start <= day && day <= r.end) net += r.hard? -1: 1;
-});
-density += net;
-}
-var score = density * 100 + peaks.length * 10 + (gU - hU);
-if (!best || score > best.score) best = { s: s, e: e, gU: gU, hU: hU, peaks: peaks, score: score, density: density};
-}
-return best;
-}
-function dayNets(rows, winStart, winEnd) {
-var out = [];
-for (var ms = winStart; ms <= winEnd; ms += DAY) {
-var g = 0, h = 0, peaks = [];
-rows.forEach(function (r) {
-if (r.start <= ms && ms <= r.end) { if (r.hard) h++; else g++;}
-if (r.peak === ms) peaks.push(r);
-});
-out.push({ ms: ms, g: g, h: h, net: g - h, peaks: peaks});
-}
-return out;
-}
-function verdictOf(g, r) {
-var df = g - r;
-if (df >= 2) return 'プラス強め';
-if (df === 1) return 'プラス寄り';
-if (df === 0) return '互角';
-if (df === -1) return '注意寄り';
-return '注意強め';
-}
-var lastRows = [], lastHero = null;
-var selectedMs = null, lastWinStart = null, lastWinEnd = null;
-var selectedWs = null, fmTargetIdx = -1;
-var pendingJump = false;
-document.addEventListener('click', function (e) {
-if (e.target && e.target.id === 'calcBtn') pendingJump = true;
-});
-function ensureSection(list) {
-var sec = document.getElementById('flowMap');
-if (sec) return sec;
-sec = document.createElement('div');
-sec.id = 'flowMap';
-sec.style.cssText = 'max-width:880px;margin:26px auto 0;padding:16px 16px 12px;border:1px solid #c5a880;border-radius:12px;background:rgba(197,168,128,0.05);scroll-margin-top:140px;';
-sec.addEventListener('click', function (e) {
-var wk = e.target.closest ? e.target.closest('.fmWeek') : null;
-if (wk) {
-selectedWs = +wk.getAttribute('data-ws');
-sec.querySelectorAll('.fmWeek').forEach(function (c) {
-var on = +c.getAttribute('data-ws') === selectedWs;
-c.style.background = on ? 'rgba(255,216,138,0.25)' : '';
-c.style.boxShadow = on ? 'inset 0 0 0 1.5px #ffd88a' : '';
-});
-openWeek(selectedWs);
-return;
-}
-var wb = e.target.closest ? e.target.closest('.fmWeekBtn') : null;
-if (wb) { openWeek(+wb.getAttribute('data-ws')); return; }
-var col = e.target.closest? e.target.closest('.fmDay'): null;
-if (col) {
-selectedMs = +col.getAttribute('data-ms');
-sec.querySelectorAll('.fmDay').forEach(function (c) {
-var on = +c.getAttribute('data-ms') === selectedMs;
-c.style.background = on ? 'rgba(255,216,138,0.25)' : '';
-c.style.boxShadow = on ? 'inset 0 0 0 1.5px #ffd88a' : '';
-});
-openDay(selectedMs);
-}
-});
-var hs = document.getElementById('halfSumSection');
-if (list && list.parentElement) list.parentElement.insertBefore(sec, list);
-else if (hs && hs.parentElement) hs.parentElement.insertBefore(sec, hs);
-else if (list.parentElement) list.parentElement.appendChild(sec);
-return sec;
-}
-function ensureModal() {
-var md = document.getElementById('flowModal');
-if (md) return md;
-md = document.createElement('div');
-md.id = 'flowModal';
-md.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(5,5,12,0.88);z-index:70;align-items:center;justify-content:center;padding:14px;';
-md.innerHTML = '<div style="width:100%;max-width:680px;max-height:86vh;overflow-y:auto;background:#14120e;border:1px solid #c5a880;border-radius:14px;padding:16px;position:relative;">'
-+ '<button type="button" id="flowModalClose" style="position:absolute;top:8px;right:10px;background:transparent;border:none;color:#c5a880;font-size:20px;cursor:pointer;line-height:1;">✕</button>'
-+ '<div id="flowModalBody"></div></div>';
-document.body.appendChild(md);
-function hide() { md.style.display = 'none'; document.body.style.overflow = '';}
-md.querySelector('#flowModalClose').addEventListener('click', hide);
-md.addEventListener('click', function (e) {
-if (e.target === md) { hide(); return;}
-if (e.target.closest && e.target.closest('[data-mw-card]')) hide();
-});
-return md;
-}
-var THEME = { '☉': '自分らしさと勝負ごと', '☽': '気持ちと体調', '☿': '連絡と仕事の段取り', '♀': '恋愛とお金', '♂': '仕事の勢いと行動', '♃': 'チャンスと広がり', '♄': '責任と積み重ね', '♅': '変化と新しいこと', '♆': '直感とイメージ', '♇': '深い見直し' };
-          var GOODC = { '☉': '表に出ること・勝負ごと', '☽': '気持ちの安定・身近な人との時間', '☿': '連絡・交渉・手続きのスムーズさ', '♀': '恋愛の進展・嬉しい買い物・人からの誘い', '♂': 'やる気と行動力・先手の動き', '♃': 'チャンスの広がり・助けてくれる人', '♄': 'コツコツの成果・信頼が固まること', '♅': '新しいやり方・意外な出会い', '♆': '直感とイメージ・癒しの時間', '♇': '深い集中・本気の立て直し' };
-          var HARDC = { '☉': 'プライドがらみの意地の張り合い', '☽': '気分の波・体調の無理', '☿': '連絡ミス・書類の見落とし・言い間違い', '♀': '甘い誘い・衝動買い', '♂': 'ケンカ・せっかちさ・勢いだけの決断', '♃': '話が大きくなりすぎること・約束のしすぎ', '♄': '締め切りと責任の重さ・冷たい対応', '♅': '急な予定変更・機械やネットのトラブル', '♆': '曖昧な話・うまい話への流されやすさ', '♇': '執着と極端な決断・根深い疲れ' };
-          var GOODACT = { '☉': '目立つ場面では前に出て正解', '☽': '身近な人との時間を優先して', '☿': '連絡や手続きは今日のうちに片付けると後が楽', '♀': '誘いには乗って正解、欲しい物も買い時', '♂': '先手で動くと流れが掴めます', '♃': '誘いや頼みごとは広がりに繋がります', '♄': 'コツコツ作業が一番進む日', '♅': '新しいやり方を試すと当たりです', '♆': '直感で選んで正解', '♇': '本気の立て直しに着手するなら今日' };
-          var HARDACT = { '☉': '意地の張り合いは避けて', '☽': '無理せず、早めに休むのも大事', '☿': '大事な連絡は送信前にもう一度確認を', '♀': '甘い話と衝動買いは一晩寝かせて', '♂': '返事は一拍置いて、勢いだけで決めないで', '♃': '約束は欲張らず、少なめに', '♄': '締め切りは前倒しで、冷たい返事に注意', '♅': '予定変更に備えて、予備の段取りを', '♆': 'うまい話は鵜呑みにしないで', '♇': '極端な決断と執着は今日は封印' };
-function natalGlyph(tx) {
-var re = new RegExp('\\u3010\\s*\\S+\\s+\\S+\\s+(\\S+)\\s*\\u3011');
-var m = tx.match(re);
-if (!m) return null;
-var g = m[1].replace(/️/g, '');
-return THEME[g]? g: null;
-}
-function topGlyphs(obj) { return Object.keys(obj).sort(function (a, b) { return obj[b] - obj[a];}).slice(0, 2);}
-function daySummaryHtml(cover, g, h, isWeek) {
-var goodThemes = {}, hardThemes = {};
-cover.forEach(function (r) {
-if (!r._glyph) return;
-if (r.hard) hardThemes[r._glyph] = (hardThemes[r._glyph] || 0) + 1;
-else goodThemes[r._glyph] = (goodThemes[r._glyph] || 0) + 1;
-});
-var gtG = topGlyphs(goodThemes), htG = topGlyphs(hardThemes);
-var air;
-if (g > 0 && h > 0 && Math.abs(g - h) < 2) air = (isWeek ? '良い流れと注意が同居する週です。使い分けが大事になります。' : '良い流れと注意が同居する日です。「どっち？」と迷う日は、使い分けが大事になります。');
-else if (g - h >= 2) air = (isWeek ? '良い流れが多めの週です。' : '良い流れが多めの日です。');
-else if (h - g >= 2) air = (isWeek ? '注意が多めの週です。' : '注意が多めの日です。');
-else if (h === 0) air = (isWeek ? '良い流れだけが目立つ週です。' : '良い流れだけが目立つ日です。');
-else air = (isWeek ? '注意だけが目立つ週です。' : '注意だけが目立つ日です。');
-var html = '<div style="margin-top:10px;border:1px solid rgba(197,168,128,0.5);border-radius:10px;padding:10px 12px;background:rgba(197,168,128,0.06);">';
-html += '<div style="font-size:13px;font-weight:700;color:#e8cf9f;">この' + (isWeek ? '週' : '日') + 'のまとめ</div>';
-html += '<div style="font-size:13.5px;color:#faf6f0;line-height:1.8;margin-top:4px;">' + air + '</div>';
-if (gtG.length) html += '<div style="font-size:13px;color:#faf6f0;line-height:1.8;margin-top:2px;">活かしどころ：「' + gtG.map(function (x) { return GOODC[x] || THEME[x];}).join('」「') + '」</div>';
-if (htG.length) html += '<div style="font-size:13px;color:#faf6f0;line-height:1.8;margin-top:2px;">注意どころ：「' + htG.map(function (x) { return HARDC[x] || THEME[x];}).join('」「') + '」</div>';
-var act = '';
-if (gtG.length && htG.length) {
-var leadGood = g >= h;
-if (leadGood) act = (GOODACT[gtG[0]] || '') + (HARDACT[htG[0]]? ' その分、' + HARDACT[htG[0]] + '。': '');
-else act = (HARDACT[htG[0]] || '') + (GOODACT[gtG[0]]? ' その分、' + GOODACT[gtG[0]] + '。': '');
-if (act && act.charAt(act.length - 1)!== '。') act += '。';
-} else if (gtG.length && GOODACT[gtG[0]]) act = GOODACT[gtG[0]] + '。';
-else if (htG.length && HARDACT[htG[0]]) act = HARDACT[htG[0]] + '。';
-if (act) html += '<div style="font-size:13.5px;color:#ffd88a;line-height:1.8;margin-top:4px;">→ こうして： ' + act + '</div>';
-html += '</div>';
-return html;
-}
-function openWeek(ws) {
-var md = ensureModal();
-var body = md.querySelector('#flowModalBody');
-var we = Math.min(ws + 6 * DAY, lastWinEnd !== null ? lastWinEnd : ws + 6 * DAY);
-var secEl = document.getElementById('flowMap');
-if (secEl) secEl.querySelectorAll('.fmWeek').forEach(function (c) {
-var on = +c.getAttribute('data-ws') === ws;
-c.style.background = on ? 'rgba(255,216,138,0.25)' : '';
-c.style.boxShadow = on ? 'inset 0 0 0 1.5px #ffd88a' : '';
-});
-var cover = lastRows.filter(function (r) { return r.start <= we && ws <= r.end; });
-cover.forEach(function (r) { r._glyph = natalGlyph(r.el.textContent || ''); });
-cover.sort(function (a, b) {
-var pa = (a.peak && a.peak >= ws && a.peak <= we) ? 0 : 1, pb = (b.peak && b.peak >= ws && b.peak <= we) ? 0 : 1;
-if (pa !== pb) return pa - pb;
-if (a.hard !== b.hard) return a.hard ? 1 : -1;
-return a.start - b.start;
-});
-var g = 0, h = 0, pk = 0;
-cover.forEach(function (r) { if (r.hard) h++; else g++; if (r.peak && r.peak >= ws && r.peak <= we) pk++; });
-var html = '<div style="font-size:17px;font-weight:700;color:#e8cf9f;">📅 ' + fmtFull(ws) + ' 〜 ' + fmtFull(we) + ' の週</div>';
-html += '<div style="font-size:12.5px;color:#c5a880;margin-top:4px;">この週にかかる配置： 良い流れ ' + g + '件 ／ 注意 ' + h + '件' + (pk ? ' ／ ◆この週がピーク ' + pk + '件' : '') + '</div>';
-if (cover.length) html += daySummaryHtml(cover, g, h, true);
-html += '<div style="display:flex;gap:8px;margin-top:10px;">'
-+ '<button type="button" id="fmPrevW" style="flex:1;background:transparent;color:#ffd88a;border:1px solid #b98a2f;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:700;cursor:pointer;' + (lastWinStart !== null && ws <= lastWinStart ? 'opacity:0.35;' : '') + '">◀ 前の週</button>'
-+ '<button type="button" id="fmNextW" style="flex:1;background:transparent;color:#ffd88a;border:1px solid #b98a2f;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:700;cursor:pointer;' + (lastWinEnd !== null && we >= lastWinEnd ? 'opacity:0.35;' : '') + '">次の週 ▶</button></div>';
-html += '<div style="font-size:11.5px;color:#8a8178;margin-top:8px;">各配置の詳しい説明です。説明文をタップすると、ホロスコープ円が開きます。</div>';
-body.innerHTML = html;
-var pvW = body.querySelector('#fmPrevW'), nxW = body.querySelector('#fmNextW');
-if (pvW) pvW.addEventListener('click', function () { if (lastWinStart === null || ws > lastWinStart) { selectedWs = ws - 7 * DAY; openWeek(selectedWs); } });
-if (nxW) nxW.addEventListener('click', function () { if (lastWinEnd === null || we < lastWinEnd) { selectedWs = ws + 7 * DAY; openWeek(selectedWs); } });
-if (!cover.length) {
-var none = document.createElement('div');
-none.style.cssText = 'font-size:13.5px;color:#faf6f0;margin-top:12px;line-height:1.8;';
-none.textContent = 'この週にかかる配置はありません。静かな週です。';
-body.appendChild(none);
-}
-cover.forEach(function (r) {
-var wrap = document.createElement('div');
-wrap.style.marginTop = '14px';
-var chip = '';
-if (r.peak && r.peak >= ws && r.peak <= we) chip = '◆ ピークは ' + fmtFull(r.peak) + ' ';
-chip += '（' + fmt(r.start) + '〜' + fmt(r.end) + '）';
-var chipDiv = document.createElement('div');
-chipDiv.style.cssText = 'font-size:11.5px;color:#c5a880;margin-bottom:4px;';
-chipDiv.textContent = chip;
-wrap.appendChild(chipDiv);
-var c = r.el.cloneNode(true);
-c.style.display = '';
-c.removeAttribute('id');
-c.querySelectorAll('[id]').forEach(function (x) { x.removeAttribute('id'); });
-var fw = c.querySelector('.feelWrap');
-if (fw) fw.remove();
-wrap.appendChild(c);
-if (r._glyph) {
-var adv = document.createElement('div');
-adv.style.cssText = 'font-size:12.5px;line-height:1.7;margin-top:5px;color:' + (r.hard ? '#ff9d85' : '#ffd88a') + ';';
-adv.textContent = r.hard
-? ('注意どころ： ' + (HARDC[r._glyph] || THEME[r._glyph]) + (HARDACT[r._glyph] ? ' ― ' + HARDACT[r._glyph] : ''))
-: ('活かしどころ： ' + (GOODC[r._glyph] || THEME[r._glyph]) + (GOODACT[r._glyph] ? ' ― ' + GOODACT[r._glyph] : ''));
-wrap.appendChild(adv);
-}
-body.appendChild(wrap);
-});
-md.style.display = 'flex';
-document.body.style.overflow = 'hidden';
-md.querySelector('#flowModalBody').parentElement.scrollTop = 0;
-}
-
-function openDay(ms) {
-var md = ensureModal();
-var body = md.querySelector('#flowModalBody');
-var secEl = document.getElementById('flowMap');
-if (secEl) secEl.querySelectorAll('.fmDay').forEach(function (c) {
-var on = +c.getAttribute('data-ms') === ms;
-c.style.background = on ? 'rgba(255,216,138,0.25)' : '';
-c.style.boxShadow = on ? 'inset 0 0 0 1.5px #ffd88a' : '';
-});
-var WD = ['日', '月', '火', '水', '木', '金', '土'];
-var cover = lastRows.filter(function (r) { return r.start <= ms && ms <= r.end;});
-cover.forEach(function (r) { r._glyph = natalGlyph(r.el.textContent || '');});
-cover.sort(function (a, b) {
-var pa = a.peak === ms? 0: 1, pb = b.peak === ms? 0: 1;
-if (pa!== pb) return pa - pb;
-if (a.hard!== b.hard) return a.hard? 1: -1;
-return a.start - b.start;
-});
-var g = 0, h = 0, pk = 0;
-cover.forEach(function (r) { if (r.hard) h++; else g++; if (r.peak === ms) pk++;});
-var html = '<div style="font-size:17px;font-weight:700;color:#e8cf9f;">📅 ' + fmtFull(ms) + '（' + WD[new Date(ms).getUTCDay()] + '）</div>';
-html += '<div style="font-size:12.5px;color:#c5a880;margin-top:4px;">この日にかかる配置： 良い流れ ' + g + '件 ／ 注意 ' + h + '件' + (pk? ' ／ ◆この日がピーク ' + pk + '件': '') + '</div>';
-if (cover.length) html += daySummaryHtml(cover, g, h);
-html += '<div style="display:flex;gap:8px;margin-top:10px;">'
-+ '<button type="button" id="fmPrev" style="flex:1;background:transparent;color:#ffd88a;border:1px solid #b98a2f;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:700;cursor:pointer;' + (lastWinStart !== null && ms <= lastWinStart ? 'opacity:0.35;' : '') + '">◀ 前の日</button>'
-+ '<button type="button" id="fmNext" style="flex:1;background:transparent;color:#ffd88a;border:1px solid #b98a2f;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:700;cursor:pointer;' + (lastWinEnd !== null && ms >= lastWinEnd ? 'opacity:0.35;' : '') + '">次の日 ▶</button></div>';
-html += '<div style="font-size:11.5px;color:#8a8178;margin-top:8px;">各配置の詳しい説明です。説明文をタップすると、ホロスコープ円が開きます。</div>';
-body.innerHTML = html;
-var pvB = body.querySelector('#fmPrev'), nxB = body.querySelector('#fmNext');
-if (pvB) pvB.addEventListener('click', function () { if (lastWinStart === null || ms > lastWinStart) { selectedMs = ms - DAY; openDay(selectedMs); } });
-if (nxB) nxB.addEventListener('click', function () { if (lastWinEnd === null || ms < lastWinEnd) { selectedMs = ms + DAY; openDay(selectedMs); } });
-if (!cover.length) {
-var none = document.createElement('div');
-none.style.cssText = 'font-size:13.5px;color:#faf6f0;margin-top:12px;line-height:1.8;';
-none.textContent = 'この日にかかる配置はありません。静かな日です。';
-body.appendChild(none);
-}
-cover.forEach(function (r) {
-var wrap = document.createElement('div');
-wrap.style.marginTop = '14px';
-var chip = '';
-if (r.peak) {
-var diff = Math.round((r.peak - ms) / DAY);
-if (diff === 0) chip = '◆ 今日がピーク';
-else if (diff > 0) chip = 'ピークまであと' + diff + '日';
-else chip = 'ピーク過ぎ' + (-diff) + '日目';
-}
-chip += (chip? '（': '（') + fmt(r.start) + '〜' + fmt(r.end) + '）';
-var chipDiv = document.createElement('div');
-chipDiv.style.cssText = 'font-size:11.5px;color:#c5a880;margin-bottom:4px;';
-chipDiv.textContent = chip;
-wrap.appendChild(chipDiv);
-var c = r.el.cloneNode(true);
-c.style.display = '';
-c.removeAttribute('id');
-c.querySelectorAll('[id]').forEach(function (x) { x.removeAttribute('id');});
-var fw = c.querySelector('.feelWrap');
-if (fw) fw.remove();
-wrap.appendChild(c);
-if (r._glyph) {
-var adv = document.createElement('div');
-adv.style.cssText = 'font-size:12.5px;line-height:1.7;margin-top:5px;color:' + (r.hard? '#ff9d85': '#ffd88a') + ';';
-adv.textContent = r.hard
-? ('注意どころ： ' + (HARDC[r._glyph] || THEME[r._glyph]) + (HARDACT[r._glyph]? ' ― ' + HARDACT[r._glyph]: ''))
-: ('活かしどころ： ' + (GOODC[r._glyph] || THEME[r._glyph]) + (GOODACT[r._glyph]? ' ― ' + GOODACT[r._glyph]: ''));
-wrap.appendChild(adv);
-}
-body.appendChild(wrap);
-});
-md.style.display = 'flex';
-document.body.style.overflow = 'hidden';
-md.querySelector('#flowModalBody').parentElement.scrollTop = 0;
-}
-        var lastSig = '';
-function build() {
-var list = document.getElementById('scheduleList');
-if (!list) return;
-var sec = document.getElementById('flowMap');
-var loading = document.getElementById('dayLoading');
-if (loading || list.style.visibility === 'hidden') { if (sec) sec.style.display = 'none'; return;}
-var dayMode =!!document.getElementById('dayBanner');
-var Y = scanYear();
-var hs0 = document.getElementById('halfSumSection');
-var sig = (dayMode? 'D': 'M') + Y + ':' + list.innerHTML.length + ':' + list.querySelectorAll('.schedule-card').length + ':' + (hs0? hs0.innerHTML.length: 0);
-if (sig === lastSig && sec) return;
-var rows = collectRows(list, Y);
-if (!rows.length) { if (sec) sec.style.display = 'none'; lastSig = sig; lastRows = []; return;}
-var winStart, winEnd, winLabel;
-if (dayMode) {
-winStart = Math.min.apply(null, rows.map(function (r) { return r.start;}));
-winEnd = Math.max.apply(null, rows.map(function (r) { return r.end;}));
-winLabel = fmtFull(winStart) + ' 〜 ' + fmtFull(winEnd);
-} else {
-var m = monthOfList(list);
-if (!m) { if (sec) sec.style.display = 'none'; return;}
-winStart = Date.UTC(Y, m - 1, 1);
-winEnd = Date.UTC(Y, m, 0);
-winLabel = Y + '年' + m + '月';
-}
-var totalDays = Math.round((winEnd - winStart) / DAY) + 1;
-lastWinStart = winStart; lastWinEnd = winEnd;
-if (pendingJump) {
-var tgt = null;
-var dj = document.body.dataset.fmJump;
-if (dj) { var pp = dj.split('-'); tgt = { y: +pp[0], m: +pp[1] }; }
-if (!tgt) { var nd2 = new Date(); tgt = { y: nd2.getFullYear(), m: nd2.getMonth() + 1 }; }
-var wY = new Date(winStart).getUTCFullYear(), wM = new Date(winStart).getUTCMonth();
-if (wY === tgt.y && wM !== tgt.m - 1) {
-var tabB = document.querySelector('#monthTabs button[data-month="' + tgt.m + '"]');
-if (tabB) { if (sec) sec.style.display = 'none'; tabB.click(); return; }
-}
-pendingJump = false;
-setTimeout(function () { var sc2 = document.getElementById('flowMap'); if (sc2) sc2.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
-}
-function pct(ms) { return ((ms - winStart) / DAY) / totalDays * 100;}
-var nowD = new Date();
-var todayMs = Date.UTC(nowD.getFullYear(), nowD.getMonth(), nowD.getDate());
-var showToday = todayMs >= winStart && todayMs <= winEnd;
-var marks = dayMode? []: collectRoadmap(Y, winStart, winEnd);
-var hero = rows.length >= 2? heroWindow(rows, winStart, winEnd): null;
-lastRows = rows; lastHero = hero;
-sec = ensureSection(list);
-var html = '<style>.fmDay:active,.fmWeek:active{background:rgba(255,216,138,0.35) !important;}</style><div style="font-size:16px;font-weight:700;color:#e8cf9f;">🧭 流れマップ <span style="font-size:12px;font-weight:400;color:#8a8178;">' + winLabel + '</span></div>';
-if (hero) {
-html += '<div style="margin-top:12px;border:1.5px solid #b98a2f;border-radius:12px;padding:12px 14px;background:rgba(185,138,47,0.10);">';
-html += '<div style="font-size:15.5px;font-weight:700;color:#ffd88a;">🔥 ' + (dayMode? 'この期間で': 'この月で') + 'いちばん濃い' + (Math.round((hero.e - hero.s) / DAY) + 1) + '日間： ' + fmtFull(hero.s) + ' 〜 ' + fmtFull(hero.e) + '</div>';
-html += '<div style="font-size:12.5px;color:#faf6f0;margin-top:5px;line-height:1.7;">良い流れの配置 ' + hero.gU + '件 ／ 注意の配置 ' + hero.hU + '件（' + verdictOf(hero.gU, hero.hU) + '）</div>';
-if (hero.peaks.length) {
-html += '<div style="font-size:12.5px;color:#c5a880;margin-top:2px;line-height:1.7;">ピークが来る日： ' + hero.peaks.map(function (r) { return fmt(r.peak) + ' ' + esc(r.label);}).join('、') + '</div>';
-}
-var inHero = marks.filter(function (mk) { return mk.ms >= hero.s && mk.ms <= hero.e;});
-if (inHero.length) {
-html += '<div style="font-size:12.5px;color:#ff9d85;margin-top:2px;line-height:1.7;">🧭 運命のサイクルの転換日（' + inHero.map(function (mk) { return fmtFull(mk.ms);}).join('、') + '）もこの期間の中です</div>';
-}
-html += '</div>';
-}
-// daily meter
-var netsAll = dayNets(rows, winStart, winEnd);
-var weeks = [];
-for (var ws = winStart; ws <= winEnd; ws += 7 * DAY) {
-var we = Math.min(ws + 6 * DAY, winEnd);
-var sum = 0;
-netsAll.forEach(function (n) { if (n.ms >= ws && n.ms <= we) sum += n.net; });
-var pg = 0, ph = 0;
-rows.forEach(function (r) { if (r.peak && r.peak >= ws && r.peak <= we) { if (r.hard) ph++; else pg++; } });
-weeks.push({ ws: ws, we: we, sum: sum, pg: pg, ph: ph });
-}
-var maxAbsW = 1;
-weeks.forEach(function (w) { if (Math.abs(w.sum) > maxAbsW) maxAbsW = Math.abs(w.sum); });
-html += '<div style="font-size:12.5px;font-weight:700;color:#e8cf9f;margin-top:14px;">📊 週ごとの波</div>';
-html += '<div id="fmMeter" style="display:flex;gap:2px;margin-top:4px;overflow-x:auto;padding-bottom:4px;">';
-fmTargetIdx = -1;
-weeks.forEach(function (w, idx) {
-var inHeroW = hero && w.ws <= hero.e && w.we >= hero.s;
-var selW = w.ws === selectedWs;
-var barH = w.sum === 0 ? 2 : 8 + Math.round(Math.abs(w.sum) / maxAbsW * 30);
-var barBg = w.sum > 0 ? 'linear-gradient(180deg,#d8b45a,#b98a2f)' : (w.sum < 0 ? 'linear-gradient(180deg,#7a9fc5,#54708f)' : '#38332c');
-var colFlex = weeks.length <= 8 ? 'flex:1 1 0;min-width:0;' : 'flex:0 0 44px;width:44px;';
-if (selW || (selectedWs === null && fmTargetIdx < 0 && ((showToday && todayMs >= w.ws && todayMs <= w.we) || (hero && hero.s >= w.ws && hero.s <= w.we)))) fmTargetIdx = idx;
-html += '<div class="fmWeek" data-ws="' + w.ws + '" style="' + colFlex + 'display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:92px;cursor:pointer;border-radius:6px;padding-top:2px;' + (selW ? 'background:rgba(255,216,138,0.25);box-shadow:inset 0 0 0 1.5px #ffd88a;' : (inHeroW ? 'background:rgba(185,138,47,0.13);' : '')) + '">';
-html += '<div style="font-size:9px;color:#ffd88a;height:11px;line-height:11px;">' + ((w.pg + w.ph) ? '◆' : '') + '</div>';
-html += '<div style="width:70%;max-width:22px;border-radius:3px 3px 0 0;background:' + barBg + ';height:' + barH + 'px;"></div>';
-html += '<div style="font-size:10px;margin-top:2px;height:14px;' + (selW ? 'color:#ffd88a;font-weight:700;' : 'color:#c5a880;') + '">' + fmt(w.ws) + '</div>';
-html += '<div style="font-size:9.5px;height:13px;color:#8a8178;">' + ((w.pg + w.ph) ? '良' + w.pg + ' 注' + w.ph : '') + '</div>';
-html += '</div>';
-});
-html += '</div>';
-html += '<div style="font-size:11px;color:#8a8178;margin-top:3px;line-height:1.6;">バーの高さは、その週の波（良い流れ−注意の重なり）です。◆はピークのある週、金色の帯は「いちばん濃い期間」と重なる週。週をタップすると、その週の配置が詳しく開きます。</div>';
-weeks.forEach(function (w) {
-var inHeroW2 = hero && w.ws <= hero.e && w.we >= hero.s;
-var vd = (w.pg + w.ph === 0 && w.sum === 0) ? '静か' : (w.sum >= 3 ? 'プラス強め' : (w.sum >= 1 ? 'プラス寄り' : (w.sum <= -3 ? 'マイナス強め' : (w.sum <= -1 ? 'マイナス寄り' : '互角'))));
-var fillW = w.sum === 0 ? 0 : Math.max(8, Math.round(Math.abs(w.sum) / maxAbsW * 100));
-var fillBg = w.sum > 0 ? 'linear-gradient(90deg,#8a6a25,#e8cf9f)' : 'linear-gradient(90deg,#54708f,#7a9fc5)';
-html += '<div style="border:1px solid ' + (inHeroW2 ? 'rgba(232,207,159,0.65)' : 'rgba(232,207,159,0.18)') + ';border-radius:14px;padding:13px 15px;margin-top:10px;background:rgba(255,255,255,0.02);">';
-html += '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;"><div style="font-size:16.5px;font-weight:700;color:#faf6f0;">' + (inHeroW2 ? '🔥 ' : '') + fmtFull(w.ws) + ' 〜 ' + fmtFull(w.we) + '</div><div style="font-size:12.5px;color:#c5a880;flex:none;">' + vd + '</div></div>';
-html += '<div style="height:8px;border-radius:99px;background:#2a251c;margin-top:9px;overflow:hidden;"><div style="height:100%;width:' + fillW + '%;background:' + fillBg + ';border-radius:99px;"></div></div>';
-html += '<div style="font-size:12.5px;color:#b6ab9c;margin-top:8px;">良い流れのピーク ' + w.pg + '件 ／ 注意のピーク ' + w.ph + '件</div>';
-html += '<button type="button" class="fmWeekBtn" data-ws="' + w.ws + '" style="margin-top:9px;background:none;border:1px solid rgba(232,207,159,0.55);color:#e8cf9f;border-radius:99px;padding:7px 16px;font-size:13.5px;cursor:pointer;">🔍 内容を詳しく見る</button>';
-html += '</div>';
-});
-html += '<div style="font-size:12px;color:#8a8178;margin-top:12px;line-height:1.6;">配置の影響期間をバーで並べました。◆はピークの日、金は良い流れ・青は注意の流れです。</div>';
-html += '<div style="display:flex;margin-top:8px;"><div style="width:132px;flex:none;"></div><div style="position:relative;flex:1;height:14px;font-size:10.5px;color:#8a8178;">';
-if (dayMode) {
-var midMs = winStart + Math.floor(totalDays / 2) * DAY;
-html += '<span style="position:absolute;left:0;">' + fmt(winStart) + '</span>';
-html += '<span style="position:absolute;left:' + pct(midMs) + '%;transform:translateX(-50%);">' + fmt(midMs) + '</span>';
-html += '<span style="position:absolute;right:0;">' + fmt(winEnd) + '</span>';
-} else {
-[1, 8, 15, 22].forEach(function (dd) {
-var ms = winStart + (dd - 1) * DAY;
-html += '<span style="position:absolute;left:' + pct(ms) + '%;">' + dd + '日</span>';
-});
-html += '<span style="position:absolute;right:0;">末日</span>';
-}
-html += '</div></div>';
-rows.forEach(function (r) {
-var cs = Math.max(r.start, winStart), ce = Math.min(r.end, winEnd);
-if (ce < cs) return;
-var left = pct(cs), width = Math.max(pct(ce) + 100 / totalDays - left, 1.5);
-html += '<div style="display:flex;align-items:flex-start;margin-top:7px;">';
-html += '<div style="width:132px;flex:none;padding-right:8px;">';
-html += '<div style="font-size:11.5px;color:#faf6f0;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + esc(r.label) + '">' + esc(r.label) + '</div>';
-html += '<div style="font-size:10.5px;color:#8a8178;margin-top:1px;">' + fmt(r.start) + '〜' + fmt(r.end) + (r.peak? ' ピーク' + fmt(r.peak): '') + '</div>';
-html += '</div>';
-html += '<div style="position:relative;flex:1;height:16px;background:rgba(255,255,255,0.04);border-radius:999px;">';
-var barBg = r.hard? 'linear-gradient(90deg,#54708f,#7a9fc5)': 'linear-gradient(90deg,#b98a2f,#d8b45a)';
-html += '<div style="position:absolute;top:2px;height:12px;border-radius:999px;background:' + barBg + ';left:' + left + '%;width:' + width + '%;">';
-if (r.start < winStart) html += '<span style="position:absolute;left:2px;top:-3px;font-size:10px;color:#0d0c0a;">◀</span>';
-if (r.end > winEnd) html += '<span style="position:absolute;right:2px;top:-3px;font-size:10px;color:#0d0c0a;">▶</span>';
-html += '</div>';
-if (r.peak && r.peak >= winStart && r.peak <= winEnd) html += '<span style="position:absolute;top:-4px;font-size:12px;color:#ffd88a;text-shadow:0 0 4px #000;left:' + pct(r.peak) + '%;transform:translateX(-50%);">◆</span>';
-if (showToday) html += '<span style="position:absolute;top:-2px;bottom:-2px;width:0;border-left:1px dashed rgba(255,216,138,0.55);left:' + pct(todayMs) + '%;"></span>';
-html += '</div></div>';
-});
-if (showToday) html += '<div style="font-size:10.5px;color:#8a8178;text-align:right;margin-top:4px;">┆ 今日（' + fmt(todayMs) + '）</div>';
-if (!dayMode && marks.length) {
-html += '<div style="display:flex;align-items:flex-start;margin-top:12px;border-top:1px dashed rgba(197,168,128,0.35);padding-top:10px;">';
-html += '<div style="width:132px;flex:none;padding-right:8px;"><div style="font-size:11.5px;color:#e8cf9f;line-height:1.35;">🧭 運命のサイクル</div><div style="font-size:10.5px;color:#8a8178;margin-top:1px;">転換日</div></div>';
-html += '<div style="position:relative;flex:1;height:16px;">';
-marks.forEach(function (mk) {
-html += '<span title="' + esc(fmtFull(mk.ms) + ' ' + mk.title) + '" style="position:absolute;top:-3px;font-size:13px;color:#ff9d85;left:' + pct(mk.ms) + '%;transform:translateX(-50%);">◆</span>';
-});
-if (showToday) html += '<span style="position:absolute;top:-2px;bottom:-2px;width:0;border-left:1px dashed rgba(255,216,138,0.55);left:' + pct(todayMs) + '%;"></span>';
-html += '</div></div>';
-html += '<div style="font-size:11px;color:#8a8178;margin-top:4px;">転換日： ' + marks.map(function (mk) { return fmtFull(mk.ms);}).join('、') + '（下のロードマップに詳しく出ています）</div>';
-}
-sec.innerHTML = html;
-sec.style.display = '';
-var fmM = sec.querySelector('#fmMeter');
-if (fmM && fmTargetIdx >= 0) fmM.scrollLeft = Math.max(0, fmTargetIdx * 46 - fmM.clientWidth / 2 + 22);
-list.style.display = 'none';
-var hsEl2 = document.getElementById('halfSumSection');
-if (hsEl2) hsEl2.style.display = 'none';
-lastSig = sig;
-}
-var iv = setInterval(function () {
-var list = document.getElementById('scheduleList');
-if (list) {
-clearInterval(iv);
-build();
-new MutationObserver(function () { setTimeout(build, 350);}).observe(list, { childList: true, subtree: true, attributes: true, attributeFilter: ['style']});
-var hs = document.getElementById('halfSumSection');
-if (hs) new MutationObserver(function () { setTimeout(build, 350);}).observe(hs, { childList: true, subtree: true});
-if (list.parentElement) new MutationObserver(function () { setTimeout(build, 350);}).observe(list.parentElement, { childList: true});
-setInterval(build, 2500);
-}
-}, 400);
-setTimeout(function () { clearInterval(iv);}, 30000);
-})();
-</script>
-
-  <script>
-(function () {
-  var iv = setInterval(function () {
-    var inp = document.getElementById('scanyear');
-    if (!inp) return;
-    if (document.getElementById('yearNote')) { clearInterval(iv); return; }
-    var sp = document.createElement('span');
-    sp.id = 'yearNote';
-    sp.textContent = '見たい月は、計算のあと下のタブをタップ';
-    sp.style.cssText = 'font-size:11.5px;color:#c5a880;margin-left:8px;';
-    inp.parentElement.insertBefore(sp, inp.nextSibling);
-    clearInterval(iv);
-  }, 400);
-  setTimeout(function () { clearInterval(iv); }, 30000);
-})();
-</script>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>個人の運勢 | クロノスコープ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Serif+JP:wght@500;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0;}
+body { background-color: #0d0c0a; font-family: 'Noto Sans JP', sans-serif; color: #faf6f0; line-height: 1.6;}
+.topTab { display: block; text-align: center; padding: 13px 8px; border-radius: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.28), rgba(197,168,128,0.10)); border: 1px solid #c5a880; color: #e8cf9f; font-weight: 700; font-size: 15px; text-decoration: none;}
+.topTab.active { background: linear-gradient(135deg, rgba(255,216,138,0.55), rgba(197,168,128,0.25)); color: #ffe9b8; border-color: #ffd88a;}
+.fld select,.fld input { width: 100%; margin-top: 4px; padding: 9px; border-radius: 8px; background: #1c1a17; color: #faf6f0; border: 1px solid #4a4238; font-size: 15px;}
+.fld { font-size: 12.5px; color: #c5a880;}
+</style>
 <script>
+try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __nav.type === 'reload') location.replace('./index.html');} catch (e) {}
+</script>
+</head>
+<body>
+<div style="max-width: 880px; margin: 0 auto; padding: 24px 16px 0;">
+<div style="border: 1px solid #c5a880; outline: 3px double rgba(197,168,128,0.55); outline-offset: 5px; padding: 16px 12px 12px; text-align: center; background: radial-gradient(ellipse at center, rgba(197,168,128,0.10), rgba(197,168,128,0.02));">
+<div style="font-family: 'Times New Roman', 'Noto Serif JP', serif; font-size: 11px; letter-spacing: 0.55em; color: #9a8d7a;">CHRONOSCOPE</div>
+<div style="font-family: 'Noto Serif JP', serif; font-size: 26px; font-weight: 700; color: #e8cf9f; letter-spacing: 0.16em; margin-top: 4px;">クロノスコープ</div>
+<div style="font-family: 'Times New Roman', serif; font-style: italic; font-size: 12px; color: #bdb098; letter-spacing: 0.08em; margin-top: 6px;">Astra inclinant, non necessitant</div>
+</div>
+</div>
+<div style="max-width: 880px; margin: 0 auto; padding: 14px 16px 10px; position: sticky; top: 0; z-index: 60; background: #0d0c0a; box-shadow: 0 6px 14px rgba(0,0,0,0.45);">
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+<a href="./seikaku.html" class="topTab">🌟 性格チェック</a>
+<a href="./unsei.html" class="topTab active">🔮 個人の運勢</a>
+<a href="./aisho.html" class="topTab">💞 相性診断</a>
+<a href="./omajinai.html" class="topTab">✨ クロノスくんのおまじない</a>
+        <a href="./buzz.html" class="topTab" style="grid-column: 1 / -1;">📣 バズ週間チェッカー（配信者向け）</a>
+</div>
+
+</div>
+<div style="max-width: 880px; margin: 10px auto 0; padding: 0 16px; text-align: center;">
+<h1 style="font-family: 'Noto Serif JP', serif; font-size: 22px; color: #e8cf9f; margin-bottom: 6px;">🔮 個人の運勢</h1>
+<p style="font-size: 13px; color: #9a8d7a;">これから8週間の流れを週ごとに読む、あなた専用の運勢です。気になる週の「内容を詳しく見る」で、その週に効いている配置の詳しい読みが開きます。</p>
+<p style="font-size: 12.5px; margin-top: 6px;"><a href="./nenun.html" style="color: #c5a880;">その年のテーマ（年運）はこちら →</a></p>
+</div>
+<div style="max-width: 880px; margin: 14px auto 0; padding: 0 16px;">
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+<label class="fld">生まれた年<select id="bzY"></select></label>
+<label class="fld">月<select id="bzM"></select></label>
+<label class="fld">日<select id="bzD"></select></label>
+</div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+<label class="fld">出生時刻（月の配置に使います）<input type="time" id="uTime" value="12:00"></label>
+<label class="fld">探し始める日（その日を含む週から8週間を見ます）<input type="date" id="bzStart"></label>
+</div>
+<p style="font-size: 12px; color: #8a8178; margin-top: 8px;">※出生地は不要です（ハウスを使わない判定のため）。出生時刻が不明な場合は12:00のままでOKです（月の読みは目安になります）。入力はあなたのブラウザの中だけに保存され、送信されません。</p>
+<button id="bzBtn" type="button" style="width: 100%; margin-top: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color: #e8cf9f; border: 1px solid #c5a880; border-radius: 999px; padding: 13px 26px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans JP', sans-serif;">🔮 運勢を見る</button>
+<div id="bzResult" style="margin-top: 18px; padding-bottom: 40px;"></div>
+</div>
+<script>
+var TEXTS = {"sun_moon":{"c":{"desc":"自分らしさと本音が重なる配置です。<br>**表の顔と素の気持ちが一体化**して、良くも悪くも「素の自分」が強く出ます。無理のない日は生き生きと、疲れている日は不機嫌が表に出やすいので、休息とのバランスが鍵です。","w1":"素の自分で勝負できる日です。背伸びしない提案ほど信頼されます。","w2":"自分らしさを前面に出せる日です。素直な志望理由が響きます。","l1":"素のままの2人でいられる日です。甘えも本音も、そのまま出して大丈夫。","l2":"素の自分を見せられる相手との縁がある日です。飾らない方が進みます。","m":"自分の満足のためにお金を使いたくなる日です。本当に欲しいものなら吉。"},"h":{"desc":"表の顔と本音が食い違いやすい配置です。<br>**やるべきことと、やりたい気持ちがぶつかり**、疲れが溜まりやすくなります。無理に結論を出さず、まず心と体を休めることが先決です。"},"t":{"title":"自分と心が素直に繋がる「本音で進める日」の軸","desc":"表の顔と本音が無理なく一致する配置です。<br>**やりたいことと、やるべきことが同じ方向を向く**ので、素直に動くほど物事が進みます。今日の自分を信じて大丈夫な日です。"},"s":{"w1":"素の自分で進められる日です。無理のない提案が信頼されます。","w2":"自分らしい働き方が見える日です。素直な志望理由が響きます。","l1":"素直な気持ちが伝わる日です。本音の会話が距離を縮めます。","l2":"素の自分でいられる相手との縁がある日です。飾らずに。","m":"本当に欲しいものへの出費が実る日です。満足度の高い買い物に。"}},"sun_mercury":{"c":{"desc":"頭と表現が重なる配置です。<br>**言葉がそのまま自分の看板になる**日で、発信力は上がりますが、言い過ぎると印象もそのまま残ります。伝える前に一度読み返す癖が、力を味方にします。","w1":"発言や提案が通りやすい日です。大事な交渉や発表に向いています。","w2":"自己PRが冴える日です。言葉に自信を持って応募してみて。","l1":"会話が弾む日です。本音トークが2人の距離を縮めます。","l2":"会話の相性が良い相手との縁がある日です。話しかける勇気が鍵。","m":"情報や学びへの出費が力になる日です。本や講座は吉です。"},"h":{"desc":"言葉が先走りやすい配置です。<br>**言い過ぎ・早とちり・伝え間違い**が起きやすく、頭も休まらなくなります。大事な話ほど、一度書いてから伝えるのが安全です。"},"t":{"title":"言葉がすっと届く「表現が冴える日」の軸","desc":"頭と表現が気持ちよく噛み合う配置です。<br>**考えたことが、無理なく言葉になって届く**日です。発信・交渉・学び直しが軽やかに進みます。"},"s":{"w1":"発言や提案が通りやすい日です。大事な話は今日進めて。","w2":"自己PRが自然に伝わる日です。言葉に自信を持って大丈夫。","l1":"会話が心地よく弾む日です。本音トークが絆を深めます。","l2":"会話の相性が良い相手との縁がある日です。話しかけてみて。","m":"学びへの出費が力になる日です。本や講座は吉です。"}},"sun_mars":{"c":{"desc":"自分らしさと闘志が重なる配置です。<br>**行動力と自己主張が最大出力になる**日です。勝負には強い反面、力任せになると衝突も大きくなります。狙いを一つに定めることが、吉凶の分かれ目です。","w1":"勝負どころで力を発揮できる日です。大事な案件は今日攻めて。","w2":"積極性が評価される日です。応募や連絡は自分から動いて吉。","l1":"情熱が強く出る日です。熱量が合えば一気に深まります。","l2":"行動範囲の中で縁が動く日です。待つより動く方が出会えます。","m":"勢いの出費が出やすい日です。使うなら体力や道具など力になるものへ。"},"h":{"desc":"自己主張と闘志がぶつかり合う配置です。<br>**イライラや対立が表面化しやすく**、勝ち負けにこだわり過ぎると消耗します。力は一点に絞って使うのが賢明です。"},"t":{"title":"やる気が素直に力になる「気持ちよく攻める日」の軸","desc":"情熱と行動が無理なく噛み合う配置です。<br>**やる気がそのまま推進力になる**日で、勝負ごとも気持ちよく進みます。狙いを定めれば、力は素直についてきます。"},"s":{"w1":"攻める仕事が気持ちよく進む日です。大事な案件は今日。","w2":"積極性が好印象になる日です。自分から動いて吉。","l1":"情熱が素直に伝わる日です。気持ちは行動で示して。","l2":"行動範囲の中で縁が動く日です。誘いには軽く乗って。","m":"力になるものへの出費が吉の日です。道具や体力づくりに。"}},"sun_saturn":{"c":{"desc":"自分らしさと責任が重なる配置です。<br>**自分の土台が試され、固まる**日です。重さを感じる場面もありますが、逃げずに向き合った分だけ、肩書きと信頼が本物になります。","w1":"責任ある仕事が回ってくる日です。引き受ける姿勢が後の評価に。","w2":"堅実さが伝わる日です。地道な実績のアピールが効きます。","l1":"関係の土台を確かめ合う日です。約束を守る姿が信頼を深めます。","l2":"誠実な相手との縁が固まる日です。条件より人柄で見て正解。","m":"貯蓄や固定費の見直しが進む日です。守りを固める出費は吉。"},"h":{"desc":"重圧と向き合う配置です。<br>**自分の限界や不足を突きつけられ**、自信が揺らぎやすくなります。ただ、逃げずに一つずつ片付ける姿勢が、後で大きな信頼になります。"},"t":{"title":"地道さが実を結ぶ「土台が報われる日」の軸","desc":"努力と実りが無理なく繋がる配置です。<br>**積み上げてきたことが、静かに評価される**日です。派手さはなくても、確かな手応えが返ってきます。"},"s":{"w1":"地道な仕事が評価される日です。丁寧さが信頼に変わります。","w2":"堅実な実績が伝わる日です。積み上げを素直に見せて。","l1":"信頼が静かに深まる日です。約束を守る姿が効きます。","l2":"誠実な相手との縁が育つ日です。人柄で選んで正解。","m":"堅実な判断ができる日です。貯蓄の計画が気持ちよく進みます。"}},"sun_uranus":{"c":{"desc":"自分らしさと変化が重なる配置です。<br>**「今の自分を変えたい」エネルギーが最大になる**日です。良い変化も衝動的な決断も紙一重。変えるなら、形を決めてから動くのが条件です。","w1":"新しいやり方を試せる日です。改善提案が通りやすい空気です。","w2":"個性を武器にできる日です。人と違う経歴が評価に変わります。","l1":"関係に新しい風が入る日です。いつもと違う提案が効きます。","l2":"個性的な相手との縁が動く日です。意外性が魅力になります。","m":"新しい技術や道具への投資が吉の日です。衝動買いとの線引きだけ注意。"},"h":{"desc":"変化の衝動が強く出る配置です。<br>**今の環境を壊したくなる気持ち**が急に湧きやすく、突発的な決断が後悔の種になります。変えるなら、辞める前に次の形を用意してから。"},"t":{"title":"新しい自分が気持ちよく始まる「更新の日」の軸","desc":"変化と自分らしさが心地よく調和する配置です。<br>**新しいやり方や環境が、無理なく自分に馴染む**日です。小さなアップデートが、後の大きな変化の入口になります。"},"s":{"w1":"新しい手法が気持ちよくハマる日です。改善提案に追い風。","w2":"個性が武器になる日です。人と違う経歴が評価に。","l1":"関係に新鮮な風が入る日です。新しい場所や体験が効きます。","l2":"個性的な相手との縁がある日です。意外性が魅力に。","m":"新しい道具や技術への出費が吉の日です。使いこなせる範囲で。"}},"moon_mercury":{"c":{"desc":"気持ちと言葉が重なる配置です。<br>**感じたことがそのまま言葉になる**日です。共感力は上がりますが、感情的な言い方は誤解も招きます。気持ちを言葉にする前に、一呼吸置くのがコツです。","w1":"相手の気持ちを汲む力が出る日です。接客や調整役に向いています。","w2":"気持ちを言葉にする力が戻る日です。志望動機の練り直しに最適。","l1":"気持ちを伝え合える日です。素直な言葉が距離を縮めます。","l2":"言葉のキャッチボールから始まる縁がある日です。連絡は軽やかに。","m":"心を満たす小さな出費が吉の日です。本や音楽など感性への投資を。"},"h":{"desc":"気持ちと言葉がすれ違いやすい配置です。<br>**感情的になって言い過ぎたり、考えがまとまらなかったり**しがちです。大事な連絡は、気持ちが落ち着いてから送るのが安全です。"},"t":{"title":"気持ちが言葉に乗りやすい「伝え上手な日」の軸","desc":"心と言葉が心地よく繋がる配置です。<br>**感じたことを、優しく正確に伝えられる**日です。相談や連絡ごとが、気持ちよく進みます。"},"s":{"w1":"気持ちを汲む力が出る日です。調整役や接客に向いています。","w2":"気持ちを言葉にできる日です。志望動機がすっと書けます。","l1":"気持ちを伝え合える日です。素直な言葉が距離を縮めます。","l2":"会話から始まる縁がある日です。連絡は軽やかに。","m":"心を満たす小さな出費が吉の日です。本や音楽に。"}},"moon_mars":{"c":{"desc":"気持ちと行動が重なる配置です。<br>**感情がそのまま行動力になる**日です。やる気の火はつきやすいですが、カッとなった勢いの言動は後悔のもと。火は仕事や運動に向けると味方になります。","w1":"勢いで片付けられる日です。溜まった作業を一気に進めて。","w2":"行動した分だけ道が開ける日です。連絡や応募は今日のうちに。","l1":"情熱が素直に出る日です。気持ちは言葉と行動で示して。","l2":"行動範囲で縁が動く日です。誘いには軽く乗って吉。","m":"ストレス発散の出費が出やすい日です。体を動かす方に回して。"},"h":{"desc":"感情と衝動が直結しやすい配置です。<br>**カッとなって言動が先走り**、後で後悔しがちです。怒りが湧いたら、その場を離れて深呼吸。それだけで大半の衝突は避けられます。"},"t":{"title":"気持ちが行動に乗る「軽やかに動ける日」の軸","desc":"感情と行動が心地よく噛み合う配置です。<br>**やる気が自然に湧いて、体も軽く動く**日です。溜まっていたことを片付けるのに向いています。"},"s":{"w1":"勢いよく片付けられる日です。溜まった作業を一気に。","w2":"行動が道を開く日です。連絡や応募は今日のうちに。","l1":"情熱が素直に伝わる日です。気持ちは行動で示して。","l2":"行動範囲で縁が動く日です。誘いには軽く乗って吉。","m":"体を動かすことへの出費が吉の日です。運動や道具に。"}},"moon_jupiter":{"c":{"desc":"気持ちと拡大が重なる配置です。<br>**心の器が広がり、安心感が満ちる**日です。人にも自分にも寛大になれますが、甘やかし過ぎや食べ過ぎにも振れます。広さは人への優しさに使うのが一番の実りです。","w1":"面倒見の良さが評価される日です。後輩や同僚の助けが信頼に。","w2":"大きな気持ちで選べる日です。視野を広げた応募が実ります。","l1":"包容力が増す日です。相手の欠点も笑って流せる余裕があります。","l2":"器の大きい相手との縁がある日です。安心感が決め手になります。","m":"人への出費が実る日です。食事や贈り物は気持ちよく使って。"},"h":{"desc":"気持ちが大きくなり過ぎやすい配置です。<br>**楽観や大盤振る舞いが過ぎて**、約束や出費が膨らみがちです。心の広さは大事ですが、今日は「ほどほど」が合言葉です。"},"t":{"title":"心の器が広がる「安心に包まれる日」の軸","desc":"気持ちと安心感が心地よく調和する配置です。<br>**心に余裕が生まれ、人にも自分にも寛大になれる**日です。満たされた気持ちが、良い縁を運んできます。"},"s":{"w1":"面倒見の良さが評価される日です。人の助けが信頼に。","w2":"大きな気持ちで選べる日です。視野を広げた応募を。","l1":"包容力が増す日です。相手の欠点も笑って流せます。","l2":"安心できる相手との縁がある日です。器の大きさが決め手。","m":"人への出費が実る日です。食事や贈り物を気持ちよく。"}},"moon_saturn":{"c":{"desc":"気持ちと責任が重なる配置です。<br>**心の土台を鍛える**日です。寂しさや重さを感じる場面もありますが、感情を抑えて務める姿勢が、静かな信頼を積み上げます。","w1":"コツコツ務める力が出る日です。地味な仕事ほど丁寧に。","w2":"堅実な準備が力になる日です。資格や基礎の勉強が進みます。","l1":"静かに寄り添える日です。言葉より、そばにいることが伝わります。","l2":"誠実な相手との縁が静かに育つ日です。焦らないのが正解。","m":"将来への備えを整える日です。貯蓄の仕組み作りは今日が吉。"},"h":{"desc":"心に重さがかかる配置です。<br>**孤独感や不安が強まり**、自分を責めやすくなります。でも今日の重さは、感情の整理が進んでいる証拠でもあります。無理に明るく振る舞わなくて大丈夫です。"},"t":{"title":"心の土台が静かに固まる「落ち着ける日」の軸","desc":"感情と落ち着きが心地よく調和する配置です。<br>**心が静かに安定し、地に足の着いた判断ができる**日です。地味でも確かな安心が積み上がります。"},"s":{"w1":"落ち着いて務められる日です。地味な仕事ほど丁寧に。","w2":"堅実な準備が進む日です。基礎固めや資格勉強に。","l1":"静かに寄り添える日です。そばにいることが伝わります。","l2":"誠実な相手との縁が静かに育つ日です。焦らずに。","m":"将来への備えが整う日です。貯蓄の仕組み作りに吉。"}},"moon_pluto":{"c":{"desc":"気持ちと底力が重なる配置です。<br>**感情の深さが極端になる**日です。絆は深まりますが、執着や疑いも濃くなります。深さは相手を信じる方に使うのが、吉への分かれ道です。","w1":"集中力が深まる日です。一つの仕事を掘り下げるほど成果に。","w2":"本気度が伝わる日です。本命の応募は熱意を見せて。","l1":"心の奥まで通じ合える日です。本音の共有が絆を変えます。","l2":"深く惹かれる相手との縁が動く日です。時間をかけて見極めて。","m":"お金の執着と解放が交わる日です。大きな決断は冷静な時に。"},"h":{"desc":"感情の奥底が強く揺れる配置です。<br>**執着や嫉妬、切り捨てたい衝動**が湧きやすくなります。感情の大掃除が進む日でもあるので、吐き出せる相手や場所を持つのが大事です。"},"t":{"title":"心の奥が温まる「深く通じ合える日」の軸","desc":"感情の深さが心地よく働く配置です。<br>**心の奥まで通じ合える手応え**がある日です。本音を預け合うことで、絆が一段深くなります。"},"s":{"w1":"集中力が深まる日です。一つの仕事を掘り下げて。","w2":"本気度が伝わる日です。本命への応募に向いています。","l1":"心の奥まで通じ合える日です。本音の共有が絆を育てます。","l2":"深く惹かれる相手との縁がある日です。時間をかけて。","m":"深い見直しが実る日です。契約の点検は吉。"}},"mercury_mars":{"c":{"desc":"言葉と行動が重なる配置です。<br>**判断と発言のスピードが最大になる**日です。即断は武器ですが、言葉の刃も鋭くなります。速さに一呼吸を添えられるかが分かれ目です。","w1":"即断即決が冴える日です。交渉や締め切り対応に強くなります。","w2":"連絡の速さが武器になる日です。返事は早く、内容は丁寧に。","l1":"率直な会話ができる日です。思ったことは溜めずに伝えて。","l2":"テンポの合う相手との縁がある日です。会話のリズムで見て。","m":"決断の速さが得を生む日です。ただし高額なものは例外で慎重に。"},"h":{"desc":"言葉が攻撃的になりやすい配置です。<br>**早口・言い過ぎ・即断のミス**が増えがちです。反論したくなったら、まず6秒置く。それで大半の衝突は回避できます。"},"t":{"title":"即断が冴える「テンポの良い日」の軸","desc":"言葉と行動が心地よく噛み合う配置です。<br>**判断と返事のテンポが軽やかに揃う**日です。溜まっていた連絡や決断が、気持ちよく片付きます。"},"s":{"w1":"即断即決が冴える日です。締め切り対応に強くなります。","w2":"連絡の速さが武器になる日です。返事は早く丁寧に。","l1":"率直な会話ができる日です。思ったことは素直に。","l2":"テンポの合う相手との縁がある日です。会話のリズムで見て。","m":"決断の速さが得を生む日です。比較は済ませてから。"}},"mercury_saturn":{"c":{"desc":"言葉と責任が重なる配置です。<br>**思考が深く、慎重になる**日です。判断は遅くなりますが、その分固い。今日決めたことは長く続きます。焦らず、確かめながら進めるのが正解です。","w1":"緻密な作業がはかどる日です。確認と記録の仕事に強くなります。","w2":"地道な準備が実る日です。資格勉強や基礎固めに最適。","l1":"静かで誠実な会話ができる日です。約束は小さくても守って。","l2":"落ち着いた相手との縁が固まる日です。信頼は時間で育ちます。","m":"堅実な判断ができる日です。長期の貯蓄や契約の見直しに吉。"},"h":{"desc":"思考が重く、悲観に寄りやすい配置です。<br>**考えが堂々巡りして、自信が削られ**がちです。ただ、慎重さ自体は今日の武器。小さく区切って、一つずつ終わらせるのが正解です。"},"t":{"title":"慎重さが実を結ぶ「固い判断の日」の軸","desc":"思考と忍耐が心地よく調和する配置です。<br>**じっくり考えたことが、確かな形になる**日です。今日の慎重さは、そのまま信頼に変わります。"},"s":{"w1":"緻密な作業がはかどる日です。確認と記録に強くなります。","w2":"地道な準備が実る日です。資格勉強や基礎固めに。","l1":"静かで誠実な会話ができる日です。小さな約束を守って。","l2":"落ち着いた相手との縁が育つ日です。信頼は時間で。","m":"堅実な判断ができる日です。長期の計画に吉。"}},"mercury_uranus":{"c":{"desc":"言葉とひらめきが重なる配置です。<br>**頭の回転と発想が最大速度になる**日です。名案は生まれますが、集中は途切れがち。ひらめきは即メモに逃がすのが活かす条件です。","w1":"アイデアが次々浮かぶ日です。改善や企画の仕事に追い風。","w2":"新しい分野の情報が入る日です。興味の種を拾っておいて。","l1":"意外な会話の展開が楽しい日です。冗談の通じる関係が深まります。","l2":"個性的な相手との縁が動く日です。会話の刺激が入口に。","m":"新しい技術への投資が吉の日です。まずは小さく試して。"},"h":{"desc":"頭の回転が速くなり過ぎる配置です。<br>**突飛な思いつきと、集中の途切れ**が同居します。ひらめきはメモに逃がして、実行は落ち着いてから順番に。"},"t":{"title":"ひらめきが気持ちよく走る「名案の日」の軸","desc":"頭とひらめきが心地よく調和する配置です。<br>**名案や新しい視点が、軽やかに浮かぶ**日です。メモに残すほど、後で大きな力になります。"},"s":{"w1":"アイデアが浮かぶ日です。改善や企画に追い風。","w2":"新しい分野の情報が入る日です。興味の種を拾って。","l1":"意外な会話が楽しい日です。冗談の通じる関係が深まります。","l2":"個性的な相手との縁がある日です。会話の刺激が入口。","m":"新しい技術への出費が吉の日です。小さく試して。"}},"mercury_neptune":{"c":{"desc":"言葉と直感が重なる配置です。<br>**感性と言葉が溶け合う**日です。詩的な表現や共感は冴えますが、事実確認は甘くなりがち。創作は進め、契約は文字で確かめて。","w1":"創作や文章の仕事が冴える日です。感性のままに形にして。","w2":"憧れを言葉にできる日です。志望動機に気持ちを乗せて。","l1":"気持ちが言葉なしでも伝わる日です。優しい沈黙も会話です。","l2":"感性の近い相手との縁がある日です。創作の場に注目して。","m":"心を豊かにする出費が吉の日です。曖昧な話への出費は止めて。"},"h":{"desc":"言葉と現実の間に霧がかかる配置です。<br>**聞き違い・言い間違い・曖昧な約束**がトラブルの元になります。今日の約束は必ず文字に残して、お互いの認識を合わせて。"},"t":{"title":"感性が言葉になる「詩的な日」の軸","desc":"感性と言葉が心地よく溶け合う配置です。<br>**直感を言葉にする力が冴える**日です。創作や相談ごとが、優しく前に進みます。"},"s":{"w1":"創作や文章が冴える日です。感性のまま形にして。","w2":"憧れを言葉にできる日です。志望動機に気持ちを乗せて。","l1":"気持ちが優しく伝わる日です。沈黙も心地よい会話に。","l2":"感性の近い相手との縁がある日です。創作の場に注目。","m":"心を豊かにする出費が吉の日です。感性を満たすものを。"}},"venus_saturn":{"c":{"desc":"魅力と責任が重なる配置です。<br>**楽しさに真剣さが混ざる**日です。関係は固まりますが、重さや物足りなさも感じます。誠実に向き合う関係だけが残る、選別の日でもあります。","w1":"堅実な魅力が伝わる日です。信頼で選ばれる仕事が来ます。","w2":"長く続けられる仕事に縁がある日です。条件の安定を見て。","l1":"関係が一段固まる日です。真剣な話し合いに向いています。","l2":"誠実な相手との縁が深まる日です。時間をかける価値があります。","m":"堅実な出費判断ができる日です。長く使うものへの投資は吉。"},"h":{"desc":"愛情と距離感が試される配置です。<br>**冷たさや物足りなさを感じやすく**、関係の重さが前に出ます。ただ、ここで誠実に向き合う関係は、本物だけが残ります。"},"t":{"title":"真剣さが実を結ぶ「本物の関係が固まる日」の軸","desc":"魅力と誠実さが心地よく調和する配置です。<br>**楽しさの中に真剣さが宿り、関係が一段固まる**日です。長く続くものの価値が、静かに分かります。"},"s":{"w1":"堅実な魅力が伝わる日です。信頼で選ばれる仕事が来ます。","w2":"長く続けられる仕事に縁がある日です。安定を見て。","l1":"関係が一段固まる日です。真剣な話に向いています。","l2":"誠実な相手との縁が深まる日です。時間をかける価値あり。","m":"堅実な判断ができる日です。長く使うものへの出費は吉。"}},"sun_venus":{"c":{"desc":"自分らしさと楽しみが重なる配置です。<br>**魅力と存在感が濃く出る**日で、人目を引きます。楽しさに流され過ぎると散財や怠けにも振れるので、楽しむ時間に区切りを付けると両立できます。","w1":"華やかさと愛嬌が武器になる日です。人前に出る仕事に追い風です。","w2":"第一印象で勝負できる日です。面接や見学は明るさが鍵です。","l1":"一緒にいて楽しいが濃く出る日です。デートやお出かけに最適です。","l2":"魅力が伝わりやすい日です。笑顔でいられる場所に縁があります。","m":"心が喜ぶ買い物が増える日です。上限を決めれば楽しみ切れます。"},"h":{"desc":"楽しみと現実のバランスが崩れやすい配置です。<br>**甘えや贅沢が過ぎて**、やるべきことが後回しになりがちです。楽しむ日と締める日のメリハリを意識して。"},"t":{"title":"魅力が自然に伝わる「楽しみ上手な日」の軸","desc":"自分らしさと楽しみが心地よく調和する配置です。<br>**無理なく魅力が伝わり、人の輪も広がる**日です。楽しむことが、そのまま運を運んできます。"},"s":{"w1":"愛嬌とセンスが評価される日です。人前に出る仕事に追い風。","w2":"第一印象が良く伝わる日です。面接や見学は笑顔が鍵。","l1":"一緒にいて楽しいが増す日です。デートやお出かけに最適。","l2":"魅力が自然に伝わる日です。楽しい場に縁があります。","m":"心が喜ぶ買い物が吉の日です。満足できるものを選んで。"}},"sun_jupiter":{"c":{"desc":"自分らしさと拡大が重なる配置です。<br>**存在感と自信が大きく膨らむ**日です。チャンスは掴みやすいですが、自信過剰になると足元が疎かに。大きく出る日ほど、確認を丁寧に。","w1":"大きな仕事を任されやすい日です。堂々と受ける姿勢が評価されます。","w2":"格上の舞台に手が届く日です。一段上への応募に追い風です。","l1":"2人の将来が大きく描ける日です。夢の共有が絆を太くします。","l2":"器の大きい相手との縁がある日です。自分も大きく構えて。","m":"大きな出費に縁がある日です。学びや挑戦への投資は実りやすいです。"},"h":{"desc":"拡大のエネルギーが暴走しやすい配置です。<br>**自信過剰や約束のし過ぎ**で、後から収拾がつかなくなりがちです。引き受ける量は、いつもの八分目が正解です。"},"t":{"title":"視野が気持ちよく広がる「追い風の日」の軸","desc":"自分らしさと拡大が心地よく調和する配置です。<br>**自信と余裕が自然に育ち、チャンスも掴みやすく**なります。大きく構えるほど、流れが味方する日です。"},"s":{"w1":"大きな仕事が気持ちよく回る日です。堂々と受ける姿勢が吉。","w2":"格上の舞台が見える日です。一段上への応募に追い風。","l1":"将来の話が明るく弾む日です。夢の共有が絆を太くします。","l2":"器の大きい相手との縁がある日です。自分も大きく構えて。","m":"挑戦への投資が実りやすい日です。学びや経験に使って。"}},"sun_neptune":{"c":{"desc":"自分らしさと夢が重なる配置です。<br>**直感と表現力が冴える**日ですが、現実感は薄くなりがちです。ひらめきは形に残し、約束ごとは文面で確認する。この二つで力を活かせます。","w1":"直感とアイデアが冴える日です。企画や創作の仕事に追い風です。","w2":"憧れを仕事に近づける日です。夢を言葉にすると入口が見えます。","l1":"言葉にしない気持ちが伝わる日です。静かな時間が絆を深めます。","l2":"感性の合う相手との縁がある日です。趣味の場が入口になります。","m":"心を豊かにするものへの出費が吉の日です。曖昧な契約には乗らないで。"},"h":{"desc":"理想と現実の境目が曖昧になる配置です。<br>**夢見がちになって判断が甘くなり**、人の言葉に流されやすくなります。大事な契約や約束は、文面で確認するまで決めないで。"},"t":{"title":"直感が優しく冴える「ひらめきの日」の軸","desc":"直感と表現が心地よく調和する配置です。<br>**ひらめきや共感が、無理なく形になる**日です。創作や相談ごとが、優しく前に進みます。"},"s":{"w1":"直感とアイデアが冴える日です。企画や創作に追い風。","w2":"憧れを仕事に近づける日です。夢を言葉にすると進みます。","l1":"言葉なしでも気持ちが通じる日です。静かな時間が絆に。","l2":"感性の合う相手との縁がある日です。趣味の場が入口。","m":"心を豊かにする出費が吉の日です。感性を満たすものを。"}},"sun_pluto":{"c":{"desc":"自分らしさと底力が重なる配置です。<br>**存在感と影響力が極端に強く出る**日です。良い方向に使えば主導権を握れますが、力で押し切ろうとすると反発も大きくなります。使う場面を選ぶのが鍵です。","w1":"主導権を握れる日です。大事な交渉は自分のペースで進めて。","w2":"強い印象を残せる日です。本命へのアピールは本気を見せて。","l1":"絆が深く濃くなる日です。本音の一つが関係を変えます。","l2":"強く惹かれ合う縁が動く日です。熱に任せず、相手の中身も見て。","m":"大きなお金を動かす力がある日です。判断は冷静な頭で。"},"h":{"desc":"力と力のぶつかり合いが起きやすい配置です。<br>**支配や執着、極端な決断**に傾きやすく、周囲との摩擦も大きくなります。全部を変えようとせず、一点だけに力を絞るのが身を守ります。"},"t":{"title":"底力が静かに味方する「集中が実る日」の軸","desc":"集中力と存在感が無理なく高まる配置です。<br>**一つのことに深く入り込むほど、手応えが返ってくる**日です。力は静かに、でも確かに味方しています。"},"s":{"w1":"集中力が深まる日です。本命の仕事を掘り下げて。","w2":"本気度が伝わる日です。本命へのアピールに向いています。","l1":"絆が深く温まる日です。本音の共有が関係を育てます。","l2":"深く惹かれる相手との縁がある日です。時間をかけて。","m":"大きな判断が冷静にできる日です。計画的な出費は吉。"}},"moon_venus":{"c":{"desc":"気持ちと楽しみが重なる配置です。<br>**心地よさと甘えが最大になる**日です。満たされる時間は作れますが、楽な方に流され過ぎると後が大変。楽しむ分は楽しみ、締める所は締めて。","w1":"和やかな空気を作れる日です。チームの潤滑油として評価されます。","w2":"人当たりの良さが伝わる日です。面接は笑顔と相づちが鍵。","l1":"甘い時間が濃くなる日です。おねだりも素直な方が叶います。","l2":"優しい相手との縁が育つ日です。心地よい場所に身を置いて。","m":"ご褒美の出費が増える日です。上限を決めれば満足度は上がります。"},"h":{"desc":"甘えと楽しみが過ぎやすい配置です。<br>**心地よさに流されて、やるべきことや節制が緩み**がちです。今日は楽しむ分だけ、明日の自分に借りを作らない範囲で。"},"t":{"title":"心が満たされる「ご機嫌な日」の軸","desc":"気持ちと楽しみが心地よく調和する配置です。<br>**心地よい時間と、人の優しさに恵まれる**日です。満たされた分、人にも優しくなれます。"},"s":{"w1":"和やかな空気が作れる日です。チームの潤滑油として評価されます。","w2":"人当たりの良さが伝わる日です。面接は笑顔が鍵。","l1":"甘く穏やかな時間が増える日です。一緒の時間を楽しんで。","l2":"優しい相手との縁が育つ日です。心地よい場所に身を置いて。","m":"ご褒美の買い物が吉の日です。満足できるものを一つ。"}},"moon_uranus":{"c":{"desc":"気持ちと変化が重なる配置です。<br>**気分の波と変化の予感が強く出る**日です。環境を変える力はありますが、衝動のまま動くと落ち着きません。変えるのは一つずつが条件です。","w1":"変化に柔軟に対応できる日です。急な予定変更も軽くこなせます。","w2":"新しい働き方に目が向く日です。情報収集から始めて正解。","l1":"関係に新鮮な風が入る日です。いつもと違う場所が効きます。","l2":"意外な相手との縁が動く日です。先入観を外すと広がります。","m":"新しい道具や仕組みへの出費が吉の日です。使いこなせる範囲で。"},"h":{"desc":"気持ちが落ち着かなくなりやすい配置です。<br>**急な気分の変化や、環境を変えたくなる衝動**が出やすくなります。今日の決断は明日には気が変わるもの。大きな変更は保留が正解です。"},"t":{"title":"気分が軽く切り替わる「新鮮な日」の軸","desc":"気持ちと新しさが心地よく調和する配置です。<br>**気分転換がうまくいき、新しい風が心に入る**日です。いつもと違う選択が、良い刺激になります。"},"s":{"w1":"変化に軽やかに対応できる日です。急な変更もこなせます。","w2":"新しい働き方に目が向く日です。情報収集が実ります。","l1":"関係に新鮮な風が入る日です。いつもと違う場所が効きます。","l2":"意外な相手との縁がある日です。先入観を外して。","m":"新しい仕組みへの出費が吉の日です。小さく始めて。"}},"moon_neptune":{"c":{"desc":"気持ちと夢が重なる配置です。<br>**感受性が最大限に開く**日です。人の気持ちを感じ取る力は上がりますが、境界が曖昧になって疲れもします。一人の時間を確保できるかどうかが鍵です。","w1":"直感が冴える日です。空気を読む力が仕事を助けます。","w2":"憧れの働き方に近づく日です。夢を具体的な一歩に変えて。","l1":"言葉なしでも通じ合える日です。静かな時間が2人を深くします。","l2":"感性の合う相手との縁がある日です。アートや音楽の場に注目。","m":"心を潤すものへの出費が吉の日です。曖昧な儲け話には乗らないで。"},"h":{"desc":"感受性が過敏になりやすい配置です。<br>**人の感情や雰囲気に飲まれやすく**、境界が曖昧になります。今日は一人で静まる時間を確保して、心のフィルターを休ませて。"},"t":{"title":"感受性が優しく開く「癒しの日」の軸","desc":"心と直感が心地よく調和する配置です。<br>**人の気持ちが自然に分かり、優しさが循環する**日です。音楽やアートに触れると、心がすっと整います。"},"s":{"w1":"直感が優しく冴える日です。空気を読む力が助けます。","w2":"憧れの働き方に近づく日です。夢を一歩に変えて。","l1":"言葉なしでも通じ合える日です。静かな時間が絆に。","l2":"感性の合う相手との縁がある日です。アートの場に注目。","m":"心を潤す出費が吉の日です。感性を満たすものを。"}},"mercury_venus":{"c":{"desc":"言葉と魅力が重なる配置です。<br>**言葉のセンスと人当たりが濃く出る**日です。交渉や発信は有利ですが、甘い言葉は相手にも自分にも効き過ぎます。誠実さを添えるのが条件です。","w1":"交渉や接客がうまくいく日です。言葉の選び方が成果を分けます。","w2":"文章力が評価される日です。応募書類の推敲に時間をかけて。","l1":"会話の楽しさが増す日です。褒め言葉が関係を温めます。","l2":"言葉の相性が良い相手との縁がある日です。会話の場に出て。","m":"言葉や学びへの投資が実る日です。本や講座は吉です。"},"h":{"desc":"言葉と気持ちのバランスが崩れやすい配置です。<br>**お世辞や甘い話に乗りやすく**、大事な確認が疎かになりがちです。心地よい言葉ほど、裏付けを取る癖を。"},"t":{"title":"言葉に魅力が乗る「交渉上手な日」の軸","desc":"言葉と魅力が心地よく調和する配置です。<br>**話し方や文章に、自然な魅力と説得力が乗る**日です。交渉・発信・接客が軽やかに進みます。"},"s":{"w1":"交渉や接客がうまくいく日です。言葉選びが成果に。","w2":"文章力が評価される日です。応募書類の推敲を丁寧に。","l1":"会話の楽しさが増す日です。褒め言葉が関係を温めます。","l2":"言葉の相性が良い相手との縁がある日です。会話の場へ。","m":"学びへの投資が実る日です。本や講座は吉。"}},"mercury_jupiter":{"c":{"desc":"言葉と拡大が重なる配置です。<br>**話す力と学ぶ力が大きく広がる**日です。大きな話は進みますが、言い過ぎ・聞き過ぎで細部を落としがち。具体的な確認を挟むのが条件です。","w1":"大きな商談や発表が進む日です。堂々と話す姿勢が効きます。","w2":"視野の広い選択ができる日です。大きな舞台への応募も検討を。","l1":"将来の話が弾む日です。夢を語り合う時間が絆になります。","l2":"世界を広げてくれる相手との縁がある日です。学びの場に注目。","m":"学びと情報への大きな投資が実る日です。回収計画もセットで。"},"h":{"desc":"話が大きくなり過ぎやすい配置です。<br>**大風呂敷・約束のし過ぎ・聞き流し**が重なり、後の収拾が大変になりがちです。今日は話を八分目に抑えるのが賢さです。"},"t":{"title":"学びと話が広がる「視野が開ける日」の軸","desc":"言葉と拡大が心地よく調和する配置です。<br>**大きな話が前向きに進み、学びも気持ちよく広がる**日です。視野の広さが、そのまま追い風になります。"},"s":{"w1":"大きな商談や発表が進む日です。堂々と話して。","w2":"視野の広い選択ができる日です。大きな舞台も検討を。","l1":"将来の話が弾む日です。夢の語り合いが絆に。","l2":"世界を広げてくれる相手との縁がある日です。学びの場へ。","m":"学びへの投資が実る日です。経験を買う出費は吉。"}},"mercury_pluto":{"c":{"desc":"言葉と底力が重なる配置です。<br>**言葉の影響力が極端に強くなる**日です。一言が場を動かしますが、圧の強い言い方は反発も買います。力は、本当に大事な一言のために取っておいて。","w1":"発言に重みが出る日です。大事な交渉や発表で存在感が出ます。","w2":"調べる力が深まる日です。本命の情報は徹底的に掘って。","l1":"本音の深い話ができる日です。核心の共有が絆を変えます。","l2":"強い印象の相手との縁が動く日です。言葉の圧に流されないで。","m":"お金の裏側を読む力が出る日です。契約の細部まで目を通して。"},"h":{"desc":"言葉に強い圧が宿りやすい配置です。<br>**追及・告発・本音のぶつけ合い**が過熱しがちです。今日の言葉は一生残るつもりで、発信の前に一度読み返して。"},"t":{"title":"言葉に重みが宿る「核心を伝えられる日」の軸","desc":"言葉と集中が心地よく調和する配置です。<br>**本質を見抜く力と、それを伝える力が冴える**日です。大事な一言が、場を良い方向に動かします。"},"s":{"w1":"発言に重みが出る日です。大事な交渉や発表に向いています。","w2":"調べる力が深まる日です。本命の情報を掘り下げて。","l1":"本音の深い話ができる日です。核心の共有が絆に。","l2":"強い印象の相手との縁がある日です。言葉の力を感じて。","m":"お金の本質を読む力が出る日です。契約の確認は吉。"}},"venus_mars":{"c":{"desc":"魅力と情熱が重なる配置です。<br>**惹かれる力と攻める力が同時に最大になる**日です。恋も勝負も熱くなりますが、熱のまま進むと温度差でぶつかります。相手のペース確認が条件です。","w1":"行動力と愛嬌が両方出る日です。営業や発表に追い風です。","w2":"積極性が魅力になる日です。応募は自分から動いて吉。","l1":"情熱が燃え上がる日です。素直な表現が関係を熱くします。","l2":"一目惚れ級の縁が動く日です。熱くなっても確認は丁寧に。","m":"欲しいものへの出費が増える日です。本命一つに絞って。"},"h":{"desc":"情熱と欲求が過熱しやすい配置です。<br>**衝動的な接近や、熱の温度差**がトラブルを招きがちです。燃え上がるほど、相手の意思確認を丁寧に。"},"t":{"title":"魅力と情熱が気持ちよく重なる「恋も勝負も乗る日」の軸","desc":"魅力と情熱が心地よく調和する配置です。<br>**惹かれる力と攻める力が、無理なく両方出る**日です。恋にも勝負にも、気持ちの良い熱が入ります。"},"s":{"w1":"行動力と愛嬌が両方出る日です。営業や発表に追い風。","w2":"積極性が魅力になる日です。自分から動いて吉。","l1":"情熱が気持ちよく伝わる日です。素直な表現が効きます。","l2":"惹かれ合う縁が動く日です。素直に近づいて。","m":"本命への出費が吉の日です。一つに絞って気持ちよく。"}},"venus_jupiter":{"c":{"desc":"魅力と拡大が重なる配置です。<br>**楽しさと豊かさが大きく膨らむ**日です。人にもお金にも縁がありますが、調子に乗ると使い過ぎ・約束し過ぎに。広げる分だけ、足元も固めて。","w1":"華やかな仕事に縁がある日です。人前に出る場面で輝けます。","w2":"条件の良い話が来やすい日です。受ける量は加減して。","l1":"2人の楽しみが大きくなる日です。旅行や贅沢な計画が弾みます。","l2":"豊かな縁が広がる日です。楽しい場に身を置くのが鍵。","m":"豊かさが回る日です。使う分と残す分の線引きだけ忘れずに。"},"h":{"desc":"楽しみと贅沢が膨らみ過ぎる配置です。<br>**甘え・食べ過ぎ・使い過ぎ**の三点セットに注意。楽しい日だからこそ、上限を先に決めるのが大人の楽しみ方です。"},"t":{"title":"楽しさと豊かさが広がる「祝福の日」の軸","desc":"魅力と拡大が心地よく調和する配置です。<br>**楽しみも縁も、気持ちよく広がる**日です。人の輪の中で、豊かさが循環します。"},"s":{"w1":"華やかな仕事に縁がある日です。人前に出る場面で輝けます。","w2":"条件の良い話が来やすい日です。笑顔で受けて。","l1":"2人の楽しみが広がる日です。旅行や贅沢な計画が弾みます。","l2":"豊かな縁が広がる日です。楽しい場に身を置いて。","m":"豊かさが回る日です。気持ちの良い使い方をして。"}},"venus_uranus":{"c":{"desc":"魅力と変化が重なる配置です。<br>**新鮮な刺激と出会いの予感が強く出る**日です。心は動きやすいですが、衝動で関係の形を決めるのは早過ぎます。刺激は体験で楽しみ、決断は明日に。","w1":"新しい魅力の見せ方が見つかる日です。見た目や手法の刷新に吉。","w2":"意外な求人や誘いに心が動く日です。まず話を聞いてみて。","l1":"関係に新しい風が入る日です。サプライズや変化が効きます。","l2":"電撃的な出会いの予感がある日です。展開が速いほど確認を。","m":"新しい体験への出費が吉の日です。気まぐれ買いとの線引きを。"},"h":{"desc":"心が刺激を求めて落ち着かない配置です。<br>**飽きや浮ついた気持ち**から、関係や予定を壊したくなりがちです。刺激は新しい体験で満たして、人間関係は壊さないで。"},"t":{"title":"新鮮なときめき「風の入る日」の軸","desc":"魅力と新しさが心地よく調和する配置です。<br>**新鮮な刺激と軽やかな出会いに恵まれる**日です。いつもと違う選択が、心を気持ちよく揺らします。"},"s":{"w1":"新しい魅力の見せ方が見つかる日です。刷新に吉。","w2":"意外な誘いが転機になる日です。話は聞いてみて。","l1":"関係に新しい風が入る日です。サプライズが効きます。","l2":"新鮮な出会いの予感がある日です。軽やかに近づいて。","m":"新しい体験への出費が吉の日です。気持ちよく使って。"}},"venus_neptune":{"c":{"desc":"魅力と夢が重なる配置です。<br>**ロマンチックな空気が最大になる**日です。恋も創作も美しく進みますが、相手は少し盛れて見えています。夢は楽しみ、約束は現実の言葉で。","w1":"美的センスが冴える日です。デザインや接客の仕事に追い風。","w2":"憧れの仕事に近づく日です。夢を具体的な条件に翻訳して。","l1":"ロマンチックな時間が濃くなる日です。雰囲気づくりが効きます。","l2":"運命めいた出会いの予感がある日です。でも判断は翌日に回して。","m":"美しいものへの出費が吉の日です。曖昧な勧誘には乗らないで。"},"h":{"desc":"恋と夢に酔いやすい配置です。<br>**相手を理想化したり、曖昧な関係に希望を乗せたり**しがちです。今日見えている相手の姿は、少し盛れて見えています。判断は明日に。"},"t":{"title":"ロマンチックが満ちる「夢のような日」の軸","desc":"魅力と夢が心地よく調和する配置です。<br>**ロマンチックな空気と、芸術的なひらめきに恵まれる**日です。優しい時間が、人の心を溶かします。"},"s":{"w1":"美的センスが冴える日です。デザインや接客に追い風。","w2":"憧れの仕事に近づく日です。夢を条件に翻訳して。","l1":"ロマンチックな時間が増える日です。雰囲気づくりが効きます。","l2":"夢のような出会いの予感がある日です。感性を大切に。","m":"美しいものへの出費が吉の日です。心が満たされます。"}},"venus_pluto":{"c":{"desc":"魅力と底力が重なる配置です。<br>**惹かれる力が極端に強くなる**日です。深い絆は生まれますが、独占欲も同じだけ濃くなります。深さは信頼に変換できるかが分かれ目です。","w1":"人を惹きつける力が強く出る日です。大事な場面で存在感が出ます。","w2":"本気のアピールが届く日です。本命には本音で当たって。","l1":"絆が深く濃くなる日です。本音の共有が関係を変えます。","l2":"強烈に惹かれる縁が動く日です。熱と執着を見分けて。","m":"大きなお金が絡む話が出やすい日です。判断は一人で抱えず相談を。"},"h":{"desc":"愛情が深さを通り越して重くなる配置です。<br>**独占欲や執着、相手を試す気持ち**が強く出やすくなります。深い愛ほど、相手の自由を残すことが信頼になります。"},"t":{"title":"深く惹かれ合う「絆が濃くなる日」の軸","desc":"魅力と深さが心地よく調和する配置です。<br>**深く惹かれ合い、絆が濃くなる**日です。本音を預け合うことで、関係が一段深くなります。"},"s":{"w1":"人を惹きつける力が出る日です。大事な場面で存在感が。","w2":"本気のアピールが届く日です。本命には本音で。","l1":"絆が深く濃くなる日です。本音の共有が関係を育てます。","l2":"深く惹かれる縁が動く日です。時間をかけて大切に。","m":"深い見直しが実る日です。大事な契約の確認は吉。"}},"mars_jupiter":{"c":{"desc":"行動と拡大が重なる配置です。<br>**攻める力と広げる力が同時に最大になる**日です。大きな成果は狙えますが、無理な勝負は大怪我のもと。勝負どころを一つに絞るのが条件です。","w1":"大きな仕事に挑める日です。攻める場面では一気に進めて。","w2":"積極性が実る日です。大きめの舞台への応募も視野に。","l1":"行動力が魅力になる日です。誘いや計画は自分から。","l2":"行動範囲で縁が大きく動く日です。出かける先に注目。","m":"大きな勝負に出たくなる日です。額は冷静に決めて。"},"h":{"desc":"勢いが付き過ぎて空回りしやすい配置です。<br>**大胆さが裏目に出て、無理な勝負や拡大**に走りがちです。今日は勝負どころを一つに絞ること。それ以外は守りに回るのが結果的に速いです。"},"t":{"title":"攻めと広がりが噛み合う「快進撃の日」の軸","desc":"行動と拡大が心地よく調和する配置です。<br>**攻めるほど道が広がる、手応えのある**日です。大きな挑戦も、気持ちよく前に進みます。"},"s":{"w1":"大きな仕事が気持ちよく進む日です。攻め時は今日。","w2":"積極性が実る日です。大きめの舞台も視野に。","l1":"行動力が魅力になる日です。誘いは自分から。","l2":"行動範囲で縁が動く日です。出かける先に注目。","m":"挑戦への出費が吉の日です。経験を買って。"}},"mars_saturn":{"c":{"desc":"行動と責任が重なる配置です。<br>**やる気と重圧が同時に最大になる**日です。進みは遅く感じますが、今日の粘りは本物の実力になります。焦って力任せにせず、順番を守るのが条件です。","w1":"粘り強さが試される日です。難しい仕事ほど丁寧に進めて。","w2":"地道な努力が報われる日です。諦めかけた先にもう一度当たって。","l1":"誠実な行動が伝わる日です。言葉より、務める姿が見られています。","l2":"真面目な相手との縁が固まる日です。信頼は行動の積み重ね。","m":"堅実な判断ができる日です。無駄な出費はきれいに止まります。"},"h":{"desc":"アクセルとブレーキを同時に踏む配置です。<br>**やる気はあるのに進まない焦り**が溜まりやすくなります。今日は速さより、止まっている原因を一つ潰す日。焦燥は敵です。"},"t":{"title":"粘りが実を結ぶ「本物の力がつく日」の軸","desc":"行動と忍耐が心地よく調和する配置です。<br>**コツコツ進めたことが、確かな手応えになる**日です。今日の粘りは、一生使える力になります。"},"s":{"w1":"粘り強さが実る日です。難しい仕事ほど丁寧に。","w2":"地道な努力が報われる日です。諦めかけた先にもう一度。","l1":"誠実な行動が伝わる日です。務める姿が見られています。","l2":"真面目な相手との縁が育つ日です。信頼は積み重ね。","m":"堅実な判断ができる日です。無駄がきれいに止まります。"}},"mars_uranus":{"c":{"desc":"行動と変化が重なる配置です。<br>**突発的なエネルギーと方向転換の衝動が最大になる**日です。素早い対応は武器ですが、勢いの事故には注意。動く前に安全確認を挟むのが条件です。","w1":"変化に即対応できる日です。トラブル対応で評価が上がります。","w2":"思い切った方向転換が効く日です。ただし計画は先に紙へ。","l1":"関係に刺激が入る日です。いつもと違う行動が新鮮に映ります。","l2":"意外な展開から縁が動く日です。驚きを楽しめる余裕を。","m":"突発的な出費に備える日です。予備費の確認をしておいて。"},"h":{"desc":"衝動と突発が重なりやすい配置です。<br>**急な方向転換や事故めいたトラブル**に注意が要ります。今日はいつもより慎重な運転・操作・言動を。思いつきの決断は保留です。"},"t":{"title":"変化に素早く乗れる「身軽な日」の軸","desc":"行動と変化が心地よく調和する配置です。<br>**素早い対応と方向転換が、気持ちよく決まる**日です。身軽さがそのまま強みになります。"},"s":{"w1":"変化に即対応できる日です。トラブル対応で評価が上がります。","w2":"方向転換が効く日です。新しい道も視野に。","l1":"関係に刺激が入る日です。いつもと違う行動が新鮮に。","l2":"意外な展開から縁が動く日です。驚きを楽しんで。","m":"新しい道具への出費が吉の日です。仕事の効率に。"}},"mars_neptune":{"c":{"desc":"行動と直感が重なる配置です。<br>**力まずに流れに乗る力**が出る日です。正面突破より、相手の事情を読む動きが効きます。ただし、的がぼやけると空回りするので、狙いは一つに。","w1":"力技より工夫が効く日です。相手の都合を読むと進みます。","w2":"直感で動く先に縁がある日です。気になる求人はまず保存を。","l1":"優しい行動が伝わる日です。相手の気持ちに沿う動きが効きます。","l2":"穏やかな相手との縁が動く日です。助け合いの場に注目。","m":"情に流される出費に注意の日です。あげる分は上限を決めて。"},"h":{"desc":"やる気の焦点がぼやけやすい配置です。<br>**頑張る方向がずれて空回りしたり、人の事情に巻き込まれたり**しがちです。今日は的を一つに絞って、それ以外は潔く置いて。"},"t":{"title":"力まずに勝てる「流れに乗る日」の軸","desc":"行動と直感が心地よく調和する配置です。<br>**正面突破ではなく、流れを読む動きが効く**日です。相手の事情を読むほど、物事が優しく進みます。"},"s":{"w1":"工夫が効く日です。相手の都合を読むと進みます。","w2":"直感で動く先に縁がある日です。気になる求人は保存を。","l1":"優しい行動が伝わる日です。相手に沿う動きが効きます。","l2":"穏やかな相手との縁がある日です。助け合いの場に。","m":"人を助ける出費が実る日です。気持ちよく使って。"}},"mars_pluto":{"c":{"desc":"行動と底力が重なる配置です。<br>**執念と突破力が最大出力になる**日です。不可能に見える壁も押せますが、力の使い方を誤ると対立も最大になります。押す相手と場面を選ぶのが絶対条件です。","w1":"難関を突破する力が出る日です。本命の仕事に全力を注いで。","w2":"本気度が結果を分ける日です。中途半端な応募は今日はやめて。","l1":"情熱が深く強く出る日です。本音のぶつかり合いも絆に変わります。","l2":"強く惹かれる縁が動く日です。熱の持続を見極める目も持って。","m":"大きなお金を動かす覚悟が決まる日です。判断は数字で裏付けを。"},"h":{"desc":"力のぶつかり合いが激しくなりやすい配置です。<br>**執念が裏返って対立や極端な行動**に繋がりがちです。勝ち切ることより、傷を残さない終わらせ方を選ぶのが今日の強さです。"},"t":{"title":"執念が実を結ぶ「壁を越える日」の軸","desc":"行動と底力が心地よく調和する配置です。<br>**粘り強い集中が、難しい壁を越える力になる**日です。本気で当たるほど、手応えが返ってきます。"},"s":{"w1":"難関を越える力が出る日です。本命の仕事に全力を。","w2":"本気度が結果を分ける日です。本命に絞って当たって。","l1":"情熱が深く伝わる日です。本音も絆に変わります。","l2":"強く惹かれる縁が動く日です。時間をかけて見極めて。","m":"大きな判断が冷静にできる日です。計画的に動いて。"}},"jupiter_saturn":{"c":{"desc":"拡大と責任が重なる配置です。<br>**広げたい気持ちと固めたい現実が同居する**日です。どちらかではなく、広げるための土台作りに力を使うと、後で大きく伸びます。","w1":"大きな仕事の土台作りが進む日です。地味な準備が後の飛躍に。","w2":"堅実な格上げができる日です。条件と夢の両方を見る目を。","l1":"将来と現実を両方話せる日です。具体的な計画が安心を生みます。","l2":"堅実で器のある相手との縁が固まる日です。長く続く目で見て。","m":"貯蓄と投資のバランスを決める日です。長期の視点で配分を。"},"h":{"desc":"拡大と制限が引っ張り合う配置です。<br>**進めたいのに条件が重い、という板挟み**になりがちです。今日は大きく広げる日ではなく、広げるための条件を一つ整える日です。"},"t":{"title":"夢と土台が両立する「大器の礎の日」の軸","desc":"拡大と責任が心地よく調和する配置です。<br>**大きく描きながら、足元も固められる**日です。今日作る土台は、長く自分を支えます。"},"s":{"w1":"大きな仕事の土台作りが進む日です。準備が後の飛躍に。","w2":"堅実な格上げができる日です。夢と条件の両方を見て。","l1":"将来と現実を両方話せる日です。具体的な計画が安心に。","l2":"堅実で器のある相手との縁がある日です。長く続く目で。","m":"貯蓄と投資のバランスが取れる日です。長期の視点で。"}},"jupiter_uranus":{"c":{"desc":"拡大と変化が重なる配置です。<br>**転機のエネルギーが最大になる**日です。思いがけない好機も、急な変更もあり得ます。波に乗るなら、失っても痛くない範囲から試すのが条件です。","w1":"新しいチャンスが飛び込む日です。柔軟な対応が実りに。","w2":"意外な求人や誘いが転機になる日です。話は聞いてみて。","l1":"関係に転機が訪れる日です。変化を一緒に楽しめるかが鍵。","l2":"意外な相手との縁が大きく動く日です。先入観なしで会って。","m":"臨時収入の予感がある日です。入った分の一部は残して。"},"h":{"desc":"変化の波が大きくうねる配置です。<br>**突然の好機と突然の変更が同居**し、振り回されやすくなります。飛び乗るのは、失っても痛くない範囲のものだけに。"},"t":{"title":"転機が気持ちよく来る「棚ぼたも実力の日」の軸","desc":"拡大と変化が心地よく調和する配置です。<br>**思いがけない好機が、自然に舞い込む**日です。柔軟に受け止めるほど、転機が味方になります。"},"s":{"w1":"新しいチャンスが入る日です。柔軟な対応が実りに。","w2":"意外な誘いが転機になる日です。話は聞いてみて。","l1":"関係に転機が訪れる日です。変化を一緒に楽しんで。","l2":"意外な相手との縁がある日です。先入観なしで会って。","m":"臨時収入の予感がある日です。一部は残しておいて。"}},"jupiter_neptune":{"c":{"desc":"拡大と夢が重なる配置です。<br>**希望と直感が大きく膨らむ**日です。夢は描けますが、根拠のない楽観にも膨らみます。夢は大きく、確認は細かく。この両立が条件です。","w1":"大きなビジョンが描ける日です。企画の種は今日まいて。","w2":"憧れの舞台に近づく日です。夢と条件を並べて見て。","l1":"2人の夢が大きく膨らむ日です。語り合う時間が幸せを作ります。","l2":"理想に近い相手との縁がある日です。現実の言動も添えて見て。","m":"夢への投資が実る日です。ただし裏付けのない話は別です。"},"h":{"desc":"夢と期待が膨らみ過ぎる配置です。<br>**根拠のない楽観や、都合の良い解釈**で判断を誤りやすくなります。今日は「証拠のある話」だけを信じるのが安全です。"},"t":{"title":"夢が優しく膨らむ「希望の日」の軸","desc":"拡大と夢が心地よく調和する配置です。<br>**希望と直感が優しく膨らみ、未来の絵が描ける**日です。夢を語ることが、次の現実を作ります。"},"s":{"w1":"大きなビジョンが描ける日です。企画の種をまいて。","w2":"憧れの舞台に近づく日です。夢と条件を並べて見て。","l1":"2人の夢が膨らむ日です。語り合いが幸せを作ります。","l2":"理想に近い相手との縁がある日です。感性を大切に。","m":"夢への投資が実る日です。学びや経験に使って。"}},"jupiter_pluto":{"c":{"desc":"拡大と底力が重なる配置です。<br>**大きなお金や影響力が動く**日です。掴む力は強いですが、欲が出過ぎると判断が歪みます。線引きを先に決めておくのが絶対条件です。","w1":"大きな仕事の主導権が握れる日です。交渉は自分の土俵で。","w2":"格上げの大きな一歩が出る日です。本命に絞って当たって。","l1":"関係が大きく深まる日です。将来の約束が現実味を帯びます。","l2":"大きな存在感の相手との縁が動く日です。対等でいる意識を。","m":"大きなお金が動く日です。契約の細部まで目を通してから。"},"h":{"desc":"大きな力同士がせめぎ合う配置です。<br>**お金や権力を巡る駆け引き**が濃くなりやすく、欲が判断を曇らせます。今日の勝負は、深入りしない線を先に決めることが条件です。"},"t":{"title":"大きな流れを掴める「実りの日」の軸","desc":"拡大と底力が心地よく調和する配置です。<br>**大きな仕事やお金の流れを、確かな手応えで掴める**日です。集中して当たるほど、実りが大きくなります。"},"s":{"w1":"大きな仕事の主導権が握れる日です。交渉は自分の土俵で。","w2":"格上げの一歩が出る日です。本命に絞って当たって。","l1":"関係が大きく深まる日です。将来の話が現実味を帯びます。","l2":"存在感のある相手との縁がある日です。対等な目線で。","m":"大きなお金が気持ちよく動く日です。計画的に使って。"}},"saturn_uranus":{"c":{"desc":"責任と変化が重なる配置です。<br>**古い形を守る力と、新しくする力が正面から合わさる**日です。対立ではなく組み替えの日。残すものと変えるものを分ける作業が進みます。","w1":"やり方の組み替えが進む日です。古い手順の刷新に追い風。","w2":"安定と自由の両立が見える日です。働き方の条件を整理して。","l1":"関係の形を組み替える日です。話し合いで新しい形が見つかります。","l2":"価値観の違う相手とも歩み寄れる日です。違いは材料に。","m":"契約や仕組みの見直しが進む日です。古い固定費の棚卸しを。"},"h":{"desc":"守りたい秩序と、壊したい衝動がぶつかる配置です。<br>**古いやり方への限界感**が強まりますが、全部を壊すと足場まで失います。変えるのは一つずつ、順番に。"},"t":{"title":"組み替えが気持ちよく進む「刷新の日」の軸","desc":"責任と変化が心地よく調和する配置です。<br>**残すものと変えるものの整理が、無理なく進む**日です。古い形の組み替えが、新しい安定を作ります。"},"s":{"w1":"やり方の組み替えが進む日です。手順の刷新に追い風。","w2":"安定と自由の両立が見える日です。条件を整理して。","l1":"関係の形を組み替える日です。話し合いで新しい形に。","l2":"価値観の違う相手とも歩み寄れる日です。違いは材料。","m":"契約の見直しが進む日です。古い固定費の棚卸しを。"}},"saturn_neptune":{"c":{"desc":"責任と夢が重なる配置です。<br>**理想を現実の形にする力**が出る日です。地味な作業が夢の土台になります。ただし曖昧な部分は後で響くので、数字と期限だけは今日はっきりさせて。","w1":"夢の計画を具体化できる日です。工程に落とす作業が進みます。","w2":"憧れの仕事への道筋が見える日です。必要な資格や経験を洗い出して。","l1":"夢を共有しながら現実も話せる日です。2人の計画が形に。","l2":"穏やかで誠実な相手との縁が育つ日です。静かな時間を大切に。","m":"将来の夢への貯蓄が進む日です。目的別の積み立ては吉。"},"h":{"desc":"現実の重さと理想の間で揺れる配置です。<br>**曖昧なまま抱えた不安**が大きくなりやすい日です。不安は、数字や期限に置き換えると小さくなります。今日は「見える化」が薬です。"},"t":{"title":"夢に形が宿る「土台づくりの日」の軸","desc":"責任と夢が心地よく調和する配置です。<br>**理想を現実の形にする作業が、静かに進む**日です。地味な一歩が、夢を本物にします。"},"s":{"w1":"計画を具体化できる日です。工程に落とす作業が進みます。","w2":"憧れへの道筋が見える日です。必要なものを洗い出して。","l1":"夢と現実を両方話せる日です。2人の計画が形に。","l2":"穏やかで誠実な相手との縁が育つ日です。静かな時間を。","m":"夢への貯蓄が進む日です。目的別の積み立ては吉。"}},"saturn_pluto":{"c":{"desc":"責任と底力が重なる配置です。<br>**一つのことに全力を注ぎ込む**日です。重圧は大きいですが、今日の没頭は一生ものの実力になります。ただし、休む時間も計画に入れるのが条件です。","w1":"専門性を深く掘れる日です。一つの仕事に没頭すると成果が大きいです。","w2":"本気の準備が力になる日です。基礎の徹底が後の差に。","l1":"関係の核心と向き合える日です。重い話も静かに進められます。","l2":"深い縁が静かに育つ日です。言葉より時間の共有を。","m":"大きな固定費や負債と向き合う日です。計画を立てれば道は開けます。"},"h":{"desc":"重圧が一点に集中する配置です。<br>**逃げ場のない課題と向き合わされ**、消耗しやすい日です。ただ、ここで逃げなかった課題は、後で一生ものの実力になります。休息も計画のうちに。"},"t":{"title":"没頭が実力になる「一意専心の日」の軸","desc":"責任と集中が心地よく調和する配置です。<br>**一つのことに深く没頭でき、その分だけ実力が伸びる**日です。今日の集中は、一生ものの財産になります。"},"s":{"w1":"専門性を深く掘れる日です。没頭するほど成果が。","w2":"本気の準備が力になる日です。基礎の徹底が差に。","l1":"関係の核心と向き合える日です。重い話も静かに進みます。","l2":"深い縁が静かに育つ日です。時間の共有を大切に。","m":"大きな固定費と向き合える日です。計画が道を開きます。"}},"uranus_neptune":{"c":{"desc":"変化と夢が重なる配置です。<br>**感覚のステージが切り替わる**日です。新しい価値観が入ってきますが、地に足は着きにくくなります。変化は記録に残し、判断は日を改めて。","w1":"新しい発想や価値観に触れる日です。学びの種を拾って。","w2":"働き方の新しい形が見える日です。情報は集めて、決断は後に。","l1":"関係の空気が切り替わる日です。新しい2人の形が見えてきます。","l2":"感性の新しい縁が開く日です。アートや学びの場に注目。","m":"新しい仕組みへの小さな出費が吉の日です。大きな契約は保留で。"},"h":{"desc":"感覚がざわつき、現実感が揺らぐ配置です。<br>**漠然とした不安や、時代の変化への焦り**が出やすくなります。情報の取り過ぎは毒。今日は触れる情報を絞るのが安定のコツです。"},"t":{"title":"感覚が切り替わる「新しい価値観の日」の軸","desc":"変化と感性が心地よく調和する配置です。<br>**新しい価値観や美意識が、自然に入ってくる**日です。世界の見え方が、一段新しくなります。"},"s":{"w1":"新しい発想に触れる日です。学びの種を拾って。","w2":"働き方の新しい形が見える日です。情報を集めて。","l1":"関係の空気が切り替わる日です。新しい2人の形が。","l2":"感性の新しい縁が開く日です。アートや学びの場へ。","m":"新しい仕組みへの小さな出費が吉の日です。試してみて。"}},"uranus_pluto":{"c":{"desc":"変化と底力が重なる配置です。<br>**環境を根底から変える力**が最大になる日です。変革は進みますが、壊し過ぎると戻れません。残すものを先に決めてから動くのが条件です。","w1":"大きな改革に手が届く日です。変える順番を決めてから着手を。","w2":"人生の方向転換ができる日です。ただし下調べは念入りに。","l1":"関係の転機を迎える日です。結論は2人で話し合ってから。","l2":"人生を変えるような縁が動く日です。自分の軸を持って向き合って。","m":"大きな契約変更が進む日です。条件の確認は専門家の目も借りて。"},"h":{"desc":"大きな変化の圧力がかかる配置です。<br>**環境や立場が否応なく変わるような出来事**に振り回されやすい日です。抵抗するより、変わった後の形を先に考える方が力を使えます。"},"t":{"title":"変革が気持ちよく進む「生まれ変わりの日」の軸","desc":"変化と底力が心地よく調和する配置です。<br>**環境や生き方の大きな組み替えが、無理なく進む**日です。変わることを楽しめるのが、今日の強さです。"},"s":{"w1":"大きな改革に手が届く日です。変える順番を決めて。","w2":"方向転換ができる日です。下調べは念入りに。","l1":"関係の転機を迎える日です。話し合って決めて。","l2":"人生を変えるような縁がある日です。自分の軸を持って。","m":"大きな契約変更が進む日です。確認は丁寧に。"}},"neptune_pluto":{"c":{"desc":"夢と底力が重なる配置です。<br>**深い直感と静かな再生力**が合わさる日です。表立った動きはなくても、内側の決意が固まります。焦らず、内側の声に従うのが正解です。","w1":"直感が深く冴える日です。数字の裏の空気を読む力が助けます。","w2":"本当にやりたい仕事の輪郭が見える日です。メモに残しておいて。","l1":"深いところで通じ合える日です。言葉より存在が伝わります。","l2":"魂のレベルで惹かれる縁がある日です。時間をかけて育てて。","m":"お金への執着が静かに解ける日です。流れを整える見直しを。"},"h":{"desc":"深いところで静かな圧がかかる配置です。<br>**漠然とした執着や、見えない不安**が膨らみやすい日です。答えの出ない考えは一度脇に置いて、体を休めることを優先して。"},"t":{"title":"深い直感が静かに冴える「再生の日」の軸","desc":"直感と再生力が心地よく調和する配置です。<br>**内側の決意が静かに固まり、心が新しくなる**日です。焦らず、自分の声に従って大丈夫です。"},"s":{"w1":"直感が深く冴える日です。空気を読む力が助けます。","w2":"本当にやりたい仕事の輪郭が見える日です。メモに残して。","l1":"深いところで通じ合える日です。存在が伝わります。","l2":"深く惹かれる縁がある日です。時間をかけて育てて。","m":"お金への執着が解ける日です。流れを整える見直しを。"}},"sun_sun":{"c":{"desc":"生まれた日の太陽に、いまの太陽が重なる配置です。<br>**自分らしさが最大出力になる**日で、ここから1年の流れが切り替わります。良くも悪くも「素の自分」が前に出るので、宣言や再出発は今日、意地の張り合いは避けるのが条件です。","w1":"自分の看板が強く出る日です。役割の宣言や再スタートに最適。","w2":"自分らしい働き方を打ち出せる日です。方向性の宣言を。","l1":"素の自分同士で向き合える日です。ありのままが一番伝わります。","l2":"自分らしくいられる場所に縁が集まる日です。無理な演出は不要。","m":"自分への投資が実る日です。長く使うものへの出費は吉。"},"h":{"desc":"自分らしさ同士がぶつかり合う配置です。<br>**「こうあるべき」という自分の像**が硬くなり、人の意見を受け入れにくくなります。今日は正しさより、柔らかさが自分を守ります。"},"t":{"title":"自分らしさが気持ちよく冴える「再出発の日」の軸","desc":"生まれた日の太陽に、いまの太陽が心地よく重なる配置です。<br>**自分らしさが無理なく冴え、ここから1年の流れが明るく切り替わる**日です。再出発や宣言に最適です。"},"s":{"w1":"自分の看板が冴える日です。再スタートや宣言に最適。","w2":"自分らしい働き方が見える日です。方向性を言葉に。","l1":"素の自分同士で向き合える日です。ありのままが伝わります。","l2":"自分らしくいられる場所に縁がある日です。無理な演出は不要。","m":"自分への投資が実る日です。長く使うものは吉。"}},"moon_moon":{"c":{"desc":"生まれた日の月に、いまの月が重なる配置です。<br>**心のリズムが元の位置に戻る**日で、感情の出力も最大になります。満たされる感覚も、揺れやすさも今日は大きめ。気持ちの波に大きな判断を任せないのが条件です。","w1":"心の調子が仕事に直結する日です。慣れた手順ほど確実に進みます。","w2":"気持ちの声が聞こえる日です。本当にやりたい仕事が見えてきます。","l1":"素の気持ちがそのまま出る日です。甘えも本音も素直に。","l2":"心がほっとする相手との縁がある日です。懐かしい場所にも注目。","m":"心を満たす出費が吉の日です。ただし気分買いとの線引きを。"},"h":{"desc":"感情の波が増幅されやすい配置です。<br>**小さなことで大きく落ち込んだり、逆に昂ったり**しがちです。波は今日だけのもの。大きな判断は、波が引いてからで間に合います。"},"t":{"title":"心のリズムが整う「気持ちリセットの日」の軸","desc":"生まれた日の月に、いまの月が心地よく重なる配置です。<br>**心の波が穏やかに整い、気持ちが軽くリセットされる**日です。懐かしい場所や人が、心の充電になります。"},"s":{"w1":"心の調子が整う日です。慣れた仕事ほど確実に進みます。","w2":"気持ちが軽くなる日です。応募や連絡は今日のうちに。","l1":"素の気持ちを伝え合える日です。懐かしい話が距離を縮めます。","l2":"心がほっとする相手との縁がある日です。懐かしい場所にも注目。","m":"心を満たす出費が吉の日です。充電を優先して。"}},"mercury_mercury":{"c":{"desc":"生まれた日の水星に、いまの水星が重なる配置です。<br>**頭の回路が元の設定に戻り、思考の出力も最大になる**日です。学び直しや計画の練り直しは進みますが、考え過ぎの堂々巡りにも注意。区切りを決めるのが条件です。","w1":"頭の切り替えが効く日です。滞った連絡や書類が片付きます。","w2":"言葉の力が戻る日です。志望動機や自己PRの練り直しに最適。","l1":"話し合いの仕切り直しができる日です。伝わる言葉が見つかります。","l2":"言葉のキャッチボールから始まる縁がある日です。懐かしい連絡も。","m":"情報への投資が実る日です。本や講座は吉。"},"h":{"desc":"頭が回り過ぎて疲れやすい配置です。<br>**考えの堂々巡りや、言葉の揚げ足取り**が起きがちです。今日は情報の入口を絞って、考える量そのものを減らして。"},"t":{"title":"頭がすっと冴える「仕切り直しの日」の軸","desc":"生まれた日の水星に、いまの水星が心地よく重なる配置です。<br>**頭の回路が軽やかにリセットされ、考えがすっとまとまる**日です。学び直しや計画の練り直しに最適です。"},"s":{"w1":"頭の切り替えが効く日です。滞った連絡や書類が片付きます。","w2":"言葉の力が戻る日です。自己PRの練り直しに最適。","l1":"話し合いの仕切り直しができる日です。伝わる言葉が見つかります。","l2":"言葉のキャッチボールから始まる縁がある日です。","m":"情報への投資が実る日です。本や講座は吉。"}},"venus_venus":{"c":{"desc":"生まれた日の金星に、いまの金星が重なる配置です。<br>**「好き」のセンサーが最大感度になる**日です。本当に好きなものはくっきり見えますが、甘い誘惑にも弱くなります。上限と線引きを先に決めるのが条件です。","w1":"センスと愛嬌が最大に出る日です。人前に出る仕事に追い風。","w2":"「好き」を仕事に繋げる日です。趣味の延長に本命があります。","l1":"好きという気持ちが最大になる日です。小さなデートや贈り物が効きます。","l2":"自分の「好き」がはっきりする日です。感覚に合う相手と縁が動きます。","m":"心が喜ぶ買い物が吉の日です。上限を決めれば満足できます。"},"h":{"desc":"楽しみへの欲が膨らみやすい配置です。<br>**好きなことへの散財や、甘い関係への深入り**に注意。今日の「好き」は少し盛れて見えています。上限と線引きを先に。"},"t":{"title":"好きが気持ちよく冴える「楽しみ直しの日」の軸","desc":"生まれた日の金星に、いまの金星が心地よく重なる配置です。<br>**「好き」のセンサーが澄んで、本当に大切なものが見える**日です。楽しみ直し、愛し直しのきっかけになります。"},"s":{"w1":"センスと愛嬌が冴える日です。人前に出る仕事に追い風。","w2":"「好き」を仕事に繋げる日です。趣味の延長に本命が。","l1":"好きを再確認できる日です。小さなデートや贈り物が効きます。","l2":"自分の「好き」がはっきりする日です。合う相手と縁が。","m":"心が喜ぶ買い物が吉の日です。長く愛せるものを。"}},"mars_mars":{"c":{"desc":"生まれた日の火星に、いまの火星が重なる配置です。<br>**闘志と行動力のエンジンが最大出力で再点火する**日です。挑戦の再開には最適ですが、衝突の火種も大きくなります。向ける先を一つに決めるのが条件です。","w1":"やる気に火がつく日です。後回しの仕事へ一気に着手できます。","w2":"挑戦の再開に追い風の日です。諦めた求人や資格にもう一度。","l1":"情熱が最大になる日です。素直な表現が関係を熱くします。","l2":"行動した先で縁が動く日です。フットワーク軽く誘いに乗って。","m":"勢いの出費に注意の日です。使うなら力になるものへ。"},"h":{"desc":"闘志同士が火花を散らしやすい配置です。<br>**些細なことで対立が燃え上がり**、体力も消耗します。今日の勝負は「冷静でいること」。力を抜く判断が一番の強さです。"},"t":{"title":"やる気が気持ちよく再点火する「再始動の日」の軸","desc":"生まれた日の火星に、いまの火星が心地よく重なる配置です。<br>**闘志のエンジンが軽やかに再点火する**日です。止まっていた挑戦の再開に最適です。"},"s":{"w1":"やる気に火がつく日です。後回しの仕事へ一気に着手を。","w2":"挑戦の再開に追い風の日です。諦めた先にもう一度。","l1":"情熱が戻る日です。素直な表現が関係を熱くします。","l2":"行動した先で縁が動く日です。誘いには軽く乗って。","m":"力になるものへの出費が吉の日です。道具や体力づくりに。"}},"jupiter_jupiter":{"c":{"desc":"生まれた日の木星に、いまの木星が重なる配置です。<br>**拡大のサイクルが一巡りし、次の12年が始まる**日です。大きな学びや挑戦の種まきには最適ですが、自信過剰の約束には注意。大きく描いて、足元は細かくが条件です。","w1":"視野が大きく広がる日です。大きな仕事や学びへの挑戦が実を結び始めます。","w2":"格上げの縁がある日です。一段上の舞台への応募に追い風。","l1":"2人の世界が広がる日です。将来の計画や旅行の話が弾みます。","l2":"世界を広げてくれる相手との縁がある日です。","m":"拡大への投資が吉の日です。学び・旅・挑戦は実りが大きいです。"},"h":{"desc":"拡大の欲が膨らみ過ぎる配置です。<br>**「もっと大きく」という気持ち**が、身の丈を超えた約束や出費を招きがちです。今日の拡大は、内側の学びに回すのが正解です。"},"t":{"title":"新しい12年が明るく始まる「種まきの日」の軸","desc":"生まれた日の木星に、いまの木星が心地よく重なる配置です。<br>**拡大のサイクルが明るく一巡りし、次の種まきの時期に入る**日です。大きな学びや挑戦の再開に追い風です。"},"s":{"w1":"視野が広がる日です。大きな仕事や学びが実を結び始めます。","w2":"格上げの縁がある日です。一段上の舞台への応募に追い風。","l1":"2人の世界が広がる日です。将来の計画や旅行の話が弾みます。","l2":"世界を広げてくれる相手との縁がある日です。","m":"拡大への投資が吉の日です。学び・旅・挑戦は実りが大きい。"}},"saturn_saturn":{"c":{"desc":"生まれた日の土星に、いまの土星が重なる配置です。<br>**積み上げてきたものの総点検の日**です。重さや限界を感じる場面もありますが、残るものは本物だけ。不要な責任を下ろす決断も、今日ならできます。","w1":"土台の点検が進む日です。地味な確認ほど後の評価に繋がります。","w2":"土台作りの日です。資格や実務経験など、残るものへの投資が正解。","l1":"関係の土台を確かめ合う日です。約束を守る姿勢が信頼を深めます。","l2":"誠実な相手との縁が育つ日です。条件より人柄で選んで。","m":"固定費と貯蓄の点検に最適の日です。守りを固めて。"},"h":{"desc":"重さが二重にかかる配置です。<br>**責任・年齢・限界といったテーマ**が前に出て、気分も沈みがちです。今日の重さは、土台の点検が進んでいる証拠。一つ終わらせるごとに軽くなります。"},"t":{"title":"積み上げが報われる「実りの確認の日」の軸","desc":"生まれた日の土星に、いまの土星が心地よく重なる配置です。<br>**積み上げてきたものの価値が、静かに確かめられる**日です。本物だけが残り、確かな手応えになります。"},"s":{"w1":"土台の点検が実る日です。地味な確認が評価に繋がります。","w2":"土台作りが報われる日です。残るものへの投資が正解。","l1":"関係の土台を確かめ合う日です。約束を守る姿勢が信頼に。","l2":"誠実な相手との縁が育つ日です。人柄で選んで。","m":"固定費と貯蓄の点検に最適の日です。守りを固めて。"}},"uranus_uranus":{"c":{"desc":"生まれた日の天王星に、いまの天王星が重なる配置です。<br>**変化の衝動が元の設定で再起動する**日です。「このままでいいのか」というざわつきは、停滞を壊す合図。ただし全部を壊す必要はなく、変えるのは一つからが条件です。","w1":"やり方を変える勇気が出る日です。古い手順を一つ捨てると効率が跳ねます。","w2":"方向転換のヒントがある日です。新しい働き方にも目を向けて。","l1":"関係に新しい風が入る日です。いつもと違う提案が効きます。","l2":"意外な場所・意外な相手との縁がある日です。先入観を外して。","m":"新しい技術や道具への投資が吉の日です。衝動買いとの線引きを。"},"h":{"desc":"変化の衝動が二重に走る配置です。<br>**今すぐ全部を変えたくなる気持ち**が強まりますが、今日の衝動は持続しません。変えるなら小さく一つだけ、様子見しながら。"},"t":{"title":"変化が気持ちよく再起動する「リセットの日」の軸","desc":"生まれた日の天王星に、いまの天王星が心地よく重なる配置です。<br>**停滞を壊す風が、軽やかに吹き直す**日です。古いやり方を一つ手放すと、新しい風が入ってきます。"},"s":{"w1":"やり方を変える勇気が出る日です。手順を一つ捨てると効率が跳ねます。","w2":"方向転換のヒントがある日です。新しい働き方にも目を。","l1":"関係に新しい風が入る日です。いつもと違う提案が効きます。","l2":"意外な相手との縁がある日です。先入観を外して。","m":"新しい技術への投資が吉の日です。小さく試して。"}},"neptune_neptune":{"c":{"desc":"生まれた日の海王星に、いまの海王星が重なる配置です。<br>**夢と理想の輪郭が静かに浮かび上がる**日です。直感は冴えますが、現実の確認は甘くなりがち。夢は言葉に残し、契約ごとは別日に回すのが条件です。","w1":"直感が冴える日です。空気で判断する場面に強くなります。","w2":"夢を言葉にし直す日です。憧れの働き方を書き出すと入口が見えます。","l1":"言葉にしない気持ちが伝わる日です。静かな時間が2人を深くします。","l2":"夢や趣味の世界から縁が始まる日です。感性の合う相手に注目。","m":"心を豊かにする出費が吉の日です。曖昧な契約や儲け話には乗らないで。"},"h":{"desc":"現実感が薄くなりやすい配置です。<br>**夢想や曖昧な期待に時間を溶かし**、大事な判断を先送りしがちです。今日は「事実だけのメモ」を取ることが、霧を晴らします。"},"t":{"title":"夢の輪郭が澄む「理想の再確認の日」の軸","desc":"生まれた日の海王星に、いまの海王星が心地よく重なる配置です。<br>**本当に叶えたい夢の輪郭が、静かに澄んで見える**日です。曖昧だった憧れを、言葉や形にし直す作業が進みます。"},"s":{"w1":"直感が冴える日です。空気で判断する場面に強くなります。","w2":"夢を言葉にし直す日です。憧れを書き出すと入口が見えます。","l1":"言葉にしない気持ちが伝わる日です。静かな時間が絆に。","l2":"夢や趣味の世界から縁が始まる日です。感性の合う相手に。","m":"心を豊かにする出費が吉の日です。感性を満たすものを。"}},"pluto_pluto":{"c":{"desc":"生まれた日の冥王星に、いまの冥王星が静かに重なる配置です。<br>**深層の決意が固まる**日です。表立った変化はなくても、執着を力に変えるか、執着に振り回されるかの分かれ目。手放すものを一つ決めると、力が澄みます。","w1":"集中力が深まる日です。一つの仕事を掘り下げるほど大きな成果に。","w2":"力を溜める日です。大きな応募の前に戦略を練り直して。","l1":"絆の深さを確かめる日です。本音の一つが関係を生まれ変わらせます。","l2":"強く惹かれる縁が水面下で動く日です。焦らず見極めて。","m":"お金の流れを深く見直す日です。保険や契約の点検に最適。"},"h":{"desc":"深層の圧が静かに強まる配置です。<br>**執着や支配欲、切り捨ての衝動**が水面下で大きくなります。今日は結論を出さないのが正解。圧は、時間とともに形を変えていきます。"},"t":{"title":"底力が静かに澄む「決意の日」の軸","desc":"生まれた日の冥王星に、いまの冥王星が心地よく重なる配置です。<br>**深層の決意が静かに固まる**日です。表立った変化はなくても、内側の力が澄んでいきます。"},"s":{"w1":"集中力が深まる日です。一つを掘り下げるほど成果に。","w2":"力を溜める日です。大きな応募の前に戦略を練り直して。","l1":"絆の深さを確かめる日です。本音の一つが関係を育てます。","l2":"強く惹かれる縁が水面下で動く日です。焦らず見極めて。","m":"お金の流れを見直す日です。保険や契約の点検に最適。"}}};
 (function () {
-  function pad(n) { return (n < 10 ? '0' : '') + n; }
-  var done = false;
-  var iv = setInterval(function () {
-    if (done) { clearInterval(iv); return; }
-    var place = document.getElementById('birthplace');
-    var year = document.getElementById('scanyear');
-    var btn = document.getElementById('calcBtn');
-    if (!place || !year || !btn) return;
-    done = true;
-    clearInterval(iv);
-    btn.textContent = '🔮 運勢を見る';
-    new MutationObserver(function () { if (btn.textContent !== '🔮 運勢を見る' && btn.textContent.indexOf('中') === -1) btn.textContent = '🔮 運勢を見る'; }).observe(btn, { childList: true, characterData: true, subtree: true });
-    var pg = place.closest('.form-group');
-    if (pg) pg.style.display = 'none';
-    var yg = year.closest('.form-group');
-    if (yg) yg.style.display = 'none';
-    var grp = document.createElement('div');
-    grp.className = 'form-group';
-    var today = new Date();
-    var iso = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
-    grp.innerHTML = '<label>📅 見たい日（この日を含む月を表示します）</label>'
-      + '<input type="date" id="fmDate" class="form-control" style="margin-top:4px;" value="' + iso + '">';
-    if (yg && yg.parentElement) yg.parentElement.insertBefore(grp, yg);
-    else btn.parentElement.insertBefore(grp, btn);
-    document.addEventListener('click', function (e) {
-      if (!e.target || e.target.id !== 'calcBtn') return;
-      var d = document.getElementById('fmDate');
-      var y = document.getElementById('scanyear');
-      if (d && d.value && y) {
-        y.value = d.value.slice(0, 4);
-        document.body.dataset.fmJump = d.value.slice(0, 4) + '-' + (+d.value.slice(5, 7));
-      } else {
-        document.body.dataset.fmJump = '';
+var KEY = 'chronoscope_birth_v1';
+var GLYPH = { 0: '☉', 1: '☽', 2: '☿', 3: '♀', 4: '♂', 5: '♃', 6: '♄', 7: '♅', 8: '♆', 9: '♇' };
+var NAME = { 0: '太陽', 1: '月', 2: '水星', 3: '金星', 4: '火星', 5: '木星', 6: '土星', 7: '天王星', 8: '海王星', 9: '冥王星' };
+var PN = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+var TRANSITS = [0, 2, 3, 4, 5, 6, 7, 8, 9];
+var NATALS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+var ASPS = [0, 90, 120, 180];
+var ASPG = { 0: '☌', 90: '□', 120: '△', 180: '☍' };
+var ORB_SPAN = 4.5;
+var SCAN_LO = -60, SCAN_HI = 115;
+var GOODC = { '☉': '表に出ること・勝負ごと', '☽': '気持ちの安定・身近な人との時間', '☿': '連絡・交渉・手続きのスムーズさ', '♀': '恋愛の進展・嬉しい買い物・人からの誘い', '♂': 'やる気と行動力・先手の動き', '♃': 'チャンスの広がり・助けてくれる人', '♄': 'コツコツの成果・信頼が固まること', '♅': '新しいやり方・意外な出会い', '♆': '直感とイメージ・癒しの時間', '♇': '深い集中・本気の立て直し' };
+var HARDC = { '☉': 'プライドがらみの意地の張り合い', '☽': '気分の波・体調の無理', '☿': '連絡ミス・書類の見落とし・言い間違い', '♀': '甘い誘い・衝動買い', '♂': 'ケンカ・せっかちさ・勢いだけの決断', '♃': '話が大きくなりすぎること・約束のしすぎ', '♄': '締め切りと責任の重さ・冷たい対応', '♅': '急な予定変更・機械やネットのトラブル', '♆': '曖昧な話・うまい話への流されやすさ', '♇': '執着と極端な決断・根深い疲れ' };
+var GOODACT = { '☉': '目立つ場面では前に出て正解', '☽': '身近な人との時間を優先して', '☿': '連絡や手続きは今日のうちに片付けると後が楽', '♀': '誘いには乗って正解、欲しい物も買い時', '♂': '先手で動くと流れが掴めます', '♃': '誘いや頼みごとは広がりに繋がります', '♄': 'コツコツ作業が一番進む日', '♅': '新しいやり方を試すと当たりです', '♆': '直感で選んで正解', '♇': '本気の立て直しに着手するなら今日' };
+var HARDACT = { '☉': '意地の張り合いは避けて', '☽': '無理せず、早めに休むのも大事', '☿': '大事な連絡は送信前にもう一度確認を', '♀': '甘い話と衝動買いは一晩寝かせて', '♂': '返事は一拍置いて、勢いだけで決めないで', '♃': '約束は欲張らず、少なめに', '♄': '締め切りは前倒しで、冷たい返事に注意', '♅': '予定変更に備えて、予備の段取りを', '♆': 'うまい話は鵜呑みにしないで', '♇': '極端な決断と執着は今日は封印' };
+var yS = document.getElementById('bzY'), mS = document.getElementById('bzM'), dS = document.getElementById('bzD');
+for (var i = 1930; i <= 2030; i++) { var o = document.createElement('option'); o.value = i; o.textContent = i + '年'; yS.appendChild(o); }
+for (var i = 1; i <= 12; i++) { var o2 = document.createElement('option'); o2.value = i; o2.textContent = i + '月'; mS.appendChild(o2); }
+for (var i = 1; i <= 31; i++) { var o3 = document.createElement('option'); o3.value = i; o3.textContent = i + '日'; dS.appendChild(o3); }
+yS.value = '1990'; mS.value = '1'; dS.value = '1';
+var timeEl = document.getElementById('uTime');
+try {
+  var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+  if (saved && saved.y) { yS.value = saved.y; mS.value = saved.m; dS.value = saved.d; }
+  if (saved && saved.time) timeEl.value = saved.time;
+} catch (e) {}
+var startEl = document.getElementById('bzStart');
+var now = new Date();
+startEl.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+var PM = null, PJD = null;
+async function pInit() {
+  if (PM) return;
+  const mod = await import('./assets/swisseph-BtfJwKK5.js');
+  const factory = typeof mod.default === 'function' ? mod.default : mod.SwissEphModule;
+  const wasmBinary = await (await fetch('./assets/swisseph-BmP0Bw24.wasm')).arrayBuffer();
+  PM = await factory({ instantiateWasm: (imports, success) => { WebAssembly.instantiate(wasmBinary, imports).then(r => success(r.instance, r.module)); return {}; } });
+  PJD = PM.cwrap('swe_julday_wrap', 'number', ['number', 'number', 'number', 'number', 'number']);
+}
+function pPos(jd, planet) {
+  const out = PM._malloc(48), err = PM._malloc(256);
+  const rc = PM.ccall('swe_calc_ut_wrap', 'number', ['number', 'number', 'number', 'number', 'number'], [jd, planet, 260, out, err]);
+  const lon = rc < 0 ? NaN : PM.getValue(out, 'double');
+  PM._free(out); PM._free(err);
+  return lon;
+}
+function fmtD(ms) { var d = new Date(ms); return (d.getUTCMonth() + 1) + '月' + d.getUTCDate() + '日'; }
+function fmtText(t) { return String(t || '').replace(/\n/g, '<br>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>'); }
+function pairKey(t, n) { return PN[Math.min(t, n)] + '_' + PN[Math.max(t, n)]; }
+function verdictOf(g, h) {
+  if (!g && !h) return '静か';
+  var d = g - h;
+  if (d >= 2) return 'プラス強め';
+  if (d === 1) return 'プラス寄り';
+  if (d === 0) return '互角';
+  if (d === -1) return 'マイナス寄り';
+  return 'マイナス強め';
+}
+function computeAll(natal, jd0) {
+  var days = SCAN_HI - SCAN_LO + 1;
+  var tp = [];
+  for (var di = 0; di < days; di++) {
+    var row = {};
+    for (var ti = 0; ti < TRANSITS.length; ti++) row[TRANSITS[ti]] = pPos(jd0 + SCAN_LO + di, TRANSITS[ti]);
+    tp.push(row);
+  }
+  var configs = [];
+  TRANSITS.forEach(function (t) {
+    NATALS.forEach(function (n) {
+      var diffs = [];
+      for (var di = 0; di < days; di++) {
+        var df = Math.abs(tp[di][t] - natal[n]) % 360; if (df > 180) df = 360 - df;
+        diffs.push(df);
       }
-    }, true);
-  }, 400);
-  setTimeout(function () { clearInterval(iv); }, 30000);
+      ASPS.forEach(function (asp) {
+        var runStart = -1, peakIdx = -1, peakOrb = 99;
+        for (var di = 0; di <= days; di++) {
+          var orb = di < days ? Math.abs(diffs[di] - asp) : 99;
+          if (orb <= ORB_SPAN) {
+            if (runStart < 0) { runStart = di; peakIdx = di; peakOrb = orb; }
+            else if (orb < peakOrb) { peakOrb = orb; peakIdx = di; }
+          } else if (runStart >= 0) {
+            var sOff = SCAN_LO + runStart, eOff = SCAN_LO + di - 1;
+            if (eOff >= 0 && sOff <= 55) configs.push({ t: t, n: n, asp: asp, hard: (asp === 90 || asp === 180), startOff: sOff, endOff: eOff, peakOff: SCAN_LO + peakIdx, peakOrb: peakOrb });
+            runStart = -1; peakOrb = 99;
+          }
+        }
+      });
+    });
+  });
+  var dayNet = [];
+  for (var d = 0; d < 56; d++) dayNet.push(0);
+  configs.forEach(function (c) {
+    var s = Math.max(0, c.startOff), e = Math.min(55, c.endOff);
+    for (var d = s; d <= e; d++) dayNet[d] += c.hard ? -1 : 1;
+  });
+  return { configs: configs, dayNet: dayNet };
+}
+function cfgHtml(c, baseMs) {
+var key = pairKey(c.t, c.n);
+var T = TEXTS[key] || {};
+var ent = c.asp === 0? T.c: (c.asp === 120? T.t: T.h);
+var sub = c.asp === 0? T.c: T.s;
+var g = GLYPH[c.t];
+var badge = '🎯 ' + fmtD(baseMs + c.startOff * 86400000) + ' 〜 ' + fmtD(baseMs + c.endOff * 86400000) + '（ピーク ' + fmtD(baseMs + c.peakOff * 86400000) + '）';
+var clip = '';
+if (c.startOff <= SCAN_LO) clip += ' ※始まりは、表示期間より前です';
+if (c.endOff >= SCAN_HI) clip += ' ※終わりは、表示期間より先です';
+var h = '<div style="border-top:1px solid rgba(197,168,128,0.25); padding:10px 0 4px; margin-top:10px;">';
+h += '<div style="display:inline-block; background:rgba(255,216,138,0.13); color:#ffd88a; border:1px solid rgba(255,216,138,0.4); border-radius:999px; padding:2px 10px; font-size:11.5px; font-weight:700;">' + badge + '</div>';
+if (clip) h += '<div style="font-size:11px; color:#8a8178; margin-top:3px;">' + clip + '</div>';
+h += '<div style="font-size:14.5px; font-weight:700; color:#faf6f0; margin-top:6px;">\u3010 ' + g + ' ' + ASPG[c.asp] + ' ' + GLYPH[c.n] + ' \u3011' + NAME[c.t] + '×' + NAME[c.n] + (c.hard? ' <span style="color:#ff9d85; font-size:12px;">注意の配置</span>': ' <span style="color:#ffd88a; font-size:12px;">良い流れ</span>') + '</div>';
+if (ent && ent.title) h += '<div style="font-size:13.5px; color:#e8cf9f; font-weight:700; margin-top:2px;">' + ent.title + '</div>';
+if (ent && ent.desc) h += '<div style="font-size:13.5px; color:#faf6f0; line-height:1.75; margin-top:4px;">' + fmtText(ent.desc) + '</div>';
+if (sub && sub.w1) h += '<div style="font-size:12.5px; color:#b6ab9c; line-height:1.8; margin-top:6px;">💻\u3010お仕事中\u3011' + sub.w1 + '<br>\u3010これから・お休み中\u3011' + sub.w2 + '<br>❤️\u3010恋人あり\u3011' + sub.l1 + '<br>\u3010フリー\u3011' + sub.l2 + '<br>🪙\u3010金運\u3011' + sub.m + '</div>';
+h += '<div style="font-size:12.5px; color:#e8cf9f; margin-top:6px;">' + (c.hard? '注意どころ：' + HARDC[g] + ' ― ' + HARDACT[g]: '活かしどころ：' + GOODC[g] + ' ― ' + GOODACT[g]) + '</div>';
+h += '</div>';
+return h;
+}
+function weekSummaryHtml(cfgs, pg, ph) {
+var goodT = [], hardT = [];
+cfgs.forEach(function (c) {
+var g = GLYPH[c.t];
+if (c.hard) { if (hardT.indexOf(HARDC[g]) < 0) hardT.push(HARDC[g]);}
+else if (goodT.indexOf(GOODC[g]) < 0) goodT.push(GOODC[g]);
+});
+var h = '<div style="background:rgba(255,216,138,0.06); border:1px solid rgba(255,216,138,0.25); border-radius:10px; padding:10px 12px; font-size:13px; line-height:1.8;">';
+h += '<div style="font-weight:700; color:#e8cf9f;">この週のまとめ（' + verdictOf(pg, ph) + '）</div>';
+if (goodT.length) h += '<div>活かしどころ：' + goodT.slice(0, 3).join('／') + '</div>';
+if (hardT.length) h += '<div>注意どころ：' + hardT.slice(0, 3).join('／') + '</div>';
+h += '</div>';
+return h;
+}
+document.getElementById('bzBtn').addEventListener('click', async function () {
+var box = document.getElementById('bzResult');
+box.innerHTML = '<p style="color:#9a8d7a; font-size:13.5px;">計算中…</p>';
+try {
+await pInit();
+var by = +yS.value, bm = +mS.value, bd = +dS.value;
+var tv = (timeEl.value || '12:00').split(':');
+var mins = (+tv[0] || 0) * 60 + (+tv[1] || 0);
+try {
+var prev = {};
+try { prev = JSON.parse(localStorage.getItem(KEY) || '{}');} catch (e) {}
+prev.y = by; prev.m = bm; prev.d = bd; prev.time = timeEl.value || '12:00';
+localStorage.setItem(KEY, JSON.stringify(prev));
+} catch (e) {}
+var sv = (startEl.value || '').split('-');
+if (sv.length!== 3) { box.innerHTML = '<p style="color:#ff9d85;">探し始める日を選んでください。</p>'; return;}
+var jdN = PJD(by, bm, bd, 3.0, 1) + (mins - 720) / 1440;
+var natal = {};
+NATALS.forEach(function (id) { natal[id] = pPos(jdN, id);});
+var sDate = new Date(Date.UTC(+sv[0], +sv[1] - 1, +sv[2]));
+var monOff = (sDate.getUTCDay() + 6) % 7;
+var mDate = new Date(sDate.getTime() - monOff * 86400000);
+var bv = [mDate.getUTCFullYear(), mDate.getUTCMonth() + 1, mDate.getUTCDate()];
+var jd0 = PJD(bv[0], bv[1], bv[2], 3.0, 1);
+var baseMs = Date.UTC(bv[0], bv[1] - 1, bv[2]);
+var res = computeAll(natal, jd0);
+var configs = res.configs, dayNet = res.dayNet;
+var weeks = [];
+for (var wI = 0; wI < 8; wI++) {
+var ws = wI * 7, we = ws + 6, score = 0, pg = 0, ph = 0;
+for (var d = ws; d <= we; d++) score += dayNet[d];
+var cover = [];
+configs.forEach(function (c) {
+if (c.endOff >= ws && c.startOff <= we) cover.push(c);
+if (c.peakOff >= ws && c.peakOff <= we) { if (c.hard) ph++; else pg++;}
+});
+cover.sort(function (a, b) {
+var ap = (a.peakOff >= ws && a.peakOff <= we)? 0: 1, bp = (b.peakOff >= ws && b.peakOff <= we)? 0: 1;
+if (ap!== bp) return ap - bp;
+if (a.hard!== b.hard) return a.hard? 1: -1;
+return a.peakOff - b.peakOff;
+});
+weeks.push({ i: wI, ws: ws, we: we, score: score, pg: pg, ph: ph, cover: cover, label: fmtD(baseMs + ws * 86400000) + ' 〜 ' + fmtD(baseMs + we * 86400000)});
+}
+var hero = null;
+if (configs.length) {
+for (var s = 0; s <= 49; s++) {
+var net = 0, gg = 0, hh = 0, peaks = [];
+for (var d2 = s; d2 <= s + 6; d2++) net += dayNet[d2];
+configs.forEach(function (c) {
+if (c.endOff >= s && c.startOff <= s + 6) { if (c.hard) hh++; else gg++;}
+if (c.peakOff >= s && c.peakOff <= s + 6) peaks.push(c);
+});
+if (!hero || net > hero.net || (net === hero.net && gg > hero.g)) hero = { s: s, net: net, g: gg, h: hh, peaks: peaks};
+}
+}
+var maxAbs = 1;
+weeks.forEach(function (w) { if (Math.abs(w.score) > maxAbs) maxAbs = Math.abs(w.score);});
+var html = '';
+if (hero) {
+html += '<div style="border:1.5px solid #ffd88a; border-radius:14px; padding:18px 16px; background:rgba(255,216,138,0.07); text-align:center;">'
++ '<div style="font-size:13px; color:#ffd88a; font-weight:700;">🔥 この8週間でいちばん濃い7日間</div>'
++ '<div style="font-family:\'Noto Serif JP\',serif; font-size:24px; font-weight:700; color:#ffe9b8; margin-top:6px;">' + fmtD(baseMs + hero.s * 86400000) + ' 〜 ' + fmtD(baseMs + (hero.s + 6) * 86400000) + '</div>'
++ '<div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.8;">良い流れの配置 ' + hero.g + '件 ／ 注意の配置 ' + hero.h + '件（' + verdictOf(hero.g, hero.h) + '）</div>'
++ (hero.peaks.length? '<div style="font-size:13px; color:#c5a880; margin-top:6px;">ピークが来る日：' + hero.peaks.map(function (c) { return fmtD(baseMs + c.peakOff * 86400000) + ' \u3010 ' + GLYPH[c.t] + ' ' + ASPG[c.asp] + ' ' + GLYPH[c.n] + ' \u3011'; }).join('、') + '</div>': '')
++ '<div style="font-size:12px; color:#9a8d7a; margin-top:8px;">※上の期間は、週の区切りをまたぐいちばん濃い7日間。下の週は月曜〜日曜で数えています。</div>'
++ '</div>';
+} else {
+html += '<div style="border:1px solid #4a4238; border-radius:14px; padding:16px; text-align:center; color:#c5a880; font-size:14px;">この8週間は、目立った配置がありませんでした。穏やかな期間です。</div>';
+}
+var maxPos = Math.max.apply(null, weeks.map(function (w) { return w.score;}).concat([0.01]));
+var maxNeg = Math.min.apply(null, weeks.map(function (w) { return w.score;}).concat([-0.01]));
+html += '<div style="font-size:12.5px; font-weight:700; color:#e8cf9f; margin-top:14px;">📊 8週間の波</div>';
+html += '<div style="display:flex; gap:2px; margin-top:4px;">';
+weeks.forEach(function (wk) {
+var isB = hero && (wk.ws <= hero.s + 6) && (wk.we >= hero.s);
+var bh = wk.score > 0? 8 + Math.round(wk.score / maxPos * 32): (wk.score < 0? 8 + Math.round(wk.score / maxNeg * 32): 2);
+var bg = wk.score > 0? 'linear-gradient(180deg,#ffd88a,#b98a2f)': (wk.score < 0? 'linear-gradient(180deg,#7a9fc5,#54708f)': '#38332c');
+var sd = fmtD(baseMs + wk.ws * 86400000).replace('月', '/').replace('日', '');
+html += '<div onclick="var r=document.getElementById(\'wkRow' + wk.i + '\'); if(r) r.scrollIntoView({behavior:\'smooth\', block:\'center\'}); var d=document.getElementById(\'wkDet' + wk.i + '\'); if(d) d.style.display=\'block\';" style="flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:74px; cursor:pointer; border-radius:6px; padding-top:2px;' + (isB? ' background:rgba(255,216,138,0.10);': '') + '">'
++ '<div style="font-size:9px; height:11px; line-height:11px;">' + (isB? '🔥': '') + '</div>'
++ '<div style="width:64%; max-width:20px; border-radius:3px 3px 0 0; background:' + bg + '; height:' + bh + 'px;"></div>'
++ '<div style="font-size:9.5px; color:#9a8d7a; margin-top:2px; height:13px;">' + sd + '</div>'
++ '<div style="font-size:9px; color:#8a8178; height:12px;">' + ((wk.pg || wk.ph)? '良' + wk.pg + ' 注' + wk.ph: '') + '</div>'
++ '</div>';
+});
+html += '</div>';
+html += '<div style="font-size:11px; color:#8a8178; margin-top:3px; line-height:1.6;">バーの高さは、その週の波（良い流れ−注意の重なり）です。週をタップすると、その週の詳しい内容が開きます。</div>';
+html += '<div style="margin-top:16px;">';
+weeks.forEach(function (wk) {
+var isBest = hero && (wk.ws <= hero.s + 6) && (wk.we >= hero.s);
+var vd = (wk.pg + wk.ph === 0 && wk.score === 0)? '静か': (wk.score >= 3? 'プラス強め': (wk.score >= 1? 'プラス寄り': (wk.score <= -3? 'マイナス強め': (wk.score <= -1? 'マイナス寄り': '互角'))));
+var fillW = wk.score === 0? 0: Math.max(8, Math.round(Math.abs(wk.score) / maxAbs * 100));
+var fillBg = wk.score > 0? 'linear-gradient(90deg,#b98a2f,#ffd88a)': 'linear-gradient(90deg,#54708f,#7a9fc5)';
+html += '<div id="wkRow' + wk.i + '" style="border:1px solid ' + (isBest? '#ffd88a': '#4a4238') + '; border-radius:12px; padding:12px 14px; margin-bottom:10px; background:rgba(255,255,255,0.02);">'
++ '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;"><span style="font-weight:700; color:' + (isBest? '#ffe9b8': '#faf6f0') + ';">' + (isBest? '🔥 ': '') + wk.label + '</span><span style="font-size:12.5px; color:#ffd88a;">' + vd + '</span></div>'
++ '<div style="height:8px; border-radius:99px; background:#262019; margin-top:8px; overflow:hidden;"><div style="height:100%; width:' + fillW + '%; background:' + fillBg + ';"></div></div>'
++ '<div style="font-size:12.5px; color:#9a8d7a; margin-top:6px;">良い流れのピーク ' + wk.pg + '件 ／ 注意のピーク ' + wk.ph + '件</div>'
++ (wk.cover.length? '<button type="button" onclick="var d=document.getElementById(\'wkDet' + wk.i + '\'); d.style.display = d.style.display === \'none\'? \'block\': \'none\';" style="margin-top:8px; background:transparent; color:#ffd88a; border:1px solid #b98a2f; border-radius:999px; padding:5px 14px; font-size:12.5px; font-weight:700; cursor:pointer;">🔍 内容を詳しく見る</button><div id="wkDet' + wk.i + '" style="display:none; margin-top:6px;">' + weekSummaryHtml(wk.cover, wk.pg, wk.ph) + wk.cover.map(function (c) { return cfgHtml(c, baseMs);}).join('') + '</div>': '')
++ '</div>';
+});
+html += '</div>';
+html += '<p style="font-size:12px; color:#8a8178; line-height:1.8;">判定のしかた：星同士の角度が効いている期間（影響期間）を日ごとに数えて、週の濃さを出しています。ピークは、その配置がいちばん強まる日です。詳しい読みは、各週の「内容を詳しく見る」から。1年を通したテーマで見たいときは「年運」のページへ。星は傾けるが、縛りはしない——計画の目安に。</p>';
+box.innerHTML = html;
+box.scrollIntoView({ behavior: 'smooth', block: 'start'});
+} catch (err) {
+box.innerHTML = '<p style="color:#ff9d85;">計算でエラーが出ました。もう一度お試しください。</p>';
+}
+});
 })();
+
 </script>
 </body>
 </html>
