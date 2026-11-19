@@ -151,7 +151,7 @@ var weeks = [];
 for (var wI = 0; wI < 8; wI++) {
   var sDt = new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + wI * 7));
   var eDt = new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + wI * 7 + 6));
-  weeks.push({ i: wI, good: 0, risk: 0, score: 0, label: fmtD(sDt) + ' 〜 ' + fmtD(eDt), topDays: [], evs: [], sv: bv });
+  weeks.push({ i: wI, good: 0, risk: 0, score: 0, label: fmtD(sDt) + ' 〜 ' + fmtD(eDt), topDays: [], evs: [], gN: 0, gS: 0, rN: 0, sv: bv });
 }
 Object.keys(events).forEach(function (key) {
   var ev = events[key];
@@ -159,8 +159,8 @@ Object.keys(events).forEach(function (key) {
   var wk = weeks[Math.floor(ev.peakOff / 7)];
   var wgt = (1 - ev.minOrb / 4) * (ev.mult || 1);
   wk.evs.push({ off: ev.peakOff, label: ev.label, good: ev.good, w: wgt });
-  if (ev.good) { wk.good += wgt; wk.topDays.push({ off: ev.peakOff, w: wgt, bestHit: { label: ev.label } }); }
-  else { wk.risk += wgt; }
+  if (ev.good) { wk.good += wgt; wk.gN++; if (mult === 1) wk.gS++; wk.topDays.push({ off: ev.peakOff, w: wgt, bestHit: { label: ev.label } }); }
+  else { wk.risk += wgt; wk.rN++; }
 });
 weeks.forEach(function (wk) {
   wk.score = wk.good - wk.risk;
@@ -176,7 +176,7 @@ if (best) {
 html += '<div style="border:1.5px solid #ffd88a; border-radius:14px; padding:18px 16px; background:rgba(255,216,138,0.07); text-align:center;">' +
 '<div style="font-size:13px; color:#ffd88a; font-weight:700;">📣 あなたのバズ週間はこの週！</div>' +
 '<div style="font-family:\'Noto Serif JP\',serif; font-size:24px; font-weight:700; color:#ffe9b8; margin-top:6px;">' + best.label + '</div>' +
-'<div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.8;">追い風の強さ ' + best.good.toFixed(1) + '（' + verdictOf(Math.round(best.good), Math.round(best.risk)) + '）' + (best.risk >= 1? '／炎上注意 ' + best.risk.toFixed(1) + ' もある週。言葉選びは丁寧に。': '') + '</div>' +
+'<div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.8;">追い風の配置 ' + best.gN + '件（うち強いもの ' + best.gS + '件）・' + verdictOf(Math.round(best.good), Math.round(best.risk)) + (best.rN? '／炎上注意の配置も ' + best.rN + '件ある週。言葉選びは丁寧に。': '') + '</div>' +
 (best.topDays.length? '<div style="font-size:13px; color:#c5a880; margin-top:6px;">特にバズ日和の日：' + best.topDays.map(function (dy) { var dt = new Date(Date.UTC(+best.sv[0], +best.sv[1] - 1, +best.sv[2] + dy.off)); return fmtD(dt) + '（' + '日月火水木金土'[dt.getUTCDay()] + '）' + (dy.bestHit? ' ' + dy.bestHit.label: '');}).join('、') + '</div>': '') +
 '</div>';
 } else {
@@ -188,7 +188,7 @@ var isBest = best && wk.i === best.i;
 html += '<div style="border:1px solid ' + (isBest? '#ffd88a': '#4a4238') + '; border-radius:12px; padding:12px 14px; margin-bottom:10px; background:rgba(255,255,255,0.02);">' +
 '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;"><span style="font-weight:700; color:' + (isBest? '#ffe9b8': '#faf6f0') + ';">' + (isBest? '👑 ': '') + wk.label + '</span><span style="font-size:12.5px; color:#ffd88a;">' + verdictOf(Math.round(wk.good), Math.round(wk.risk)) + '</span></div>' +
 '<div style="height:8px; border-radius:99px; background:#262019; margin-top:8px; overflow:hidden;"><div style="height:100%; width:' + Math.round(wk.good / maxGood * 100) + '%; background:linear-gradient(90deg,#b98a2f,#ffd88a);"></div></div>' +
-'<div style="font-size:12.5px; color:#9a8d7a; margin-top:6px;">追い風の強さ ' + wk.good.toFixed(1) + (wk.risk >= 0.5? ' ／ 炎上注意 ' + wk.risk.toFixed(1): '') + '</div>' +
+'<div style="font-size:12.5px; color:#9a8d7a; margin-top:6px;">追い風の配置 ' + wk.gN + '件（うち強いもの ' + wk.gS + '件）' + (wk.rN? ' ／ 炎上注意 ' + wk.rN + '件': '') + '</div>' +
 (wk.evs.length? '<button type="button" onclick="var d=this.nextElementSibling; d.style.display = d.style.display === \'none\'? \'block\': \'none\';" style="margin-top:8px; background:transparent; color:#ffd88a; border:1px solid #b98a2f; border-radius:999px; padding:5px 14px; font-size:12.5px; font-weight:700; cursor:pointer;">📅 期間内の「いつ」を見る</button><div style="display:none; margin-top:8px; font-size:13px; line-height:2;">' + wk.evs.map(function (ev) { var dt = new Date(Date.UTC(+wk.sv[0], +wk.sv[1] - 1, +wk.sv[2] + ev.off)); return fmtD(dt) + '（' + '日月火水木金土'[dt.getUTCDay()] + '） ' + ev.label + (ev.good? ' <span style="color:#ffd88a;">追い風</span>': ' <span style="color:#ff9d85;">炎上注意</span>');}).join('<br>') + '</div>': '') +
 '</div>';
 });
