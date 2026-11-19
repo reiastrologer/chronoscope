@@ -159,7 +159,7 @@ Object.keys(events).forEach(function (key) {
   var wk = weeks[Math.floor(ev.peakOff / 7)];
   var wgt = (1 - ev.minOrb / 4) * (ev.mult || 1);
   wk.evs.push({ off: ev.peakOff, label: ev.label, good: ev.good, w: wgt });
-  if (ev.good) { wk.good += wgt; wk.gN++; if (mult === 1) wk.gS++; wk.topDays.push({ off: ev.peakOff, w: wgt, bestHit: { label: ev.label } }); }
+  if (ev.good) { wk.good += wgt; wk.gN++; if (ev.mult === 1) wk.gS++; wk.topDays.push({ off: ev.peakOff, w: wgt, bestHit: { label: ev.label } }); }
   else { wk.risk += wgt; wk.rN++; }
 });
 weeks.forEach(function (wk) {
