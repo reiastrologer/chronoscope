@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>鑑定用ホロスコープ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #0d0c0a; color: #faf6f0; font-family: 'Noto Sans JP', sans-serif; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 18px 16px 48px; }
+  h1 { font-family: 'Noto Serif JP', serif; font-size: 20px; color: #e8cf9f; margin: 4px 0 2px; }
+  .sub { font-size: 12px; color: #8a8178; margin: 0 0 14px; line-height: 1.7; }
+  .card { border: 1px solid #4a4238; border-radius: 14px; padding: 14px 16px; margin-top: 14px; background: rgba(255,255,255,0.02); }
+  .card h2 { font-size: 14px; color: #ffd88a; margin: 0 0 10px; }
+  label { font-size: 12px; color: #c5a880; display: block; margin-bottom: 3px; }
+  input, select { background: #1a1712; color: #faf6f0; border: 1px solid #4a4238; border-radius: 8px; padding: 8px 10px; font-size: 15px; width: 100%; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .btn { background: linear-gradient(135deg, rgba(255,216,138,0.55), rgba(197,168,128,0.25)); color: #ffe9b8; border: 1px solid #ffd88a; border-radius: 999px; padding: 10px 22px; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .stepBtn { background: transparent; color: #ffd88a; border: 1px solid #b98a2f; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 700; cursor: pointer; margin: 2px; }
+  .stepBtn.now { background: rgba(255,216,138,0.18); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { color: #9a8d7a; font-weight: 500; text-align: left; padding: 3px 6px; border-bottom: 1px solid #38332c; font-size: 12px; }
+  td { padding: 3px 6px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .aspRow { display: flex; justify-content: space-between; padding: 5px 2px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
+  #gate { position: fixed; inset: 0; background: #0d0c0a; z-index: 100; display: flex; align-items: center; justify-content: center; }
+  #gate .box { text-align: center; padding: 24px; width: min(92vw, 360px); }
+  details summary { cursor: pointer; color: #e8cf9f; font-size: 13.5px; font-weight: 700; }
+  .note { font-size: 11.5px; color: #8a8178; line-height: 1.8; }
+</style>
+</head>
+<body>
+<div id="gate">
+  <div class="box">
+    <div style="font-size:26px;">🔒</div>
+    <p style="color:#e8cf9f; font-weight:700;">鑑定用ページ</p>
+    <p style="font-size:12px; color:#8a8178;">合言葉を入力してください</p>
+    <input id="pw" type="password" style="text-align:center;" autocomplete="off">
+    <div style="margin-top:12px;"><button class="btn" id="pwBtn" type="button">入る</button></div>
+    <p id="pwErr" style="color:#ff9d85; font-size:12.5px; min-height:18px;"></p>
+  </div>
+</div>
+
+<div class="wrap" id="app" style="display:none;">
+  <h1>🔭 鑑定用ホロスコープ</h1>
+  <p class="sub">ネイタル×トランジットの二重円／アスペクト／ハーフサム。計算はすべてこの端末の中で行われ、入力はブラウザ内にだけ保存されます。</p>
+
+  <div class="card">
+    <h2>👤 ネイタル</h2>
+    <div class="row">
+      <div><label>お名前（任意）</label><input id="kName" type="text" placeholder="クライアント名"></div>
+      <div><label>出生地</label><select id="kPlace"></select></div>
+    </div>
+    <div class="row3" style="margin-top:10px;">
+      <div><label>生年月日</label><input id="kDate" type="date" value="1977-12-23"></div>
+      <div><label>出生時刻</label><input id="kTime" type="time" value="12:00"></div>
+      <div><label>時刻不明</label><label style="font-size:14px; color:#faf6f0; padding-top:8px;"><input id="kUnknown" type="checkbox" style="width:auto;"> 不明（正午計算）</label></div>
+    </div>
+    <div style="margin-top:12px;"><button class="btn" id="kSetBtn" type="button">ネイタルをセット</button></div>
+  </div>
+
+  <div class="card">
+    <h2>🕐 トランジット <span id="tLabel" style="color:#faf6f0;"></span></h2>
+    <input id="tDate" type="datetime-local">
+    <div style="margin-top:10px; text-align:center;">
+      <button class="stepBtn" data-years="-1" type="button">−1年</button><button class="stepBtn" data-months="-6" type="button">−半年</button><button class="stepBtn" data-months="-3" type="button">−3ヶ月</button><button class="stepBtn" data-days="-7" type="button">−1週間</button><button class="stepBtn" data-days="-1" type="button">−1日</button><button class="stepBtn now" id="tNow" type="button">今</button><button class="stepBtn" data-days="1" type="button">+1日</button><button class="stepBtn" data-days="7" type="button">+1週間</button><button class="stepBtn" data-months="3" type="button">+3ヶ月</button><button class="stepBtn" data-months="6" type="button">+半年</button><button class="stepBtn" data-years="1" type="button">+1年</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>◎ 二重円（内＝ネイタル／外＝トランジット）</h2>
+    <div id="wheel"></div>
+    <p class="note">ハウスはネイタルのプラシーダス。線はトランジット×ネイタルのアスペクト（金＝合、緑＝トライン／セクスタイル、赤＝スクエア／オポジション）。</p>
+  </div>
+
+  <div class="row" style="margin-top:14px; gap:14px;">
+    <div class="card" style="margin-top:0;"><h2>ネイタル位置</h2><div id="natalTable"></div></div>
+    <div class="card" style="margin-top:0;"><h2>トランジット位置</h2><div id="transitTable"></div></div>
+  </div>
+
+  <div class="card">
+    <h2>🔗 アスペクト（トランジット × ネイタル）</h2>
+    <div id="aspList"></div>
+    <p class="note">オーブ：合6°／スクエア・トライン・オポジション5°／セクスタイル3°（太陽・月が絡む場合は+1°）。A＝接近中、S＝離反中。</p>
+  </div>
+
+  <div class="card">
+    <h2>🧭 ハーフサム（ミッドポイント）</h2>
+    <div style="margin-bottom:8px;"><label>許容オーブ（45°ダイヤル）</label>
+      <select id="mpOrb" style="width:auto;"><option value="0.5">0.5°</option><option value="1" selected>1.0°</option><option value="1.5">1.5°</option></select>
+    </div>
+    <div style="font-size:13px; font-weight:700; color:#e8cf9f;">ネイタルの図（惑星 ＝ A／B）</div>
+    <div id="mpPics" style="margin:6px 0 12px;"></div>
+    <div style="font-size:13px; font-weight:700; color:#e8cf9f;">いまのトランジットが触れている軸</div>
+    <div id="mpHits" style="margin:6px 0 12px;"></div>
+    <details><summary>ミッドポイント全一覧</summary><div id="mpAll" style="margin-top:8px;"></div></details>
+  </div>
+
+  <p class="note" style="margin-top:18px;">このページは検索避け（noindex）を入れ、どこからもリンクしていません。アドレスと合言葉は共有しないでください。時刻は日本時間（JST）で計算しています。</p>
+</div>
+
+<script>
+// ===== 鑑定用エンジン =====
+var BODIES = [
+  { id: 0, g: '☉', n: '太陽' }, { id: 1, g: '☽', n: '月' }, { id: 2, g: '☿', n: '水星' },
+  { id: 3, g: '♀', n: '金星' }, { id: 4, g: '♂', n: '火星' }, { id: 5, g: '♃', n: '木星' },
+  { id: 6, g: '♄', n: '土星' }, { id: 7, g: '♅', n: '天王星' }, { id: 8, g: '♆', n: '海王星' },
+  { id: 9, g: '♇', n: '冥王星' }, { id: 10, g: '☊', n: 'ノード' },
+  { id: 11, g: 'ASC', n: 'ASC' }, { id: 12, g: 'MC', n: 'MC' }
+];
+var SG = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
+var SGN = ['牡羊座', '牡牛座', '双子座', '蟹座', '獅子座', '乙女座', '天秤座', '蠍座', '射手座', '山羊座', '水瓶座', '魚座'];
+var PREFS = [
+  ['北海道', 141.35, 43.06], ['青森県', 140.74, 40.82], ['岩手県', 141.15, 39.70], ['宮城県', 140.87, 38.27],
+  ['秋田県', 140.10, 39.72], ['山形県', 140.34, 38.26], ['福島県', 140.47, 37.75], ['茨城県', 140.45, 36.34],
+  ['栃木県', 139.88, 36.57], ['群馬県', 139.06, 36.39], ['埼玉県', 139.65, 35.86], ['千葉県', 140.12, 35.61],
+  ['東京都', 139.69, 35.69], ['神奈川県', 139.64, 35.45], ['新潟県', 139.02, 37.90], ['富山県', 137.21, 36.70],
+  ['石川県', 136.63, 36.60], ['福井県', 136.22, 36.07], ['山梨県', 138.57, 35.66], ['長野県', 138.18, 36.65],
+  ['岐阜県', 136.72, 35.39], ['静岡県', 138.38, 34.98], ['愛知県', 136.91, 35.18], ['三重県', 136.51, 34.73],
+  ['滋賀県', 135.87, 35.00], ['京都府', 135.76, 35.01], ['大阪府', 135.50, 34.69], ['兵庫県', 135.18, 34.69],
+  ['奈良県', 135.83, 34.69], ['和歌山県', 135.17, 34.23], ['鳥取県', 134.24, 35.50], ['島根県', 133.05, 35.47],
+  ['岡山県', 133.92, 34.66], ['広島県', 132.46, 34.40], ['山口県', 131.47, 34.18], ['徳島県', 134.56, 34.07],
+  ['香川県', 134.04, 34.34], ['愛媛県', 132.77, 33.84], ['高知県', 133.53, 33.56], ['福岡県', 130.40, 33.61],
+  ['佐賀県', 130.30, 33.25], ['長崎県', 129.87, 32.75], ['熊本県', 130.74, 32.79], ['大分県', 131.60, 33.24],
+  ['宮崎県', 131.42, 31.91], ['鹿児島県', 130.56, 31.56], ['沖縄県', 127.68, 26.21]
+];
+var M = null, juldayFn = null;
+async function initEngine() {
+  if (M) return M;
+  const mod = await import('./assets/swisseph-BtfJwKK5.js');
+  const factory = typeof mod.default === 'function' ? mod.default : (typeof mod === 'function' ? mod : mod.SwissEphModule);
+  M = await factory({ locateFile: (f) => f === 'swisseph.wasm' ? './assets/swisseph-BmP0Bw24.wasm' : './assets/' + f });
+  juldayFn = M.cwrap('swe_julday_wrap', 'number', ['number', 'number', 'number', 'number', 'number']);
+  return M;
+}
+function calcPos(jd, planet, flags) {
+  const out = M._malloc(48), err = M._malloc(256);
+  const rc = M.ccall('swe_calc_ut_wrap', 'number', ['number', 'number', 'number', 'number', 'number'], [jd, planet, flags, out, err]);
+  if (rc < 0) { M._free(out); M._free(err); return NaN; }
+  const lon = M.getValue(out, 'double');
+  M._free(out); M._free(err);
+  return lon;
+}
+function calcHouses(jd, lat, lon) {
+  const cusps = M._malloc(104), ascmc = M._malloc(80);
+  M.ccall('swe_houses_wrap', 'number', ['number', 'number', 'number', 'number', 'number', 'number'], [jd, lat, lon, 80, cusps, ascmc]);
+  const asc = M.getValue(ascmc, 'double'), mc = M.getValue(ascmc + 8, 'double');
+  const cuspArr = [];
+  for (let i = 1; i <= 12; i++) cuspArr.push(M.getValue(cusps + i * 8, 'double'));
+  M._free(cusps); M._free(ascmc);
+  return { asc, mc, cusps: cuspArr };
+}
+function swissId(id) { return id === 10 ? 11 : id; }
+function jdFromJST(y, mo, d, hh, mm) { return juldayFn(y, mo, d, hh - 9 + (mm || 0) / 60, 1); }
+function computeChart(dateStr, timeStr, unknown, lat, lon) {
+  var p = dateStr.split('-').map(Number);
+  var t = (unknown ? '12:00' : (timeStr || '12:00')).split(':').map(Number);
+  var jd = jdFromJST(p[0], p[1], p[2], t[0], t[1] || 0);
+  var pos = {}, retro = {};
+  BODIES.slice(0, 11).forEach(function (b) {
+    if (unknown && b.id === 1) return;
+    pos[b.id] = calcPos(jd, swissId(b.id), 260);
+    var lon2 = calcPos(jd + 1, swissId(b.id), 260);
+    var diff = ((lon2 - pos[b.id]) % 360 + 540) % 360 - 180;
+    retro[b.id] = diff < 0;
+  });
+  var cusps = null;
+  if (!unknown) {
+    var h = calcHouses(jd, lat, lon);
+    pos[11] = h.asc; pos[12] = h.mc; cusps = h.cusps;
+  }
+  return { jd: jd, pos: pos, retro: retro, cusps: cusps };
+}
+function computeTransit(dt) {
+  var jd = jdFromJST(dt.getFullYear(), dt.getMonth() + 1, dt.getDate(), dt.getHours(), dt.getMinutes());
+  var pos = {}, retro = {};
+  BODIES.slice(0, 11).forEach(function (b) {
+    pos[b.id] = calcPos(jd, swissId(b.id), 260);
+    var lon2 = calcPos(jd + 1, swissId(b.id), 260);
+    var diff = ((lon2 - pos[b.id]) % 360 + 540) % 360 - 180;
+    retro[b.id] = diff < 0;
+  });
+  return { jd: jd, pos: pos, retro: retro };
+}
+function fmtPos(lon) {
+  var s = Math.floor(lon / 30), within = lon - s * 30;
+  var deg = Math.floor(within), mm = Math.floor((within - deg) * 60);
+  return SG[s] + ' ' + SGN[s] + ' ' + deg + '°' + (mm < 10 ? '0' : '') + mm + '′';
+}
+function houseOf(lon, cusps) {
+  if (!cusps) return '';
+  for (var i = 0; i < 12; i++) {
+    var c1 = cusps[i], c2 = cusps[(i + 1) % 12];
+    var span = ((c2 - c1) % 360 + 360) % 360;
+    var rel = ((lon - c1) % 360 + 360) % 360;
+    if (rel <= span) return (i + 1) + 'H';
+  }
+  return '';
+}
+var ASPS = [
+  { a: 0, g: '☌', n: '合', orb: 6, col: '#ffd88a' },
+  { a: 60, g: '⚹', n: 'セクスタイル', orb: 3, col: '#8fd0a8' },
+  { a: 90, g: '□', n: 'スクエア', orb: 5, col: '#e07856' },
+  { a: 120, g: '△', n: 'トライン', orb: 5, col: '#8fd0a8' },
+  { a: 180, g: '☍', n: 'オポジション', orb: 5, col: '#e07856' }
+];
+function findAspects(tPos, nPos, tPosLater) {
+  var out = [];
+  BODIES.slice(0, 11).forEach(function (tb) {
+    if (tPos[tb.id] === undefined) return;
+    BODIES.forEach(function (nb) {
+      if (nPos[nb.id] === undefined) return;
+      var d = Math.abs(((tPos[tb.id] - nPos[nb.id]) % 360 + 360) % 360);
+      if (d > 180) d = 360 - d;
+      var best = null;
+      ASPS.forEach(function (asp) {
+        var orb = Math.abs(d - asp.a);
+        var lim = asp.orb + ((tb.id === 0 || tb.id === 1 || nb.id === 0 || nb.id === 1) ? 1 : 0);
+        if (orb <= lim && (!best || orb < best.orb)) best = { asp: asp, orb: orb, lim: lim };
+      });
+      if (!best) return;
+      var applying = '';
+      if (tPosLater && tPosLater[tb.id] !== undefined) {
+        var d2 = Math.abs(((tPosLater[tb.id] - nPos[nb.id]) % 360 + 360) % 360);
+        if (d2 > 180) d2 = 360 - d2;
+        applying = (Math.abs(d2 - best.asp.a) < best.orb) ? 'A' : 'S';
+      }
+      out.push({ t: tb, n: nb, asp: best.asp, orb: best.orb, applying: applying });
+    });
+  });
+  out.sort(function (x, y) { return x.orb - y.orb; });
+  return out;
+}
+function midLon(a, b) {
+  var d = ((b - a) % 360 + 360) % 360;
+  if (d <= 180) return (a + d / 2) % 360;
+  return (b + (360 - d) / 2) % 360;
+}
+function foldDist(x, m) { var d = Math.abs(((x - m) % 45 + 45) % 45); return Math.min(d, 45 - d); }
+function circDist(a, b) { var d = Math.abs(((a - b) % 360 + 360) % 360); return d > 180 ? 360 - d : d; }
+function glyphOf(id) { var b = BODIES.find(function (x) { return x.id === id; }); return b ? b.g : ''; }
+
+var state = { natal: null, transit: null, tDate: new Date(), aspects: [] };
+function spreadGlyphs(items) {
+  var sorted = items.slice().sort(function (a, b) { return a.lon - b.lon; });
+  var placed = [];
+  sorted.forEach(function (it) {
+    var disp = it.lon, guard = 0;
+    var clash = function (v) { return placed.some(function (p) { return circDist(p, v) < 6; }); };
+    while (clash(disp) && guard < 40) { disp = (disp + 3) % 360; guard++; }
+    it.disp = disp; placed.push(disp);
+  });
+  return items;
+}
+function renderWheel() {
+  var box = document.getElementById('wheel');
+  if (!state.natal || !state.transit) { box.innerHTML = ''; return; }
+  var nPos = state.natal.pos, tPos = state.transit.pos;
+  var cx = 320, cy = 320;
+  var rot = nPos[11] !== undefined ? nPos[11] : 0;
+  var P = function (lon, r) { var a = (lon - rot) * Math.PI / 180; return [cx - r * Math.cos(a), cy + r * Math.sin(a)]; };
+  var s = '<svg viewBox="0 0 640 640" style="width:100%; max-width:600px; display:block; margin:0 auto;">';
+  s += '<circle cx="320" cy="320" r="302" fill="none" stroke="#c5a880" stroke-opacity="0.55"/>';
+  s += '<circle cx="320" cy="320" r="262" fill="none" stroke="#c5a880" stroke-opacity="0.35"/>';
+  s += '<circle cx="320" cy="320" r="150" fill="none" stroke="#c5a880" stroke-opacity="0.3"/>';
+  var ECOL = ['#e07856', '#c5a880', '#8fd0a8', '#7a9fc5'];
+  for (var i = 0; i < 12; i++) {
+    var q1 = P(i * 30, 262), q2 = P(i * 30, 302);
+    s += '<line x1="' + q1[0].toFixed(1) + '" y1="' + q1[1].toFixed(1) + '" x2="' + q2[0].toFixed(1) + '" y2="' + q2[1].toFixed(1) + '" stroke="#c5a880" stroke-opacity="0.4"/>';
+    var g = P(i * 30 + 15, 282);
+    s += '<text x="' + g[0].toFixed(1) + '" y="' + g[1].toFixed(1) + '" fill="' + ECOL[i % 4] + '" font-size="21" text-anchor="middle" dominant-baseline="middle">' + SG[i] + '</text>';
+  }
+  if (state.natal.cusps) {
+    state.natal.cusps.forEach(function (cusp, i) {
+      var strong = i === 0 || i === 9;
+      var h1 = P(cusp, 150), h2 = P(cusp, 262);
+      s += '<line x1="' + h1[0].toFixed(1) + '" y1="' + h1[1].toFixed(1) + '" x2="' + h2[0].toFixed(1) + '" y2="' + h2[1].toFixed(1) + '" stroke="#c5a880" stroke-opacity="' + (strong ? 0.9 : 0.4) + '" stroke-width="' + (strong ? 1.8 : 1) + '"/>';
+      var nxt = state.natal.cusps[(i + 1) % 12];
+      var span = ((nxt - cusp) % 360 + 360) % 360;
+      var np = P(cusp + span / 2, 163);
+      s += '<text x="' + np[0].toFixed(1) + '" y="' + np[1].toFixed(1) + '" fill="#9a8a70" font-size="11" text-anchor="middle" dominant-baseline="middle">' + (i + 1) + '</text>';
+    });
+  }
+  state.aspects.forEach(function (a) {
+    var p1 = P(tPos[a.t.id], 148), p2 = P(nPos[a.n.id], 148);
+    var op = 0.2 + 0.7 * (1 - a.orb / a.asp.orb);
+    s += '<line x1="' + p1[0].toFixed(1) + '" y1="' + p1[1].toFixed(1) + '" x2="' + p2[0].toFixed(1) + '" y2="' + p2[1].toFixed(1) + '" stroke="' + a.asp.col + '" stroke-width="1.3" stroke-opacity="' + op.toFixed(2) + '"/>';
+  });
+  function dots(pos, r, color, ids) {
+    var items = [];
+    ids.forEach(function (id) { if (pos[id] !== undefined && id !== 11 && id !== 12) items.push({ id: id, lon: pos[id] }); });
+    spreadGlyphs(items);
+    var out = '';
+    items.forEach(function (it) {
+      var tk1 = P(it.lon, r - 14), tk2 = P(it.lon, r - 6);
+      out += '<line x1="' + tk1[0].toFixed(1) + '" y1="' + tk1[1].toFixed(1) + '" x2="' + tk2[0].toFixed(1) + '" y2="' + tk2[1].toFixed(1) + '" stroke="' + color + '" stroke-opacity="0.7"/>';
+      var gp = P(it.disp, r);
+      out += '<text x="' + gp[0].toFixed(1) + '" y="' + gp[1].toFixed(1) + '" fill="' + color + '" font-size="19" text-anchor="middle" dominant-baseline="middle">' + glyphOf(it.id) + '</text>';
+    });
+    [11, 12].forEach(function (id) {
+      if (pos[id] === undefined || ids.indexOf(id) < 0) return;
+      var gp = P(pos[id], r);
+      out += '<text x="' + gp[0].toFixed(1) + '" y="' + gp[1].toFixed(1) + '" fill="' + color + '" font-size="10.5" font-weight="700" text-anchor="middle" dominant-baseline="middle">' + (id === 11 ? 'ASC' : 'MC') + '</text>';
+    });
+    return out;
+  }
+  s += dots(tPos, 240, '#a8c4e0', BODIES.slice(0, 11).map(function (b) { return b.id; }));
+  s += dots(nPos, 204, '#e8cf9f', BODIES.map(function (b) { return b.id; }));
+  s += '</svg>';
+  box.innerHTML = s;
+}
+function renderTables() {
+  function tbl(chart, isNatal) {
+    var h = '<table><tr><th>天体</th><th>位置</th>' + (isNatal ? '<th>ハウス</th>' : '') + '<th></th></tr>';
+    BODIES.forEach(function (b) {
+      if (chart.pos[b.id] === undefined) return;
+      h += '<tr><td>' + b.g + ' ' + b.n + '</td><td>' + fmtPos(chart.pos[b.id]) + '</td>';
+      if (isNatal) h += '<td>' + (b.id <= 10 ? houseOf(chart.pos[b.id], chart.cusps) : '') + '</td>';
+      h += '<td>' + (chart.retro[b.id] ? '<span style="color:#ff9d85;">R</span>' : '') + '</td></tr>';
+    });
+    return h + '</table>';
+  }
+  document.getElementById('natalTable').innerHTML = tbl(state.natal, true);
+  document.getElementById('transitTable').innerHTML = tbl(state.transit, false);
+}
+function renderAspects() {
+  var el = document.getElementById('aspList');
+  if (!state.aspects.length) { el.innerHTML = '<p class="note">許容オーブ内のアスペクトはありません。</p>'; return; }
+  el.innerHTML = state.aspects.map(function (a) {
+    return '<div class="aspRow"><span><span style="color:#a8c4e0;">T ' + a.t.g + ' ' + a.t.n + '</span> <span style="color:' + a.asp.col + ';">' + a.asp.g + '</span> <span style="color:#e8cf9f;">N ' + a.n.g + ' ' + a.n.n + '</span></span><span style="color:#9a8d7a;">' + a.orb.toFixed(2) + '° ' + a.applying + '</span></div>';
+  }).join('');
+}
+function midpointPairs() {
+  var ids = BODIES.map(function (b) { return b.id; }).filter(function (id) { return state.natal.pos[id] !== undefined; });
+  var pairs = [];
+  for (var i = 0; i < ids.length; i++) for (var j = i + 1; j < ids.length; j++) {
+    pairs.push({ a: ids[i], b: ids[j], lon: midLon(state.natal.pos[ids[i]], state.natal.pos[ids[j]]) });
+  }
+  return { ids: ids, pairs: pairs };
+}
+function renderMidpoints() {
+  var orbSel = parseFloat(document.getElementById('mpOrb').value);
+  var mp = midpointPairs();
+  var pics = [];
+  mp.ids.forEach(function (x) {
+    mp.pairs.forEach(function (pr) {
+      if (pr.a === x || pr.b === x) return;
+      var d = foldDist(state.natal.pos[x], pr.lon);
+      if (d <= orbSel) pics.push({ x: x, pr: pr, orb: d });
+    });
+  });
+  pics.sort(function (a, b) { return a.orb - b.orb; });
+  document.getElementById('mpPics').innerHTML = pics.length ? pics.map(function (p) {
+    return '<div class="aspRow"><span>' + glyphOf(p.x) + ' ＝ ' + glyphOf(p.pr.a) + '／' + glyphOf(p.pr.b) + '</span><span style="color:#9a8d7a;">' + p.orb.toFixed(2) + '°</span></div>';
+  }).join('') : '<p class="note">該当なし</p>';
+  var hits = [];
+  BODIES.slice(0, 11).forEach(function (tb) {
+    if (state.transit.pos[tb.id] === undefined) return;
+    mp.pairs.forEach(function (pr) {
+      var d = Math.min(circDist(state.transit.pos[tb.id], pr.lon), circDist(state.transit.pos[tb.id], (pr.lon + 180) % 360));
+      if (d <= orbSel) hits.push({ t: tb, pr: pr, orb: d });
+    });
+  });
+  hits.sort(function (a, b) { return a.orb - b.orb; });
+  document.getElementById('mpHits').innerHTML = hits.length ? hits.map(function (p) {
+    return '<div class="aspRow"><span><span style="color:#a8c4e0;">T ' + p.t.g + '</span> ☌ ' + glyphOf(p.pr.a) + '／' + glyphOf(p.pr.b) + '</span><span style="color:#9a8d7a;">' + p.orb.toFixed(2) + '°</span></div>';
+  }).join('') : '<p class="note">該当なし</p>';
+  var sorted = mp.pairs.slice().sort(function (a, b) { return a.lon - b.lon; });
+  document.getElementById('mpAll').innerHTML = '<table>' + sorted.map(function (pr) {
+    return '<tr><td>' + glyphOf(pr.a) + '／' + glyphOf(pr.b) + '</td><td>' + fmtPos(pr.lon) + '</td></tr>';
+  }).join('') + '</table>';
+}
+function renderAll() {
+  if (!state.natal || !state.transit) return;
+  var later = computeTransit(new Date(state.tDate.getTime() + 3600000));
+  state.aspects = findAspects(state.transit.pos, state.natal.pos, later.pos);
+  document.getElementById('tLabel').textContent = '― ' + state.tDate.getFullYear() + '年' + (state.tDate.getMonth() + 1) + '月' + state.tDate.getDate() + '日 ' + String(state.tDate.getHours()).padStart(2, '0') + ':' + String(state.tDate.getMinutes()).padStart(2, '0');
+  renderWheel(); renderTables(); renderAspects(); renderMidpoints();
+}
+function toLocalInput(dt) {
+  function pad(v) { return String(v).padStart(2, '0'); }
+  return dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(dt.getDate()) + 'T' + pad(dt.getHours()) + ':' + pad(dt.getMinutes());
+}
+function setTransit(dt) {
+  state.tDate = dt;
+  document.getElementById('tDate').value = toLocalInput(dt);
+  if (!M || !state.natal) return;
+  state.transit = computeTransit(dt);
+  renderAll();
+}
+function readNatalForm() {
+  var place = PREFS[Number(document.getElementById('kPlace').value)];
+  return {
+    name: document.getElementById('kName').value,
+    date: document.getElementById('kDate').value,
+    time: document.getElementById('kTime').value,
+    unknown: document.getElementById('kUnknown').checked,
+    placeIdx: Number(document.getElementById('kPlace').value),
+    lat: place[2], lon: place[1]
+  };
+}
+function applyNatal(info) {
+  state.natalInfo = info;
+  state.natal = computeChart(info.date, info.time, info.unknown, info.lat, info.lon);
+  if (!state.transit) state.transit = computeTransit(state.tDate);
+  renderAll();
+}
+async function startApp() {
+  var sel = document.getElementById('kPlace');
+  sel.innerHTML = PREFS.map(function (p, i) { return '<option value="' + i + '"' + (p[0] === '東京都' ? ' selected' : '') + '>' + p[0] + '</option>'; }).join('');
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem('kantei_natal_v1') || 'null'); } catch (e) {}
+  if (saved) {
+    document.getElementById('kName').value = saved.name || '';
+    document.getElementById('kDate').value = saved.date || '1977-12-23';
+    document.getElementById('kTime').value = saved.time || '12:00';
+    document.getElementById('kUnknown').checked = !!saved.unknown;
+    sel.value = String(saved.placeIdx !== undefined ? saved.placeIdx : 12);
+  }
+  document.getElementById('tDate').value = toLocalInput(state.tDate);
+  await initEngine();
+  applyNatal(readNatalForm());
+  document.getElementById('kSetBtn').addEventListener('click', function () {
+    var info = readNatalForm();
+    try { localStorage.setItem('kantei_natal_v1', JSON.stringify(info)); } catch (e) {}
+    applyNatal(info);
+  });
+  document.getElementById('tDate').addEventListener('change', function () {
+    var v = document.getElementById('tDate').value;
+    if (v) setTransit(new Date(v));
+  });
+  document.querySelectorAll('.stepBtn[data-days], .stepBtn[data-months], .stepBtn[data-years]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var d = new Date(state.tDate.getTime());
+      if (btn.dataset.days) d.setTime(d.getTime() + Number(btn.dataset.days) * 86400000);
+      if (btn.dataset.months) d.setMonth(d.getMonth() + Number(btn.dataset.months));
+      if (btn.dataset.years) d.setFullYear(d.getFullYear() + Number(btn.dataset.years));
+      setTransit(d);
+    });
+  });
+  document.getElementById('tNow').addEventListener('click', function () { setTransit(new Date()); });
+  document.getElementById('mpOrb').addEventListener('change', function () { if (state.natal && state.transit) renderMidpoints(); });
+}
+</script>
+
+<script>
+var PASS = 'れいじ鑑定';
+function unlock() {
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  startApp();
+}
+document.getElementById('pwBtn').addEventListener('click', function () {
+  if (document.getElementById('pw').value === PASS) { try { localStorage.setItem('kantei_ok', '1'); } catch (e) {} unlock(); }
+  else document.getElementById('pwErr').textContent = '合言葉が違います。';
+});
+document.getElementById('pw').addEventListener('keydown', function (e) { if (e.key === 'Enter') document.getElementById('pwBtn').click(); });
+var __unlocked = false;
+try { if (localStorage.getItem('kantei_ok') === '1') { __unlocked = true; } } catch (e) {}
+if (__unlocked) unlock();
+</script>
+</body>
+</html>
