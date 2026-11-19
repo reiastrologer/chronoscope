@@ -926,6 +926,7 @@ return '注意強め';
 }
 var lastRows = [], lastHero = null;
 var selectedMs = null, lastWinStart = null, lastWinEnd = null;
+var selectedWs = null, fmTargetIdx = -1;
 function ensureSection(list) {
 var sec = document.getElementById('flowMap');
 if (sec) return sec;
@@ -933,6 +934,17 @@ sec = document.createElement('div');
 sec.id = 'flowMap';
 sec.style.cssText = 'max-width:880px;margin:26px auto 0;padding:16px 16px 12px;border:1px solid #c5a880;border-radius:12px;background:rgba(197,168,128,0.05);scroll-margin-top:140px;';
 sec.addEventListener('click', function (e) {
+var wk = e.target.closest ? e.target.closest('.fmWeek') : null;
+if (wk) {
+selectedWs = +wk.getAttribute('data-ws');
+sec.querySelectorAll('.fmWeek').forEach(function (c) {
+var on = +c.getAttribute('data-ws') === selectedWs;
+c.style.background = on ? 'rgba(255,216,138,0.25)' : '';
+c.style.boxShadow = on ? 'inset 0 0 0 1.5px #ffd88a' : '';
+});
+openWeek(selectedWs);
+return;
+}
 var col = e.target.closest? e.target.closest('.fmDay'): null;
 if (col) {
 selectedMs = +col.getAttribute('data-ms');
@@ -945,7 +957,8 @@ openDay(selectedMs);
 }
 });
 var hs = document.getElementById('halfSumSection');
-if (hs && hs.parentElement) hs.parentElement.insertBefore(sec, hs);
+if (list && list.parentElement) list.parentElement.insertBefore(sec, list);
+else if (hs && hs.parentElement) hs.parentElement.insertBefore(sec, hs);
 else if (list.parentElement) list.parentElement.appendChild(sec);
 return sec;
 }
@@ -980,7 +993,7 @@ var g = m[1].replace(/️/g, '');
 return THEME[g]? g: null;
 }
 function topGlyphs(obj) { return Object.keys(obj).sort(function (a, b) { return obj[b] - obj[a];}).slice(0, 2);}
-function daySummaryHtml(cover, g, h) {
+function daySummaryHtml(cover, g, h, isWeek) {
 var goodThemes = {}, hardThemes = {};
 cover.forEach(function (r) {
 if (!r._glyph) return;
@@ -989,13 +1002,13 @@ else goodThemes[r._glyph] = (goodThemes[r._glyph] || 0) + 1;
 });
 var gtG = topGlyphs(goodThemes), htG = topGlyphs(hardThemes);
 var air;
-if (g > 0 && h > 0 && Math.abs(g - h) < 2) air = '良い流れと注意が同居する日です。「どっち？」と迷う日は、使い分けが大事になります。';
-else if (g - h >= 2) air = '良い流れが多めの日です。';
-else if (h - g >= 2) air = '注意が多めの日です。';
-else if (h === 0) air = '良い流れだけが目立つ日です。';
-else air = '注意だけが目立つ日です。';
+if (g > 0 && h > 0 && Math.abs(g - h) < 2) air = (isWeek ? '良い流れと注意が同居する週です。使い分けが大事になります。' : '良い流れと注意が同居する日です。「どっち？」と迷う日は、使い分けが大事になります。');
+else if (g - h >= 2) air = (isWeek ? '良い流れが多めの週です。' : '良い流れが多めの日です。');
+else if (h - g >= 2) air = (isWeek ? '注意が多めの週です。' : '注意が多めの日です。');
+else if (h === 0) air = (isWeek ? '良い流れだけが目立つ週です。' : '良い流れだけが目立つ日です。');
+else air = (isWeek ? '注意だけが目立つ週です。' : '注意だけが目立つ日です。');
 var html = '<div style="margin-top:10px;border:1px solid rgba(197,168,128,0.5);border-radius:10px;padding:10px 12px;background:rgba(197,168,128,0.06);">';
-html += '<div style="font-size:13px;font-weight:700;color:#e8cf9f;">この日のまとめ</div>';
+html += '<div style="font-size:13px;font-weight:700;color:#e8cf9f;">この' + (isWeek ? '週' : '日') + 'のまとめ</div>';
 html += '<div style="font-size:13.5px;color:#faf6f0;line-height:1.8;margin-top:4px;">' + air + '</div>';
 if (gtG.length) html += '<div style="font-size:13px;color:#faf6f0;line-height:1.8;margin-top:2px;">活かしどころ：「' + gtG.map(function (x) { return GOODC[x] || THEME[x];}).join('」「') + '」</div>';
 if (htG.length) html += '<div style="font-size:13px;color:#faf6f0;line-height:1.8;margin-top:2px;">注意どころ：「' + htG.map(function (x) { return HARDC[x] || THEME[x];}).join('」「') + '」</div>';
@@ -1011,6 +1024,75 @@ if (act) html += '<div style="font-size:13.5px;color:#ffd88a;line-height:1.8;mar
 html += '</div>';
 return html;
 }
+function openWeek(ws) {
+var md = ensureModal();
+var body = md.querySelector('#flowModalBody');
+var we = Math.min(ws + 6 * DAY, lastWinEnd !== null ? lastWinEnd : ws + 6 * DAY);
+var secEl = document.getElementById('flowMap');
+if (secEl) secEl.querySelectorAll('.fmWeek').forEach(function (c) {
+var on = +c.getAttribute('data-ws') === ws;
+c.style.background = on ? 'rgba(255,216,138,0.25)' : '';
+c.style.boxShadow = on ? 'inset 0 0 0 1.5px #ffd88a' : '';
+});
+var cover = lastRows.filter(function (r) { return r.start <= we && ws <= r.end; });
+cover.forEach(function (r) { r._glyph = natalGlyph(r.el.textContent || ''); });
+cover.sort(function (a, b) {
+var pa = (a.peak && a.peak >= ws && a.peak <= we) ? 0 : 1, pb = (b.peak && b.peak >= ws && b.peak <= we) ? 0 : 1;
+if (pa !== pb) return pa - pb;
+if (a.hard !== b.hard) return a.hard ? 1 : -1;
+return a.start - b.start;
+});
+var g = 0, h = 0, pk = 0;
+cover.forEach(function (r) { if (r.hard) h++; else g++; if (r.peak && r.peak >= ws && r.peak <= we) pk++; });
+var html = '<div style="font-size:17px;font-weight:700;color:#e8cf9f;">📅 ' + fmtFull(ws) + ' 〜 ' + fmtFull(we) + ' の週</div>';
+html += '<div style="font-size:12.5px;color:#c5a880;margin-top:4px;">この週にかかる配置： 良い流れ ' + g + '件 ／ 注意 ' + h + '件' + (pk ? ' ／ ◆この週がピーク ' + pk + '件' : '') + '</div>';
+if (cover.length) html += daySummaryHtml(cover, g, h, true);
+html += '<div style="display:flex;gap:8px;margin-top:10px;">'
++ '<button type="button" id="fmPrevW" style="flex:1;background:transparent;color:#ffd88a;border:1px solid #b98a2f;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:700;cursor:pointer;' + (lastWinStart !== null && ws <= lastWinStart ? 'opacity:0.35;' : '') + '">◀ 前の週</button>'
++ '<button type="button" id="fmNextW" style="flex:1;background:transparent;color:#ffd88a;border:1px solid #b98a2f;border-radius:999px;padding:7px 0;font-size:12.5px;font-weight:700;cursor:pointer;' + (lastWinEnd !== null && we >= lastWinEnd ? 'opacity:0.35;' : '') + '">次の週 ▶</button></div>';
+html += '<div style="font-size:11.5px;color:#8a8178;margin-top:8px;">各配置の詳しい説明です。説明文をタップすると、ホロスコープ円が開きます。</div>';
+body.innerHTML = html;
+var pvW = body.querySelector('#fmPrevW'), nxW = body.querySelector('#fmNextW');
+if (pvW) pvW.addEventListener('click', function () { if (lastWinStart === null || ws > lastWinStart) { selectedWs = ws - 7 * DAY; openWeek(selectedWs); } });
+if (nxW) nxW.addEventListener('click', function () { if (lastWinEnd === null || we < lastWinEnd) { selectedWs = ws + 7 * DAY; openWeek(selectedWs); } });
+if (!cover.length) {
+var none = document.createElement('div');
+none.style.cssText = 'font-size:13.5px;color:#faf6f0;margin-top:12px;line-height:1.8;';
+none.textContent = 'この週にかかる配置はありません。静かな週です。';
+body.appendChild(none);
+}
+cover.forEach(function (r) {
+var wrap = document.createElement('div');
+wrap.style.marginTop = '14px';
+var chip = '';
+if (r.peak && r.peak >= ws && r.peak <= we) chip = '◆ ピークは ' + fmtFull(r.peak) + ' ';
+chip += '（' + fmt(r.start) + '〜' + fmt(r.end) + '）';
+var chipDiv = document.createElement('div');
+chipDiv.style.cssText = 'font-size:11.5px;color:#c5a880;margin-bottom:4px;';
+chipDiv.textContent = chip;
+wrap.appendChild(chipDiv);
+var c = r.el.cloneNode(true);
+c.style.display = '';
+c.removeAttribute('id');
+c.querySelectorAll('[id]').forEach(function (x) { x.removeAttribute('id'); });
+var fw = c.querySelector('.feelWrap');
+if (fw) fw.remove();
+wrap.appendChild(c);
+if (r._glyph) {
+var adv = document.createElement('div');
+adv.style.cssText = 'font-size:12.5px;line-height:1.7;margin-top:5px;color:' + (r.hard ? '#ff9d85' : '#ffd88a') + ';';
+adv.textContent = r.hard
+? ('注意どころ： ' + (HARDC[r._glyph] || THEME[r._glyph]) + (HARDACT[r._glyph] ? ' ― ' + HARDACT[r._glyph] : ''))
+: ('活かしどころ： ' + (GOODC[r._glyph] || THEME[r._glyph]) + (GOODACT[r._glyph] ? ' ― ' + GOODACT[r._glyph] : ''));
+wrap.appendChild(adv);
+}
+body.appendChild(wrap);
+});
+md.style.display = 'flex';
+document.body.style.overflow = 'hidden';
+md.querySelector('#flowModalBody').parentElement.scrollTop = 0;
+}
+
 function openDay(ms) {
 var md = ensureModal();
 var body = md.querySelector('#flowModalBody');
@@ -1120,7 +1202,7 @@ var marks = dayMode? []: collectRoadmap(Y, winStart, winEnd);
 var hero = rows.length >= 2? heroWindow(rows, winStart, winEnd): null;
 lastRows = rows; lastHero = hero;
 sec = ensureSection(list);
-var html = '<style>.fmDay:active{background:rgba(255,216,138,0.35) !important;}</style><div style="font-size:16px;font-weight:700;color:#e8cf9f;">🧭 流れマップ <span style="font-size:12px;font-weight:400;color:#8a8178;">' + winLabel + '</span></div>';
+var html = '<style>.fmDay:active,.fmWeek:active{background:rgba(255,216,138,0.35) !important;}</style><div style="font-size:16px;font-weight:700;color:#e8cf9f;">🧭 流れマップ <span style="font-size:12px;font-weight:400;color:#8a8178;">' + winLabel + '</span></div>';
 if (hero) {
 html += '<div style="margin-top:12px;border:1.5px solid #b98a2f;border-radius:12px;padding:12px 14px;background:rgba(185,138,47,0.10);">';
 html += '<div style="font-size:15.5px;font-weight:700;color:#ffd88a;">🔥 ' + (dayMode? 'この期間で': 'この月で') + 'いちばん濃い' + (Math.round((hero.e - hero.s) / DAY) + 1) + '日間： ' + fmtFull(hero.s) + ' 〜 ' + fmtFull(hero.e) + '</div>';
@@ -1135,28 +1217,37 @@ html += '<div style="font-size:12.5px;color:#ff9d85;margin-top:2px;line-height:1
 html += '</div>';
 }
 // daily meter
-if (totalDays <= 62) {
-var nets = dayNets(rows, winStart, winEnd);
-var maxAbs = 1;
-nets.forEach(function (n) { if (Math.abs(n.net) > maxAbs) maxAbs = Math.abs(n.net);});
-html += '<div style="font-size:12.5px;font-weight:700;color:#e8cf9f;margin-top:14px;">📊 日ごとの波</div>';
+var netsAll = dayNets(rows, winStart, winEnd);
+var weeks = [];
+for (var ws = winStart; ws <= winEnd; ws += 7 * DAY) {
+var we = Math.min(ws + 6 * DAY, winEnd);
+var sum = 0;
+netsAll.forEach(function (n) { if (n.ms >= ws && n.ms <= we) sum += n.net; });
+var pg = 0, ph = 0;
+rows.forEach(function (r) { if (r.peak && r.peak >= ws && r.peak <= we) { if (r.hard) ph++; else pg++; } });
+weeks.push({ ws: ws, we: we, sum: sum, pg: pg, ph: ph });
+}
+var maxAbsW = 1;
+weeks.forEach(function (w) { if (Math.abs(w.sum) > maxAbsW) maxAbsW = Math.abs(w.sum); });
+html += '<div style="font-size:12.5px;font-weight:700;color:#e8cf9f;margin-top:14px;">📊 週ごとの波</div>';
 html += '<div id="fmMeter" style="display:flex;gap:2px;margin-top:4px;overflow-x:auto;padding-bottom:4px;">';
-nets.forEach(function (n, idx) {
-var inHeroW = hero && n.ms >= hero.s && n.ms <= hero.e;
-var isToday = n.ms === todayMs;
-var barH = n.net === 0? 2: 8 + Math.round(Math.abs(n.net) / maxAbs * 30);
-var barBg = n.net > 0? 'linear-gradient(180deg,#d8b45a,#b98a2f)': (n.net < 0? 'linear-gradient(180deg,#7a9fc5,#54708f)': '#38332c');
-var num = String(new Date(n.ms).getUTCDate());
-var sel = n.ms === selectedMs;
-html += '<div class="fmDay" data-ms="' + n.ms + '" title="' + fmtFull(n.ms) + '" style="flex:0 0 27px;width:27px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:92px;cursor:pointer;border-radius:6px;padding-top:2px;' + (sel ? 'background:rgba(255,216,138,0.25);box-shadow:inset 0 0 0 1.5px #ffd88a;' : (inHeroW ? 'background:rgba(185,138,47,0.13);' : '') + (isToday ? 'box-shadow:inset 0 0 0 1px rgba(255,216,138,0.6);' : '')) + '">';
-html += '<div style="font-size:9px;color:#ffd88a;height:11px;line-height:11px;">' + (n.peaks.length? '◆': '') + '</div>';
-html += '<div style="width:70%;max-width:14px;border-radius:3px 3px 0 0;background:' + barBg + ';height:' + barH + 'px;"></div>';
-html += '<div style="font-size:9.5px;margin-top:2px;height:13px;' + ((isToday || sel) ? 'color:#ffd88a;font-weight:700;' : 'color:#8a8178;') + '">' + num + '</div>';
+fmTargetIdx = -1;
+weeks.forEach(function (w, idx) {
+var inHeroW = hero && w.ws <= hero.e && w.we >= hero.s;
+var selW = w.ws === selectedWs;
+var barH = w.sum === 0 ? 2 : 8 + Math.round(Math.abs(w.sum) / maxAbsW * 30);
+var barBg = w.sum > 0 ? 'linear-gradient(180deg,#d8b45a,#b98a2f)' : (w.sum < 0 ? 'linear-gradient(180deg,#7a9fc5,#54708f)' : '#38332c');
+var colFlex = weeks.length <= 8 ? 'flex:1 1 0;min-width:0;' : 'flex:0 0 44px;width:44px;';
+if (selW || (selectedWs === null && fmTargetIdx < 0 && ((showToday && todayMs >= w.ws && todayMs <= w.we) || (hero && hero.s >= w.ws && hero.s <= w.we)))) fmTargetIdx = idx;
+html += '<div class="fmWeek" data-ws="' + w.ws + '" style="' + colFlex + 'display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:92px;cursor:pointer;border-radius:6px;padding-top:2px;' + (selW ? 'background:rgba(255,216,138,0.25);box-shadow:inset 0 0 0 1.5px #ffd88a;' : (inHeroW ? 'background:rgba(185,138,47,0.13);' : '')) + '">';
+html += '<div style="font-size:9px;color:#ffd88a;height:11px;line-height:11px;">' + ((w.pg + w.ph) ? '◆' : '') + '</div>';
+html += '<div style="width:70%;max-width:22px;border-radius:3px 3px 0 0;background:' + barBg + ';height:' + barH + 'px;"></div>';
+html += '<div style="font-size:10px;margin-top:2px;height:14px;' + (selW ? 'color:#ffd88a;font-weight:700;' : 'color:#c5a880;') + '">' + fmt(w.ws) + '</div>';
+html += '<div style="font-size:9.5px;height:13px;color:#8a8178;">' + ((w.pg + w.ph) ? '良' + w.pg + ' 注' + w.ph : '') + '</div>';
 html += '</div>';
 });
 html += '</div>';
-html += '<div style="font-size:11px;color:#8a8178;margin-top:3px;line-height:1.6;">バーの高さは、その日に重なる配置の波（良い流れ−注意）です。金色の帯は「いちばん濃い期間」。横にスクロールでき、日をタップすると、その日の配置が詳しく開きます。</div>';
-}
+html += '<div style="font-size:11px;color:#8a8178;margin-top:3px;line-height:1.6;">バーの高さは、その週の波（良い流れ−注意の重なり）です。◆はピークのある週、金色の帯は「いちばん濃い期間」と重なる週。週をタップすると、その週の配置が詳しく開きます。</div>';
 html += '<div style="font-size:12px;color:#8a8178;margin-top:12px;line-height:1.6;">配置の影響期間をバーで並べました。◆はピークの日、金は良い流れ・青は注意の流れです。</div>';
 html += '<div style="display:flex;margin-top:8px;"><div style="width:132px;flex:none;"></div><div style="position:relative;flex:1;height:14px;font-size:10.5px;color:#8a8178;">';
 if (dayMode) {
@@ -1206,10 +1297,7 @@ html += '<div style="font-size:11px;color:#8a8178;margin-top:4px;">転換日： 
 sec.innerHTML = html;
 sec.style.display = '';
 var fmM = sec.querySelector('#fmMeter');
-if (fmM) {
-var tMs = (selectedMs !== null && selectedMs >= winStart && selectedMs <= winEnd) ? selectedMs : (showToday ? todayMs : null);
-if (tMs !== null) fmM.scrollLeft = Math.max(0, Math.round((tMs - winStart) / DAY) * 29 - fmM.clientWidth / 2 + 13);
-}
+if (fmM && fmTargetIdx >= 0) fmM.scrollLeft = Math.max(0, fmTargetIdx * 46 - fmM.clientWidth / 2 + 22);
 lastSig = sig;
 }
 var iv = setInterval(function () {
