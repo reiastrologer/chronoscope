@@ -809,5 +809,237 @@
         setTimeout(function () { clearInterval(iv); }, 30000);
       })();
     </script>
+  <script>
+(function () {
+var DAY = 86400000;
+function fmt(ms) { var d = new Date(ms); return (d.getUTCMonth() + 1) + '/' + d.getUTCDate();}
+function fmtFull(ms) { var d = new Date(ms); return (d.getUTCMonth() + 1) + '月' + d.getUTCDate() + '日';}
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');}
+function parseSpanMs(tx, Y) {
+var sm = tx.match(/影響期間[:：]\s*(\d+)月(\d+)日\s*〜\s*(\d+)月(\d+)日/);
+if (!sm) return null;
+var start = Date.UTC(Y, +sm[1] - 1, +sm[2]);
+var end = Date.UTC(Y, +sm[3] - 1, +sm[4]);
+if (end < start) end = Date.UTC(Y + 1, +sm[3] - 1, +sm[4]);
+var pm = tx.match(/ピーク\s*(\d+)月(\d+)日/);
+var peak = null;
+if (pm) {
+var mid = (start + end) / 2;
+var cands = [Date.UTC(Y - 1, +pm[1] - 1, +pm[2]), Date.UTC(Y, +pm[1] - 1, +pm[2]), Date.UTC(Y + 1, +pm[1] - 1, +pm[2])];
+peak = cands[0];
+for (var i = 1; i < 3; i++) if (Math.abs(cands[i] - mid) < Math.abs(peak - mid)) peak = cands[i];
+}
+return { start: start, end: end, peak: peak};
+}
+function scanYear() {
+var sy = document.getElementById('scanyear');
+var v = sy? parseInt(sy.value, 10): NaN;
+return isNaN(v)? new Date().getFullYear(): v;
+}
+function monthOfList(list) {
+var h = list.querySelector('h2');
+if (!h) return null;
+var mm = h.textContent.match(/(\d+)月の星/);
+return mm? +mm[1]: null;
+}
+function collectRows(list, Y) {
+var rows = [], seen = {};
+list.querySelectorAll('.schedule-card').forEach(function (card) {
+if (card.style.display === 'none') return;
+var tx = card.textContent || '';
+if (tx.indexOf('💻') < 0) return;
+var sp = parseSpanMs(tx, Y);
+if (!sp) return;
+var li = tx.indexOf('\u3010');
+            var ri = tx.indexOf('\u3011');
+var label = (li >= 0 && ri > li)? tx.slice(li + 1, ri).replace(/\s+/g, ' ').trim(): tx.slice(0, 20);
+var key = label + '|' + sp.start;
+if (seen[key]) return;
+seen[key] = 1;
+rows.push({
+label: label, start: sp.start, end: sp.end, peak: sp.peak,
+hard: tx.indexOf('⚠️') >= 0 || tx.indexOf('注意期') >= 0
+});
+});
+rows.sort(function (a, b) { return a.start - b.start || ((a.peak || a.start) - (b.peak || b.start));});
+return rows;
+}
+function collectRoadmap(Y, winStart, winEnd) {
+var hs = document.getElementById('halfSumSection');
+if (!hs || hs.style.display === 'none') return [];
+var out = [];
+hs.querySelectorAll('.roadmap-card').forEach(function (card) {
+var badge = card.querySelector('.roadmap-date-badge');
+if (!badge) return;
+var mm = (badge.textContent || '').match(/(\d+)月(\d+)日/);
+if (!mm) return;
+var ms = Date.UTC(Y, +mm[1] - 1, +mm[2]);
+if (ms < winStart || ms > winEnd) return;
+var t = card.querySelector('.roadmap-card-title');
+out.push({ ms: ms, title: t? t.textContent.trim(): ''});
+});
+return out;
+}
+function heroWindow(rows, winStart, winEnd) {
+var totalDays = Math.round((winEnd - winStart) / DAY) + 1;
+var span = Math.min(7, totalDays);
+var best = null;
+for (var s = winStart; s + (span - 1) * DAY <= winEnd; s += DAY) {
+var e = s + (span - 1) * DAY;
+var density = 0, gU = 0, hU = 0, peaks = [];
+rows.forEach(function (r) {
+if (r.end < s || r.start > e) return;
+if (r.hard) hU++; else gU++;
+if (r.peak && r.peak >= s && r.peak <= e) peaks.push(r);
+});
+for (var d = 0; d < span; d++) {
+var day = s + d * DAY, net = 0;
+rows.forEach(function (r) {
+if (r.start <= day && day <= r.end) net += r.hard? -1: 1;
+});
+density += net;
+}
+var score = density * 100 + peaks.length * 10 + (gU - hU);
+if (!best || score > best.score) best = { s: s, e: e, gU: gU, hU: hU, peaks: peaks, score: score, density: density};
+}
+return best;
+}
+function verdictOf(g, r) {
+var df = g - r;
+if (df >= 2) return 'プラス強め';
+if (df === 1) return 'プラス寄り';
+if (df === 0) return '互角';
+if (df === -1) return '注意寄り';
+return '注意強め';
+}
+function ensureSection(list) {
+var sec = document.getElementById('flowMap');
+if (sec) return sec;
+sec = document.createElement('div');
+sec.id = 'flowMap';
+sec.style.cssText = 'max-width:880px;margin:26px auto 0;padding:16px 16px 12px;border:1px solid #c5a880;border-radius:12px;background:rgba(197,168,128,0.05);scroll-margin-top:140px;';
+var hs = document.getElementById('halfSumSection');
+if (hs && hs.parentElement) hs.parentElement.insertBefore(sec, hs);
+else if (list.parentElement) list.parentElement.appendChild(sec);
+return sec;
+}
+var lastSig = '';
+function build() {
+var list = document.getElementById('scheduleList');
+if (!list) return;
+var sec = document.getElementById('flowMap');
+var loading = document.getElementById('dayLoading');
+if (loading || list.style.visibility === 'hidden') { if (sec) sec.style.display = 'none'; return;}
+var dayMode =!!document.getElementById('dayBanner');
+var Y = scanYear();
+var hs0 = document.getElementById('halfSumSection');
+var sig = (dayMode? 'D': 'M') + Y + ':' + list.innerHTML.length + ':' + list.querySelectorAll('.schedule-card').length + ':' + (hs0? hs0.innerHTML.length: 0);
+if (sig === lastSig && sec) return;
+var rows = collectRows(list, Y);
+if (!rows.length) { if (sec) sec.style.display = 'none'; lastSig = sig; return;}
+var winStart, winEnd, winLabel;
+if (dayMode) {
+winStart = Math.min.apply(null, rows.map(function (r) { return r.start;}));
+winEnd = Math.max.apply(null, rows.map(function (r) { return r.end;}));
+winLabel = fmtFull(winStart) + ' 〜 ' + fmtFull(winEnd);
+} else {
+var m = monthOfList(list);
+if (!m) { if (sec) sec.style.display = 'none'; return;}
+winStart = Date.UTC(Y, m - 1, 1);
+winEnd = Date.UTC(Y, m, 0);
+winLabel = Y + '年' + m + '月';
+}
+var totalDays = Math.round((winEnd - winStart) / DAY) + 1;
+function pct(ms) { return ((ms - winStart) / DAY) / totalDays * 100;}
+var nowD = new Date();
+var todayMs = Date.UTC(nowD.getFullYear(), nowD.getMonth(), nowD.getDate());
+var showToday = todayMs >= winStart && todayMs <= winEnd;
+var marks = dayMode? []: collectRoadmap(Y, winStart, winEnd);
+sec = ensureSection(list);
+var html = '<div style="font-size:16px;font-weight:700;color:#e8cf9f;">🧭 流れマップ <span style="font-size:12px;font-weight:400;color:#8a8178;">' + winLabel + '</span></div>';
+// hero (checker style)
+if (rows.length >= 2) {
+var hero = heroWindow(rows, winStart, winEnd);
+if (hero) {
+html += '<div style="margin-top:12px;border:1.5px solid #b98a2f;border-radius:12px;padding:12px 14px;background:rgba(185,138,47,0.10);">';
+html += '<div style="font-size:15.5px;font-weight:700;color:#ffd88a;">🔥 ' + (dayMode? 'この期間で': 'この月で') + 'いちばん濃い' + (Math.round((hero.e - hero.s) / DAY) + 1) + '日間： ' + fmtFull(hero.s) + ' 〜 ' + fmtFull(hero.e) + '</div>';
+html += '<div style="font-size:12.5px;color:#faf6f0;margin-top:5px;line-height:1.7;">良い流れの配置 ' + hero.gU + '件 ／ 注意の配置 ' + hero.hU + '件（' + verdictOf(hero.gU, hero.hU) + '）</div>';
+if (hero.peaks.length) {
+html += '<div style="font-size:12.5px;color:#c5a880;margin-top:2px;line-height:1.7;">ピークが来る日： ' + hero.peaks.map(function (r) { return fmt(r.peak) + ' ' + esc(r.label);}).join('、') + '</div>';
+}
+var inHero = marks.filter(function (mk) { return mk.ms >= hero.s && mk.ms <= hero.e;});
+if (inHero.length) {
+html += '<div style="font-size:12.5px;color:#ff9d85;margin-top:2px;line-height:1.7;">🧭 運命のサイクルの転換日（' + inHero.map(function (mk) { return fmtFull(mk.ms);}).join('、') + '）もこの期間の中です</div>';
+}
+html += '</div>';
+}
+}
+html += '<div style="font-size:12px;color:#8a8178;margin-top:10px;line-height:1.6;">配置の影響期間をバーで並べました。◆はピークの日、金は良い流れ・青は注意の流れです。</div>';
+// axis
+html += '<div style="display:flex;margin-top:8px;"><div style="width:132px;flex:none;"></div><div style="position:relative;flex:1;height:14px;font-size:10.5px;color:#8a8178;">';
+if (dayMode) {
+var midMs = winStart + Math.floor(totalDays / 2) * DAY;
+html += '<span style="position:absolute;left:0;">' + fmt(winStart) + '</span>';
+html += '<span style="position:absolute;left:' + pct(midMs) + '%;transform:translateX(-50%);">' + fmt(midMs) + '</span>';
+html += '<span style="position:absolute;right:0;">' + fmt(winEnd) + '</span>';
+} else {
+[1, 8, 15, 22].forEach(function (dd) {
+var ms = winStart + (dd - 1) * DAY;
+html += '<span style="position:absolute;left:' + pct(ms) + '%;">' + dd + '日</span>';
+});
+html += '<span style="position:absolute;right:0;">末日</span>';
+}
+html += '</div></div>';
+rows.forEach(function (r) {
+var cs = Math.max(r.start, winStart), ce = Math.min(r.end, winEnd);
+if (ce < cs) return;
+var left = pct(cs), width = Math.max(pct(ce) + 100 / totalDays - left, 1.5);
+html += '<div style="display:flex;align-items:flex-start;margin-top:7px;">';
+html += '<div style="width:132px;flex:none;padding-right:8px;">';
+html += '<div style="font-size:11.5px;color:#faf6f0;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="' + esc(r.label) + '">' + esc(r.label) + '</div>';
+html += '<div style="font-size:10.5px;color:#8a8178;margin-top:1px;">' + fmt(r.start) + '〜' + fmt(r.end) + (r.peak? ' ピーク' + fmt(r.peak): '') + '</div>';
+html += '</div>';
+html += '<div style="position:relative;flex:1;height:16px;background:rgba(255,255,255,0.04);border-radius:999px;">';
+var barBg = r.hard? 'linear-gradient(90deg,#54708f,#7a9fc5)': 'linear-gradient(90deg,#b98a2f,#d8b45a)';
+html += '<div style="position:absolute;top:2px;height:12px;border-radius:999px;background:' + barBg + ';left:' + left + '%;width:' + width + '%;">';
+if (r.start < winStart) html += '<span style="position:absolute;left:2px;top:-3px;font-size:10px;color:#0d0c0a;">◀</span>';
+if (r.end > winEnd) html += '<span style="position:absolute;right:2px;top:-3px;font-size:10px;color:#0d0c0a;">▶</span>';
+html += '</div>';
+if (r.peak && r.peak >= winStart && r.peak <= winEnd) html += '<span style="position:absolute;top:-4px;font-size:12px;color:#ffd88a;text-shadow:0 0 4px #000;left:' + pct(r.peak) + '%;transform:translateX(-50%);">◆</span>';
+if (showToday) html += '<span style="position:absolute;top:-2px;bottom:-2px;width:0;border-left:1px dashed rgba(255,216,138,0.55);left:' + pct(todayMs) + '%;"></span>';
+html += '</div></div>';
+});
+if (showToday) html += '<div style="font-size:10.5px;color:#8a8178;text-align:right;margin-top:4px;">┆ 今日（' + fmt(todayMs) + '）</div>';
+if (!dayMode && marks.length) {
+html += '<div style="display:flex;align-items:flex-start;margin-top:12px;border-top:1px dashed rgba(197,168,128,0.35);padding-top:10px;">';
+html += '<div style="width:132px;flex:none;padding-right:8px;"><div style="font-size:11.5px;color:#e8cf9f;line-height:1.35;">🧭 運命のサイクル</div><div style="font-size:10.5px;color:#8a8178;margin-top:1px;">転換日</div></div>';
+html += '<div style="position:relative;flex:1;height:16px;">';
+marks.forEach(function (mk) {
+html += '<span title="' + esc(fmtFull(mk.ms) + ' ' + mk.title) + '" style="position:absolute;top:-3px;font-size:13px;color:#ff9d85;left:' + pct(mk.ms) + '%;transform:translateX(-50%);">◆</span>';
+});
+if (showToday) html += '<span style="position:absolute;top:-2px;bottom:-2px;width:0;border-left:1px dashed rgba(255,216,138,0.55);left:' + pct(todayMs) + '%;"></span>';
+html += '</div></div>';
+html += '<div style="font-size:11px;color:#8a8178;margin-top:4px;">転換日： ' + marks.map(function (mk) { return fmtFull(mk.ms);}).join('、') + '（下のロードマップに詳しく出ています）</div>';
+}
+sec.innerHTML = html;
+sec.style.display = '';
+lastSig = sig;
+}
+var iv = setInterval(function () {
+var list = document.getElementById('scheduleList');
+if (list) {
+clearInterval(iv);
+build();
+new MutationObserver(function () { setTimeout(build, 350);}).observe(list, { childList: true, subtree: true, attributes: true, attributeFilter: ['style']});
+var hs = document.getElementById('halfSumSection');
+if (hs) new MutationObserver(function () { setTimeout(build, 350);}).observe(hs, { childList: true, subtree: true});
+if (list.parentElement) new MutationObserver(function () { setTimeout(build, 350);}).observe(list.parentElement, { childList: true});
+setInterval(build, 2500);
+}
+}, 400);
+setTimeout(function () { clearInterval(iv);}, 30000);
+})();
+</script>
+
   </body>
 </html>
