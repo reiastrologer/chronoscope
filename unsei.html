@@ -275,30 +275,59 @@
       (function () {
         function pad(n) { return (n < 10 ? '0' : '') + n; }
         var dayTarget = null, dayAppliedFor = '', lastSig = '', stableN = 0, directorOn = false, dayDeadline = 0;
+        var weekMode = false;
         var daySteps = [], stepIdx = 0, harvest = [], internalNav = false, currentScanYear = null;
         var scrolledKey = '';
         function coversTarget(tx, Y, m, d, target) {
           if (tx.indexOf('💻') < 0) return false;
           var pm = tx.match(/ピーク\s*(\d+)月(\d+)日/) || tx.match(/🎯[^0-9]*(\d+)月(\d+)日/);
           var sm = tx.match(/影響期間[:：]\s*(\d+)月(\d+)日\s*〜\s*(\d+)月(\d+)日/);
-          if (pm && +pm[1] === m && +pm[2] === d) return true;
+          var we = weekMode ? target + 6 * 86400000 : target;
+          if (pm) {
+            var pds = [Date.UTC(Y - 1, +pm[1] - 1, +pm[2]), Date.UTC(Y, +pm[1] - 1, +pm[2]), Date.UTC(Y + 1, +pm[1] - 1, +pm[2])];
+            for (var pi = 0; pi < 3; pi++) { if (pds[pi] >= target && pds[pi] <= we) return true; }
+          }
           if (sm) {
             var s1 = Date.UTC(Y, +sm[1] - 1, +sm[2]), e1 = Date.UTC(Y, +sm[3] - 1, +sm[4]);
             if (e1 < s1) {
-              if (target >= Date.UTC(Y - 1, +sm[1] - 1, +sm[2]) && target <= e1) return true;
-              if (target >= s1 && target <= Date.UTC(Y + 1, +sm[3] - 1, +sm[4])) return true;
-            } else if (target >= s1 && target <= e1) return true;
+              if (Date.UTC(Y - 1, +sm[1] - 1, +sm[2]) <= we && e1 >= target) return true;
+              if (s1 <= we && Date.UTC(Y + 1, +sm[3] - 1, +sm[4]) >= target) return true;
+            } else if (s1 <= we && e1 >= target) return true;
           }
           return false;
         }
         function resetView() {
-          dayTarget = null; daySteps = []; stepIdx = 0; harvest = []; scrolledKey = '';
+          weekMode = false; dayTarget = null; daySteps = []; stepIdx = 0; harvest = []; scrolledKey = '';
           var list = document.getElementById('scheduleList');
           if (list) { list.style.visibility = ''; list.querySelectorAll('.schedule-card').forEach(function (c) { c.style.display = ''; }); }
           var ld0 = document.getElementById('dayLoading'); if (ld0) ld0.remove();
           var tabs = document.getElementById('monthTabs'); if (tabs) tabs.style.display = '';
           var hs = document.getElementById('halfSumSection'); if (hs) hs.style.display = '';
           var old = document.getElementById('dayBanner'); if (old) old.remove();
+        }
+        function setWeekMode(on) {
+          if (!dayTarget) return;
+          weekMode = on;
+          dayAppliedFor = ''; lastSig = ''; stableN = 0;
+          dayDeadline = Date.now() + 300000;
+          daySteps = [];
+          if (dayTarget.m > 1) daySteps.push({ scan: dayTarget.Y, tab: dayTarget.m - 1, harvest: true });
+          if (dayTarget.m < 12) daySteps.push({ scan: dayTarget.Y, tab: dayTarget.m + 1, harvest: true });
+          if (dayTarget.m === 12) daySteps.push({ scan: dayTarget.Y + 1, tab: 1, harvest: true });
+          if (dayTarget.m === 1) daySteps.push({ scan: dayTarget.Y - 1, tab: 12, harvest: true });
+          daySteps.push({ scan: dayTarget.Y, tab: dayTarget.m, final: true });
+          stepIdx = 0; harvest = [];
+          var oldB = document.getElementById('dayBanner'); if (oldB) oldB.remove();
+          var list0 = document.getElementById('scheduleList');
+          if (list0 && list0.parentElement) {
+            list0.style.visibility = 'hidden';
+            var ld = document.createElement('div');
+            ld.id = 'dayLoading';
+            ld.style.cssText = 'max-width:880px;margin:18px auto 0;padding:22px 16px;border:1px dashed #c5a880;border-radius:12px;text-align:center;color:#c5a880;font-size:14px;scroll-margin-top:140px;';
+            ld.textContent = on ? '🔮 計算中… その週の配置を集めています' : '🔮 計算中… その日の配置を集めています';
+            list0.parentElement.insertBefore(ld, list0);
+          }
+          ensureDirector();
         }
         function applyDay(Y, m, d) {
           var list = document.getElementById('scheduleList'); if (!list) return;
@@ -330,7 +359,12 @@
               var isHard = tx.indexOf('⚠️') >= 0 || tx.indexOf('注意期') >= 0;
               if (isHard) { hardN++; if (glyph) hardThemes[glyph] = (hardThemes[glyph] || 0) + 1; }
               else { goodN++; if (glyph) goodThemes[glyph] = (goodThemes[glyph] || 0) + 1; }
-              var cdiff = pm ? Math.abs(Date.UTC(Y, +pm[1] - 1, +pm[2]) - target) : 9999;
+              var cdiff = 9999;
+              if (pm) {
+                var weA = weekMode ? target + 6 * 86400000 : target;
+                var pdsA = [Date.UTC(Y - 1, +pm[1] - 1, +pm[2]), Date.UTC(Y, +pm[1] - 1, +pm[2]), Date.UTC(Y + 1, +pm[1] - 1, +pm[2])];
+                for (var pj = 0; pj < 3; pj++) { var pdA = pdsA[pj]; var ddA = pdA < target ? target - pdA : (pdA > weA ? pdA - weA : 0); if (ddA < cdiff) cdiff = ddA; }
+              }
               var li = tx.indexOf('】');
               if (li >= 0) {
                 var rest = tx.slice(li + 1); var cut = rest.indexOf('💻'); if (cut >= 0) rest = rest.slice(0, cut);
@@ -382,7 +416,7 @@
           }
           function topGlyphs(obj) { return Object.keys(obj).sort(function (a, b) { return obj[b] - obj[a]; }).slice(0, 2); }
           var summary = '';
-          if (kept === 0) summary = 'つまりこの日は、表立った配置が少ない、静かな日です。いつも通り過ごすのが一番の日です。';
+          if (kept === 0) summary = weekMode ? 'つまりこの1週間は、表立った配置が少ない、静かな週です。いつも通り過ごすのが一番の週です。' : 'つまりこの日は、表立った配置が少ない、静かな日です。いつも通り過ごすのが一番の日です。';
           else {
             var air;
             if (goodN > 0 && hardN > 0 && Math.abs(goodN - hardN) < 2) air = '良い流れと注意が同居する日です。「どっち？」と迷う日は、使い分けが大事になります。';
@@ -390,24 +424,24 @@
             else if (hardN - goodN >= 2) air = '注意が多めの日です。';
             else if (hardN === 0) air = '良い流れだけが目立つ日です。';
             else air = '注意だけが目立つ日です。';
-            summary = 'つまりこの日は、' + air;
+            summary = (weekMode ? 'つまりこの1週間は、' : 'つまりこの日は、') + air;
             var gtG = topGlyphs(goodThemes), htG = topGlyphs(hardThemes);
             var gt = gtG.map(function (g) { return GOODC[g] || THEME[g]; }).filter(function (x) { return !!x; });
             var ht = htG.map(function (g) { return HARDC[g] || THEME[g]; }).filter(function (x) { return !!x; });
             if (gt.length) {
               summary += ' 活かしどころは「' + gt.join('」「') + '」。';
               if (goodLead) summary += ' ' + goodLead + '。';
-              if (GOODACT[gtG[0]]) summary += ' ' + GOODACT[gtG[0]] + '。';
+              if (GOODACT[gtG[0]]) summary += ' ' + (weekMode ? GOODACT[gtG[0]].replace(/今日/g, 'この週') : GOODACT[gtG[0]]) + '。';
             }
             if (ht.length) {
               summary += ' 注意どころは「' + ht.join('」「') + '」。';
               if (hardLead) summary += ' ' + hardLead + '。';
-              if (HARDACT[htG[0]]) summary += ' ' + HARDACT[htG[0]] + '。';
+              if (HARDACT[htG[0]]) summary += ' ' + (weekMode ? HARDACT[htG[0]].replace(/今日/g, 'この週') : HARDACT[htG[0]]) + '。';
             }
-            if (!gt.length && !ht.length && bestLead) summary += (bestIsPeak ? ' 今日がちょうどピークの配置は「' : ' 特に効いているのは「') + bestLead + '」。';
+            if (!gt.length && !ht.length && bestLead) summary += (bestIsPeak ? (weekMode ? ' この週にピークを迎える配置は「' : ' 今日がちょうどピークの配置は「') : ' 特に効いているのは「') + bestLead + '」。';
             else if (bestLead2 && bestLead2 !== goodLead && bestLead2 !== hardLead) summary += ' ' + bestLead2 + '。';
-            else if (hardN > goodN && !ht.length) summary += ' 大事な決めごとは、できれば別の日に。';
-            else if (goodN > 0 && !gt.length && !ht.length) summary += ' 動くならこの日です。';
+            else if (hardN > goodN && !ht.length) summary += weekMode ? ' 大事な決めごとは、無理のない日に。' : ' 大事な決めごとは、できれば別の日に。';
+            else if (goodN > 0 && !gt.length && !ht.length) summary += weekMode ? ' 動くならこの週です。' : ' 動くならこの日です。';
           }
           var tabs = document.getElementById('monthTabs'); if (tabs) tabs.style.display = 'none';
           var hs = document.getElementById('halfSumSection'); if (hs) hs.style.display = 'none';
@@ -415,20 +449,22 @@
           var bn = document.createElement('div');
           bn.id = 'dayBanner';
           bn.style.cssText = 'max-width:880px;margin:18px auto 0;padding:14px 16px;border:1px solid #c5a880;border-radius:12px;background:rgba(197,168,128,0.08);text-align:center;scroll-margin-top:140px;';
-          bn.innerHTML = '<div style="font-size:17px;font-weight:700;color:#e8cf9f;">📅 ' + Y + '年' + m + '月' + d + '日の運勢</div>' +
-            '<div style="font-size:13px;color:#c5a880;margin-top:4px;">この日に効いている配置：' + kept + '件' + (kept === 0 && nearest ? '（一番近いピークは ' + nearest + ' です）' : '') + '</div>' +
-            '<div style="font-size:12px;color:#8a8178;margin-top:4px;">※その日がピークとは限りません。影響期間がその日を含む配置を表示していますので、前後の日もあわせてご覧ください。</div>' +
+          bn.innerHTML = (weekMode ? '<div style="font-size:17px;font-weight:700;color:#e8cf9f;">🌊 ' + m + '月' + d + '日 〜 ' + (new Date(target + 6 * 86400000).getUTCMonth() + 1) + '月' + new Date(target + 6 * 86400000).getUTCDate() + '日の流れ</div>' : '<div style="font-size:17px;font-weight:700;color:#e8cf9f;">📅 ' + Y + '年' + m + '月' + d + '日の運勢</div>') +
+            '<div style="font-size:13px;color:#c5a880;margin-top:4px;">' + (weekMode ? 'この週にかかる配置：' : 'この日に効いている配置：') + kept + '件' + (kept === 0 && nearest ? '（一番近いピークは ' + nearest + ' です）' : '') + '</div>' +
+            (weekMode ? '<div style="font-size:12px;color:#8a8178;margin-top:4px;">※期間がこの週にかかる配置を表示しています。ピークが週の外の配置も含みますので、1週間の流れとしてご覧ください。</div>' : '<div style="font-size:12px;color:#8a8178;margin-top:4px;">※その日がピークとは限りません。影響期間がその日を含む配置を表示していますので、前後の日もあわせてご覧ください。</div>') +
             '<div style="font-size:14px; line-height:1.8; color:#faf6f0; margin-top:10px; text-align:left;">' + summary + '</div>' +
             ((buzzGoodN + buzzRiskN) > 0 ? '<div style="font-size:12.5px; color:#ffd88a; margin-top:8px; text-align:left;">📣 発信・バズ： ' + (buzzGoodN ? '追い風 ' + buzzGoodN + '件' + (buzzLead ? '（「' + buzzLead + '」）' : '') : '') + (buzzGoodN && buzzRiskN ? ' ／ ' : '') + (buzzRiskN ? '炎上・空回り注意 ' + buzzRiskN + '件' : '') + '（' + verdictOf(buzzGoodN, buzzRiskN) + '）' + '</div>' : '') +
             ((bossGN + bossRN + cliGN + cliRN) > 0 ? '<div style="font-size:12.5px; color:#c9bfff; margin-top:4px; text-align:left;">💼 仕事の対人： ' + [(bossGN || bossRN) ? '上司・目上 ' + (bossGN ? '追い風' + bossGN + '件' : '') + (bossGN && bossRN ? '・' : '') + (bossRN ? '注意' + bossRN + '件' : '') + '（' + verdictOf(bossGN, bossRN) + '）' : '', (cliGN || cliRN) ? '顧客・人付き合い ' + (cliGN ? '追い風' + cliGN + '件' : '') + (cliGN && cliRN ? '・' : '') + (cliRN ? '注意' + cliRN + '件' : '') + '（' + verdictOf(cliGN, cliRN) + '）' : ''].filter(function (x) { return !!x; }).join(' ／ ') + '</div>' : '') +
-            '<button type="button" id="dayAllBtn" style="margin-top:10px;background:transparent;color:#ffd88a;border:1.5px solid #b98a2f;border-radius:999px;padding:8px 18px;font-size:13.5px;font-weight:700;cursor:pointer;">月全体を見る</button>';
+            '<button type="button" id="dayAllBtn" style="margin-top:10px;background:transparent;color:#ffd88a;border:1.5px solid #b98a2f;border-radius:999px;padding:8px 18px;font-size:13.5px;font-weight:700;cursor:pointer;">月全体を見る</button>' + (weekMode ? '<button type="button" id="dayOnlyBtn" style="margin-top:10px;margin-left:8px;background:transparent;color:#ffd88a;border:1.5px solid #b98a2f;border-radius:999px;padding:8px 18px;font-size:13.5px;font-weight:700;cursor:pointer;">📅 その日だけを見る</button>' : '<button type="button" id="weekBtn" style="margin-top:10px;margin-left:8px;background:transparent;color:#ffd88a;border:1.5px solid #b98a2f;border-radius:999px;padding:8px 18px;font-size:13.5px;font-weight:700;cursor:pointer;">🌊 この日から1週間の流れを見る</button>');
           list.parentElement.insertBefore(bn, list);
           list.style.visibility = '';
           var ld2 = document.getElementById('dayLoading'); if (ld2) ld2.remove();
           document.getElementById('dayAllBtn').addEventListener('click', resetView);
+          var wb = document.getElementById('weekBtn'); if (wb) wb.addEventListener('click', function () { setWeekMode(true); });
+          var db = document.getElementById('dayOnlyBtn'); if (db) db.addEventListener('click', function () { setWeekMode(false); });
           addFeelButtons(Y, m, d);
           renderFeelStats();
-          var skey = Y + '-' + m + '-' + d;
+          var skey = Y + '-' + m + '-' + d + (weekMode ? 'w' : '');
           if (scrolledKey !== skey) { scrolledKey = skey; bn.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
         }
         function sigOf(list) { return list.innerHTML.length + ':' + list.querySelectorAll('.schedule-card').length; }
@@ -710,8 +746,9 @@
             var sm = pt.match(/(\d+)月(\d+)日\s*〜\s*(\d+)月(\d+)日/);
             card.dataset.enh = '1';
             if (!pm || !sm) return;
-            gold.textContent = '🎯 ' + sm[1] + '月' + sm[2] + '日';
+            gold.textContent = '🎯 ' + sm[1] + '月' + sm[2] + '日 〜 ' + sm[3] + '月' + sm[4] + '日（ピーク ' + pm[1] + '月' + pm[2] + '日）';
             per.textContent = pt + '（ピーク ' + pm[1] + '月' + pm[2] + '日）';
+            per.style.display = 'none';
             var bm = (card.textContent || '').match(/【\s*(\S+)\s+\S+\s+(\S+)\s*】/);
             if (bm) {
               var tg = bm[1].replace(/\uFE0F/g, ''), ng = bm[2].replace(/\uFE0F/g, '');
