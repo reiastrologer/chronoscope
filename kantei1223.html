@@ -74,7 +74,8 @@
   <div class="card">
     <h2>◎ 二重円（内＝ネイタル／外＝トランジット）</h2>
     <div id="wheel"></div>
-    <p class="note">ハウスはネイタルのプラシーダス。線はトランジット×ネイタルのアスペクト（金＝合、緑＝トライン／セクスタイル、赤＝スクエア／オポジション）。</p>
+    <div id="aspDetail" style="margin-top:10px;"></div>
+    <p class="note">ハウスはネイタルのプラシーダス。線はトランジット×ネイタルのアスペクト（金＝合、緑＝トライン、赤＝スクエア／オポジション）。</p>
   </div>
 
   <div class="row" style="margin-top:14px; gap:14px;">
@@ -85,7 +86,7 @@
   <div class="card">
     <h2>🔗 アスペクト（トランジット × ネイタル）</h2>
     <div id="aspList"></div>
-    <p class="note">オーブ：合6°／スクエア・トライン・オポジション5°／セクスタイル3°（太陽・月が絡む場合は+1°）。A＝接近中、S＝離反中。</p>
+    <p class="note">オーブ：合6°／スクエア・トライン・オポジション5°（太陽・月が絡む場合は+1°）。A＝接近中、S＝離反中。</p>
   </div>
 
   <div class="card">
@@ -110,7 +111,7 @@ var BODIES = [
   { id: 3, g: '♀', n: '金星' }, { id: 4, g: '♂', n: '火星' }, { id: 5, g: '♃', n: '木星' },
   { id: 6, g: '♄', n: '土星' }, { id: 7, g: '♅', n: '天王星' }, { id: 8, g: '♆', n: '海王星' },
   { id: 9, g: '♇', n: '冥王星' }, { id: 10, g: '☊', n: 'ノード' },
-  { id: 11, g: 'ASC', n: 'ASC' }, { id: 12, g: 'MC', n: 'MC' }
+  { id: 11, g: 'ASC', n: 'ASC' }, { id: 12, g: 'MC', n: 'MC' }, { id: 13, g: '⊗', n: 'POF' }
 ];
 var SG = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
 var SGN = ['牡羊座', '牡牛座', '双子座', '蟹座', '獅子座', '乙女座', '天秤座', '蠍座', '射手座', '山羊座', '水瓶座', '魚座'];
@@ -168,12 +169,17 @@ function computeChart(dateStr, timeStr, unknown, lat, lon) {
     var diff = ((lon2 - pos[b.id]) % 360 + 540) % 360 - 180;
     retro[b.id] = diff < 0;
   });
-  var cusps = null;
+  var cusps = null, sect = null;
   if (!unknown) {
     var h = calcHouses(jd, lat, lon);
     pos[11] = h.asc; pos[12] = h.mc; cusps = h.cusps;
+    var sunHouse = parseInt(houseOf(pos[0], cusps), 10);
+    sect = (sunHouse >= 7) ? 'day' : 'night';
+    pos[13] = (sect === 'day')
+      ? ((h.asc + pos[1] - pos[0]) % 360 + 360) % 360
+      : ((h.asc + pos[0] - pos[1]) % 360 + 360) % 360;
   }
-  return { jd: jd, pos: pos, retro: retro, cusps: cusps };
+  return { jd: jd, pos: pos, retro: retro, cusps: cusps, sect: sect };
 }
 function computeTransit(dt) {
   var jd = jdFromJST(dt.getFullYear(), dt.getMonth() + 1, dt.getDate(), dt.getHours(), dt.getMinutes());
@@ -203,7 +209,6 @@ function houseOf(lon, cusps) {
 }
 var ASPS = [
   { a: 0, g: '☌', n: '合', orb: 6, col: '#ffd88a' },
-  { a: 60, g: '⚹', n: 'セクスタイル', orb: 3, col: '#8fd0a8' },
   { a: 90, g: '□', n: 'スクエア', orb: 5, col: '#e07856' },
   { a: 120, g: '△', n: 'トライン', orb: 5, col: '#8fd0a8' },
   { a: 180, g: '☍', n: 'オポジション', orb: 5, col: '#e07856' }
@@ -244,7 +249,7 @@ function foldDist(x, m) { var d = Math.abs(((x - m) % 45 + 45) % 45); return Mat
 function circDist(a, b) { var d = Math.abs(((a - b) % 360 + 360) % 360); return d > 180 ? 360 - d : d; }
 function glyphOf(id) { var b = BODIES.find(function (x) { return x.id === id; }); return b ? b.g : ''; }
 
-var state = { natal: null, transit: null, tDate: new Date(), aspects: [] };
+var state = { natal: null, transit: null, tDate: new Date(), aspects: [], selected: null };
 function spreadGlyphs(items) {
   var sorted = items.slice().sort(function (a, b) { return a.lon - b.lon; });
   var placed = [];
@@ -267,7 +272,7 @@ function renderWheel() {
   s += '<circle cx="320" cy="320" r="302" fill="none" stroke="#c5a880" stroke-opacity="0.55"/>';
   s += '<circle cx="320" cy="320" r="262" fill="none" stroke="#c5a880" stroke-opacity="0.35"/>';
   s += '<circle cx="320" cy="320" r="150" fill="none" stroke="#c5a880" stroke-opacity="0.3"/>';
-  var ECOL = ['#e07856', '#c5a880', '#8fd0a8', '#7a9fc5'];
+  var ECOL = ['#FF9A76', '#E8C87E', '#8FE3B0', '#6FB7FF'];
   for (var i = 0; i < 12; i++) {
     var q1 = P(i * 30, 262), q2 = P(i * 30, 302);
     s += '<line x1="' + q1[0].toFixed(1) + '" y1="' + q1[1].toFixed(1) + '" x2="' + q2[0].toFixed(1) + '" y2="' + q2[1].toFixed(1) + '" stroke="#c5a880" stroke-opacity="0.4"/>';
@@ -288,18 +293,32 @@ function renderWheel() {
   state.aspects.forEach(function (a) {
     var p1 = P(tPos[a.t.id], 148), p2 = P(nPos[a.n.id], 148);
     var op = 0.2 + 0.7 * (1 - a.orb / a.asp.orb);
-    s += '<line x1="' + p1[0].toFixed(1) + '" y1="' + p1[1].toFixed(1) + '" x2="' + p2[0].toFixed(1) + '" y2="' + p2[1].toFixed(1) + '" stroke="' + a.asp.col + '" stroke-width="1.3" stroke-opacity="' + op.toFixed(2) + '"/>';
+    var sel = state.selected;
+    var match = sel && ((sel.side === 'T' && sel.id === a.t.id) || (sel.side === 'N' && sel.id === a.n.id));
+    var lw = match ? 2.8 : 1.3;
+    var lo = sel ? (match ? 1 : 0.04) : op;
+    s += '<line data-t="' + a.t.id + '" data-n="' + a.n.id + '" x1="' + p1[0].toFixed(1) + '" y1="' + p1[1].toFixed(1) + '" x2="' + p2[0].toFixed(1) + '" y2="' + p2[1].toFixed(1) + '" stroke="' + a.asp.col + '" stroke-width="' + lw + '" stroke-opacity="' + lo + '"/>';
   });
-  function dots(pos, r, color, ids) {
+  function dots(pos, r, color, ids, side) {
     var items = [];
     ids.forEach(function (id) { if (pos[id] !== undefined && id !== 11 && id !== 12) items.push({ id: id, lon: pos[id] }); });
     spreadGlyphs(items);
     var out = '';
+    var sel = state.selected;
+    var involved = {};
+    if (sel) {
+      involved[sel.side + sel.id] = true;
+      state.aspects.forEach(function (a) {
+        if (sel.side === 'T' && a.t.id === sel.id) involved['N' + a.n.id] = true;
+        if (sel.side === 'N' && a.n.id === sel.id) involved['T' + a.t.id] = true;
+      });
+    }
     items.forEach(function (it) {
       var tk1 = P(it.lon, r - 14), tk2 = P(it.lon, r - 6);
       out += '<line x1="' + tk1[0].toFixed(1) + '" y1="' + tk1[1].toFixed(1) + '" x2="' + tk2[0].toFixed(1) + '" y2="' + tk2[1].toFixed(1) + '" stroke="' + color + '" stroke-opacity="0.7"/>';
       var gp = P(it.disp, r);
-      out += '<text x="' + gp[0].toFixed(1) + '" y="' + gp[1].toFixed(1) + '" fill="' + color + '" font-size="19" text-anchor="middle" dominant-baseline="middle">' + glyphOf(it.id) + '</text>';
+      var dim = sel && !involved[side + it.id] ? ' opacity="0.25"' : '';
+      out += '<g class="plHit" data-side="' + side + '" data-id="' + it.id + '" style="cursor:pointer;"' + dim + '><circle cx="' + gp[0].toFixed(1) + '" cy="' + gp[1].toFixed(1) + '" r="17" fill="rgba(0,0,0,0)"/><text x="' + gp[0].toFixed(1) + '" y="' + gp[1].toFixed(1) + '" fill="' + color + '" font-size="21" font-weight="700" stroke="rgba(0,0,0,0.6)" stroke-width="0.6" paint-order="stroke" text-anchor="middle" dominant-baseline="middle">' + glyphOf(it.id) + '</text></g>';
     });
     [11, 12].forEach(function (id) {
       if (pos[id] === undefined || ids.indexOf(id) < 0) return;
@@ -308,18 +327,39 @@ function renderWheel() {
     });
     return out;
   }
-  s += dots(tPos, 240, '#a8c4e0', BODIES.slice(0, 11).map(function (b) { return b.id; }));
-  s += dots(nPos, 204, '#e8cf9f', BODIES.map(function (b) { return b.id; }));
+  s += dots(tPos, 240, '#59E3FF', BODIES.slice(0, 11).map(function (b) { return b.id; }), 'T');
+  s += dots(nPos, 204, '#FFE14D', BODIES.map(function (b) { return b.id; }), 'N');
   s += '</svg>';
   box.innerHTML = s;
+  box.querySelectorAll('.plHit').forEach(function (g) {
+    g.addEventListener('click', function () {
+      var side = g.getAttribute('data-side'), id = Number(g.getAttribute('data-id'));
+      if (state.selected && state.selected.side === side && state.selected.id === id) state.selected = null;
+      else state.selected = { side: side, id: id };
+      renderWheel(); renderAspDetail();
+    });
+  });
+}
+function renderAspDetail() {
+  var el = document.getElementById('aspDetail');
+  var sel = state.selected;
+  if (!sel) { el.innerHTML = '<p class="note">惑星をタップすると、その惑星のアスペクトだけを絞って表示します。もう一度タップで解除。</p>'; return; }
+  var b = BODIES.find(function (x) { return x.id === sel.id; });
+  var list = state.aspects.filter(function (a) { return sel.side === 'T' ? a.t.id === sel.id : a.n.id === sel.id; });
+  var head = '<div style="font-size:14px; font-weight:700; color:' + (sel.side === 'T' ? '#59E3FF' : '#FFE14D') + ';">' + (sel.side === 'T' ? 'トランジット ' : 'ネイタル ') + b.g + ' ' + b.n + (sel.side === 'T' ? ' のアスペクト' : ' へのトランジット') + '</div>';
+  if (!list.length) { el.innerHTML = head + '<p class="note">許容オーブ内のアスペクトはありません。</p>'; return; }
+  el.innerHTML = head + list.map(function (a) {
+    return '<div class="aspRow"><span><span style="color:#59E3FF;">T ' + a.t.g + ' ' + a.t.n + '</span> <span style="color:' + a.asp.col + ';">' + a.asp.g + '</span> <span style="color:#FFE14D;">N ' + a.n.g + ' ' + a.n.n + '</span></span><span style="color:#9a8d7a;">' + a.orb.toFixed(2) + '° ' + a.applying + '</span></div>';
+  }).join('');
 }
 function renderTables() {
   function tbl(chart, isNatal) {
     var h = '<table><tr><th>天体</th><th>位置</th>' + (isNatal ? '<th>ハウス</th>' : '') + '<th></th></tr>';
     BODIES.forEach(function (b) {
       if (chart.pos[b.id] === undefined) return;
-      h += '<tr><td>' + b.g + ' ' + b.n + '</td><td>' + fmtPos(chart.pos[b.id]) + '</td>';
-      if (isNatal) h += '<td>' + (b.id <= 10 ? houseOf(chart.pos[b.id], chart.cusps) : '') + '</td>';
+      var nm = b.n + (b.id === 13 && chart.sect ? (chart.sect === 'day' ? '（昼の式）' : '（夜の式）') : '');
+      h += '<tr><td>' + b.g + ' ' + nm + '</td><td>' + fmtPos(chart.pos[b.id]) + '</td>';
+      if (isNatal) h += '<td>' + (b.id <= 10 || b.id === 13 ? houseOf(chart.pos[b.id], chart.cusps) : '') + '</td>';
       h += '<td>' + (chart.retro[b.id] ? '<span style="color:#ff9d85;">R</span>' : '') + '</td></tr>';
     });
     return h + '</table>';
@@ -331,11 +371,11 @@ function renderAspects() {
   var el = document.getElementById('aspList');
   if (!state.aspects.length) { el.innerHTML = '<p class="note">許容オーブ内のアスペクトはありません。</p>'; return; }
   el.innerHTML = state.aspects.map(function (a) {
-    return '<div class="aspRow"><span><span style="color:#a8c4e0;">T ' + a.t.g + ' ' + a.t.n + '</span> <span style="color:' + a.asp.col + ';">' + a.asp.g + '</span> <span style="color:#e8cf9f;">N ' + a.n.g + ' ' + a.n.n + '</span></span><span style="color:#9a8d7a;">' + a.orb.toFixed(2) + '° ' + a.applying + '</span></div>';
+    return '<div class="aspRow"><span><span style="color:#59E3FF;">T ' + a.t.g + ' ' + a.t.n + '</span> <span style="color:' + a.asp.col + ';">' + a.asp.g + '</span> <span style="color:#FFE14D;">N ' + a.n.g + ' ' + a.n.n + '</span></span><span style="color:#9a8d7a;">' + a.orb.toFixed(2) + '° ' + a.applying + '</span></div>';
   }).join('');
 }
 function midpointPairs() {
-  var ids = BODIES.map(function (b) { return b.id; }).filter(function (id) { return state.natal.pos[id] !== undefined; });
+  var ids = BODIES.map(function (b) { return b.id; }).filter(function (id) { return id !== 13 && state.natal.pos[id] !== undefined; });
   var pairs = [];
   for (var i = 0; i < ids.length; i++) for (var j = i + 1; j < ids.length; j++) {
     pairs.push({ a: ids[i], b: ids[j], lon: midLon(state.natal.pos[ids[i]], state.natal.pos[ids[j]]) });
@@ -367,7 +407,7 @@ function renderMidpoints() {
   });
   hits.sort(function (a, b) { return a.orb - b.orb; });
   document.getElementById('mpHits').innerHTML = hits.length ? hits.map(function (p) {
-    return '<div class="aspRow"><span><span style="color:#a8c4e0;">T ' + p.t.g + '</span> ☌ ' + glyphOf(p.pr.a) + '／' + glyphOf(p.pr.b) + '</span><span style="color:#9a8d7a;">' + p.orb.toFixed(2) + '°</span></div>';
+    return '<div class="aspRow"><span><span style="color:#59E3FF;">T ' + p.t.g + '</span> ☌ ' + glyphOf(p.pr.a) + '／' + glyphOf(p.pr.b) + '</span><span style="color:#9a8d7a;">' + p.orb.toFixed(2) + '°</span></div>';
   }).join('') : '<p class="note">該当なし</p>';
   var sorted = mp.pairs.slice().sort(function (a, b) { return a.lon - b.lon; });
   document.getElementById('mpAll').innerHTML = '<table>' + sorted.map(function (pr) {
@@ -379,7 +419,7 @@ function renderAll() {
   var later = computeTransit(new Date(state.tDate.getTime() + 3600000));
   state.aspects = findAspects(state.transit.pos, state.natal.pos, later.pos);
   document.getElementById('tLabel').textContent = '― ' + state.tDate.getFullYear() + '年' + (state.tDate.getMonth() + 1) + '月' + state.tDate.getDate() + '日 ' + String(state.tDate.getHours()).padStart(2, '0') + ':' + String(state.tDate.getMinutes()).padStart(2, '0');
-  renderWheel(); renderTables(); renderAspects(); renderMidpoints();
+  renderWheel(); renderTables(); renderAspects(); renderMidpoints(); renderAspDetail();
 }
 function toLocalInput(dt) {
   function pad(v) { return String(v).padStart(2, '0'); }
