@@ -458,6 +458,10 @@ return '注意強め';
 var lastRows = [], lastHero = null;
 var selectedMs = null, lastWinStart = null, lastWinEnd = null;
 var selectedWs = null, fmTargetIdx = -1;
+var pendingJump = false;
+document.addEventListener('click', function (e) {
+if (e.target && e.target.id === 'calcBtn') pendingJump = true;
+});
 function ensureSection(list) {
 var sec = document.getElementById('flowMap');
 if (sec) return sec;
@@ -725,6 +729,19 @@ winLabel = Y + '年' + m + '月';
 }
 var totalDays = Math.round((winEnd - winStart) / DAY) + 1;
 lastWinStart = winStart; lastWinEnd = winEnd;
+if (pendingJump) {
+var tgt = null;
+var dj = document.body.dataset.fmJump;
+if (dj) { var pp = dj.split('-'); tgt = { y: +pp[0], m: +pp[1] }; }
+if (!tgt) { var nd2 = new Date(); tgt = { y: nd2.getFullYear(), m: nd2.getMonth() + 1 }; }
+var wY = new Date(winStart).getUTCFullYear(), wM = new Date(winStart).getUTCMonth();
+if (wY === tgt.y && wM !== tgt.m - 1) {
+var tabB = document.querySelector('#monthTabs button[data-month="' + tgt.m + '"]');
+if (tabB) { sec.style.display = 'none'; tabB.click(); return; }
+}
+pendingJump = false;
+setTimeout(function () { var sc2 = document.getElementById('flowMap'); if (sc2) sc2.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+}
 function pct(ms) { return ((ms - winStart) / DAY) / totalDays * 100;}
 var nowD = new Date();
 var todayMs = Date.UTC(nowD.getFullYear(), nowD.getMonth(), nowD.getDate());
@@ -850,5 +867,61 @@ setTimeout(function () { clearInterval(iv);}, 30000);
 })();
 </script>
 
-  </body>
+  <script>
+(function () {
+  var iv = setInterval(function () {
+    var inp = document.getElementById('scanyear');
+    if (!inp) return;
+    if (document.getElementById('yearNote')) { clearInterval(iv); return; }
+    var sp = document.createElement('span');
+    sp.id = 'yearNote';
+    sp.textContent = '見たい月は、計算のあと下のタブをタップ';
+    sp.style.cssText = 'font-size:11.5px;color:#c5a880;margin-left:8px;';
+    inp.parentElement.insertBefore(sp, inp.nextSibling);
+    clearInterval(iv);
+  }, 400);
+  setTimeout(function () { clearInterval(iv); }, 30000);
+})();
+</script>
+<script>
+(function () {
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  var done = false;
+  var iv = setInterval(function () {
+    if (done) { clearInterval(iv); return; }
+    var place = document.getElementById('birthplace');
+    var year = document.getElementById('scanyear');
+    var btn = document.getElementById('calcBtn');
+    if (!place || !year || !btn) return;
+    done = true;
+    clearInterval(iv);
+    btn.textContent = '🔮 運勢を見る';
+    var pg = place.closest('.form-group');
+    if (pg) pg.style.display = 'none';
+    var yg = year.closest('.form-group');
+    if (yg) yg.style.display = 'none';
+    var grp = document.createElement('div');
+    grp.className = 'form-group';
+    var today = new Date();
+    var iso = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
+    grp.innerHTML = '<label>📅 見たい日（この日を含む月を表示します）</label>'
+      + '<input type="date" id="fmDate" class="form-control" style="margin-top:4px;" value="' + iso + '">';
+    if (yg && yg.parentElement) yg.parentElement.insertBefore(grp, yg);
+    else btn.parentElement.insertBefore(grp, btn);
+    document.addEventListener('click', function (e) {
+      if (!e.target || e.target.id !== 'calcBtn') return;
+      var d = document.getElementById('fmDate');
+      var y = document.getElementById('scanyear');
+      if (d && d.value && y) {
+        y.value = d.value.slice(0, 4);
+        document.body.dataset.fmJump = d.value.slice(0, 4) + '-' + (+d.value.slice(5, 7));
+      } else {
+        document.body.dataset.fmJump = '';
+      }
+    }, true);
+  }, 400);
+  setTimeout(function () { clearInterval(iv); }, 30000);
+})();
+</script>
+</body>
 </html>
