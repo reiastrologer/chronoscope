@@ -39,8 +39,8 @@ try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __
 </div>
 <div style="max-width: 880px; margin: 10px auto 0; padding: 0 16px; text-align: center;">
 <h1 style="font-family: 'Noto Serif JP', serif; font-size: 22px; color: #e8cf9f; margin-bottom: 6px;">🔮 個人の運勢</h1>
-<p style="font-size: 13px; color: #9a8d7a;">これから8週間の流れを週ごとに読む、あなた専用の運勢です。気になる週の「内容を詳しく見る」で、その週に効いている配置の詳しい読みが開きます。</p>
-<p style="font-size: 12.5px; margin-top: 6px;"><a href="./nenun.html" style="color: #c5a880;">その年のテーマ（年運）はこちら →</a></p>
+<p style="font-size: 14px; color: #9a8d7a;">これから8週間の流れを週ごとに読む、あなた専用の運勢です。気になる週の「内容を詳しく見る」で、その週に効いている配置の詳しい読みが開きます。</p>
+<p style="font-size: 13px; margin-top: 6px;"><a href="./nenun.html" style="color: #c5a880;">その年のテーマ（年運）はこちら →</a></p>
 </div>
 <div style="max-width: 880px; margin: 14px auto 0; padding: 0 16px;">
 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
@@ -52,7 +52,7 @@ try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __
 <label class="fld">出生時刻（月の配置に使います）<input type="time" id="uTime" value="12:00"></label>
 <label class="fld">探し始める日（その日を含む週から8週間を見ます）<input type="date" id="bzStart"></label>
 </div>
-<p style="font-size: 12px; color: #8a8178; margin-top: 8px;">※出生地は不要です（ハウスを使わない判定のため）。出生時刻が不明な場合は12:00のままでOKです（月の読みは目安になります）。入力はあなたのブラウザの中だけに保存され、送信されません。</p>
+<p style="font-size: 12.5px; color: #8a8178; margin-top: 8px;">※出生地は不要です（ハウスを使わない判定のため）。出生時刻が不明な場合は12:00のままでOKです（月の読みは目安になります）。入力はあなたのブラウザの中だけに保存され、送信されません。</p>
 <button id="bzBtn" type="button" style="width: 100%; margin-top: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color: #e8cf9f; border: 1px solid #c5a880; border-radius: 999px; padding: 13px 26px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans JP', sans-serif;">🔮 運勢を見る</button>
 <div id="bzResult" style="margin-top: 18px; padding-bottom: 40px;"></div>
 </div>
@@ -170,13 +170,13 @@ else clip += ' ※ピークは、この8週間より先です';
 if (c.startOff < 0) clip += ' ※始まりは、この8週間より前です';
 if (c.endOff > 55) clip += ' ※終わりは、この8週間より先です';
 var h = '<div style="border-top:1px solid rgba(197,168,128,0.25); padding:10px 0 4px; margin-top:10px;">';
-h += '<div style="display:inline-block; background:rgba(255,216,138,0.13); color:#ffd88a; border:1px solid rgba(255,216,138,0.4); border-radius:999px; padding:2px 10px; font-size:11.5px; font-weight:700;">' + badge + '</div>';
-if (clip) h += '<div style="font-size:11px; color:#8a8178; margin-top:3px;">' + clip + '</div>';
-h += '<div style="font-size:14.5px; font-weight:700; color:#faf6f0; margin-top:6px;">\u3010 ' + g + ' ' + ASPG[c.asp] + ' ' + GLYPH[c.n] + ' \u3011' + NAME[c.t] + '×' + NAME[c.n] + (c.hard? ' <span style="color:#ff9d85; font-size:12px;">注意の配置</span>': ' <span style="color:#ffd88a; font-size:12px;">良い流れ</span>') + '</div>';
-if (ent && ent.title) h += '<div style="font-size:13.5px; color:#e8cf9f; font-weight:700; margin-top:2px;">' + ent.title + '</div>';
-if (ent && ent.desc) h += '<div style="font-size:13.5px; color:#faf6f0; line-height:1.75; margin-top:4px;">' + fmtText(ent.desc) + '</div>';
-if (sub && sub.w1) h += '<div style="font-size:12.5px; color:#b6ab9c; line-height:1.8; margin-top:6px;">💻\u3010お仕事中\u3011' + sub.w1 + '<br>\u3010これから・お休み中\u3011' + sub.w2 + '<br>❤️\u3010恋人あり\u3011' + sub.l1 + '<br>\u3010フリー\u3011' + sub.l2 + '<br>🪙\u3010金運\u3011' + sub.m + '</div>';
-h += '<div style="font-size:12.5px; color:#e8cf9f; margin-top:6px;">' + (c.hard? '注意どころ：' + HARDC[g] + ' ― ' + HARDACT[g]: '活かしどころ：' + GOODC[g] + ' ― ' + GOODACT[g]) + '</div>';
+h += '<div style="display:inline-block; background:rgba(255,216,138,0.13); color:#ffd88a; border:1px solid rgba(255,216,138,0.4); border-radius:999px; padding:2px 10px; font-size:12.5px; font-weight:700;">' + badge + '</div>';
+if (clip) h += '<div style="font-size:12px; color:#8a8178; margin-top:3px;">' + clip + '</div>';
+h += '<div style="font-size:15.5px; font-weight:700; color:#faf6f0; margin-top:6px;">\u3010 ' + g + ' ' + ASPG[c.asp] + ' ' + GLYPH[c.n] + ' \u3011' + NAME[c.t] + '×' + NAME[c.n] + (c.hard? ' <span style="color:#ff9d85; font-size:12px;">注意の配置</span>': ' <span style="color:#ffd88a; font-size:12px;">良い流れ</span>') + '</div>';
+if (ent && ent.title) h += '<div style="font-size:14.5px; color:#e8cf9f; font-weight:700; margin-top:2px;">' + ent.title + '</div>';
+if (ent && ent.desc) h += '<div style="font-size:15px; color:#faf6f0; line-height:1.75; margin-top:4px;">' + fmtText(ent.desc) + '</div>';
+if (sub && sub.w1) h += '<div style="font-size:13.5px; color:#b6ab9c; line-height:1.8; margin-top:6px;">💻\u3010お仕事中\u3011' + sub.w1 + '<br>\u3010これから・お休み中\u3011' + sub.w2 + '<br>❤️\u3010恋人あり\u3011' + sub.l1 + '<br>\u3010フリー\u3011' + sub.l2 + '<br>🪙\u3010金運\u3011' + sub.m + '</div>';
+h += '<div style="font-size:13.5px; color:#e8cf9f; margin-top:6px;">' + (c.hard? '注意どころ：' + HARDC[g] + ' ― ' + HARDACT[g]: '活かしどころ：' + GOODC[g] + ' ― ' + GOODACT[g]) + '</div>';
 h += '</div>';
 return h;
 }
@@ -187,7 +187,7 @@ var g = GLYPH[c.t];
 if (c.hard) { if (hardT.indexOf(HARDC[g]) < 0) hardT.push(HARDC[g]);}
 else if (goodT.indexOf(GOODC[g]) < 0) goodT.push(GOODC[g]);
 });
-var h = '<div style="background:rgba(255,216,138,0.06); border:1px solid rgba(255,216,138,0.25); border-radius:10px; padding:10px 12px; font-size:13px; line-height:1.8;">';
+var h = '<div style="background:rgba(255,216,138,0.06); border:1px solid rgba(255,216,138,0.25); border-radius:10px; padding:10px 12px; font-size:14px; line-height:1.8;">';
 h += '<div style="font-weight:700; color:#e8cf9f;">この週のまとめ（' + verdictOf(pg, ph) + '）</div>';
 if (goodT.length) h += '<div>活かしどころ：' + goodT.slice(0, 3).join('／') + '</div>';
 if (hardT.length) h += '<div>注意どころ：' + hardT.slice(0, 3).join('／') + '</div>';
@@ -257,11 +257,11 @@ weeks.forEach(function (w) { if (Math.abs(w.score) > maxAbs) maxAbs = Math.abs(w
 var html = '';
 if (hero) {
 html += '<div style="border:1.5px solid #ffd88a; border-radius:14px; padding:18px 16px; background:rgba(255,216,138,0.07); text-align:center;">'
-+ '<div style="font-size:13px; color:#ffd88a; font-weight:700;">🔥 この8週間でいちばん濃い7日間</div>'
++ '<div style="font-size:14px; color:#ffd88a; font-weight:700;">🔥 この8週間でいちばん濃い7日間</div>'
 + '<div style="font-family:\'Noto Serif JP\',serif; font-size:24px; font-weight:700; color:#ffe9b8; margin-top:6px;">' + fmtD(baseMs + hero.s * 86400000) + ' 〜 ' + fmtD(baseMs + (hero.s + 6) * 86400000) + '</div>'
-+ '<div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.8;">良い流れの配置 ' + hero.g + '件 ／ 注意の配置 ' + hero.h + '件（' + verdictOf(hero.g, hero.h) + '）</div>'
-+ (hero.peaks.length? '<div style="font-size:13px; color:#c5a880; margin-top:6px;">ピークが来る日：' + hero.peaks.map(function (c) { return fmtD(baseMs + c.peakOff * 86400000) + ' \u3010 ' + GLYPH[c.t] + ' ' + ASPG[c.asp] + ' ' + GLYPH[c.n] + ' \u3011'; }).join('、') + '</div>': '')
-+ '<div style="font-size:12px; color:#9a8d7a; margin-top:8px;">※上の期間は、週の区切りをまたぐいちばん濃い7日間。下の週は月曜〜日曜で数えています。</div>'
++ '<div style="font-size:14.5px; color:#faf6f0; margin-top:8px; line-height:1.8;">良い流れの配置 ' + hero.g + '件 ／ 注意の配置 ' + hero.h + '件（' + verdictOf(hero.g, hero.h) + '）</div>'
++ (hero.peaks.length? '<div style="font-size:13.5px; color:#c5a880; margin-top:6px;">ピークが来る日：' + hero.peaks.map(function (c) { return fmtD(baseMs + c.peakOff * 86400000) + ' \u3010 ' + GLYPH[c.t] + ' ' + ASPG[c.asp] + ' ' + GLYPH[c.n] + ' \u3011'; }).join('、') + '</div>': '')
++ '<div style="font-size:12.5px; color:#9a8d7a; margin-top:8px;">※上の期間は、週の区切りをまたぐいちばん濃い7日間。下の週は月曜〜日曜で数えています。</div>'
 + '</div>';
 } else {
 html += '<div style="border:1px solid #4a4238; border-radius:14px; padding:16px; text-align:center; color:#c5a880; font-size:14px;">この8週間は、目立った配置がありませんでした。穏やかな期間です。</div>';
@@ -271,8 +271,8 @@ var maxNeg = Math.min.apply(null, weeks.map(function (w) { return w.score;}).con
 if (bg.length) {
 var bgSorted = bg.slice().sort(function (a, b) { if (a.hard !== b.hard) return a.hard ? 1 : -1; return a.peakOff - b.peakOff; });
 html += '<div style="border:1px solid #4a4238; border-radius:14px; padding:14px 16px; margin-top:14px;">'
-+ '<div style="font-size:13px; color:#e8cf9f; font-weight:700;">🌌 期間を通して効いている配置</div>'
-+ '<div style="font-size:12px; color:#9a8d7a; margin-top:4px; line-height:1.7;">動きの遅い星の配置で、この8週間の下地になっているものです。各週の詳細からは外して、ここにまとめました。</div>'
++ '<div style="font-size:14px; color:#e8cf9f; font-weight:700;">🌌 期間を通して効いている配置</div>'
++ '<div style="font-size:12.5px; color:#9a8d7a; margin-top:4px; line-height:1.7;">動きの遅い星の配置で、この8週間の下地になっているものです。各週の詳細からは外して、ここにまとめました。</div>'
 + bgSorted.map(function (c) { return cfgHtml(c, baseMs); }).join('')
 + '</div>';
 }
@@ -291,7 +291,7 @@ html += '<div onclick="var r=document.getElementById(\'wkRow' + wk.i + '\'); if(
 + '</div>';
 });
 html += '</div>';
-html += '<div style="font-size:11px; color:#8a8178; margin-top:3px; line-height:1.6;">バーの高さは、その週の波（良い流れ−注意の重なり）です。週をタップすると、その週の詳しい内容が開きます。</div>';
+html += '<div style="font-size:12px; color:#8a8178; margin-top:3px; line-height:1.6;">バーの高さは、その週の波（良い流れ−注意の重なり）です。週をタップすると、その週の詳しい内容が開きます。</div>';
 html += '<div style="margin-top:16px;">';
 weeks.forEach(function (wk) {
 var isBest = hero && (wk.ws <= hero.s + 6) && (wk.we >= hero.s);
@@ -299,14 +299,14 @@ var vd = (wk.pg + wk.ph === 0 && wk.score === 0)? '静か': (wk.score >= 3? 'プ
 var fillW = wk.score === 0? 0: Math.max(8, Math.round(Math.abs(wk.score) / maxAbs * 100));
 var fillBg = wk.score > 0? 'linear-gradient(90deg,#b98a2f,#ffd88a)': 'linear-gradient(90deg,#54708f,#7a9fc5)';
 html += '<div id="wkRow' + wk.i + '" style="border:1px solid ' + (isBest? '#ffd88a': '#4a4238') + '; border-radius:12px; padding:12px 14px; margin-bottom:10px; background:rgba(255,255,255,0.02);">'
-+ '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;"><span style="font-weight:700; color:' + (isBest? '#ffe9b8': '#faf6f0') + ';">' + (isBest? '🔥 ': '') + wk.label + '</span><span style="font-size:12.5px; color:#ffd88a;">' + vd + '</span></div>'
++ '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;"><span style="font-weight:700; color:' + (isBest? '#ffe9b8': '#faf6f0') + ';">' + (isBest? '🔥 ': '') + wk.label + '</span><span style="font-size:13px; color:#ffd88a;">' + vd + '</span></div>'
 + '<div style="height:8px; border-radius:99px; background:#262019; margin-top:8px; overflow:hidden;"><div style="height:100%; width:' + fillW + '%; background:' + fillBg + ';"></div></div>'
-+ '<div style="font-size:12.5px; color:#9a8d7a; margin-top:6px;">良い流れのピーク ' + wk.pg + '件 ／ 注意のピーク ' + wk.ph + '件</div>'
-+ (wk.cover.length? '<button type="button" onclick="var d=document.getElementById(\'wkDet' + wk.i + '\'); d.style.display = d.style.display === \'none\'? \'block\': \'none\';" style="margin-top:8px; background:transparent; color:#ffd88a; border:1px solid #b98a2f; border-radius:999px; padding:5px 14px; font-size:12.5px; font-weight:700; cursor:pointer;">🔍 内容を詳しく見る</button><div id="wkDet' + wk.i + '" style="display:none; margin-top:6px;">' + weekSummaryHtml(wk.cover, wk.pg, wk.ph) + wk.cover.map(function (c) { return cfgHtml(c, baseMs);}).join('') + '</div>': '')
++ '<div style="font-size:13px; color:#9a8d7a; margin-top:6px;">良い流れのピーク ' + wk.pg + '件 ／ 注意のピーク ' + wk.ph + '件</div>'
++ (wk.cover.length? '<button type="button" onclick="var d=document.getElementById(\'wkDet' + wk.i + '\'); d.style.display = d.style.display === \'none\'? \'block\': \'none\';" style="margin-top:8px; background:transparent; color:#ffd88a; border:1px solid #b98a2f; border-radius:999px; padding:5px 14px; font-size:13px; font-weight:700; cursor:pointer;">🔍 内容を詳しく見る</button><div id="wkDet' + wk.i + '" style="display:none; margin-top:6px;">' + weekSummaryHtml(wk.cover, wk.pg, wk.ph) + wk.cover.map(function (c) { return cfgHtml(c, baseMs);}).join('') + '</div>': '')
 + '</div>';
 });
 html += '</div>';
-html += '<p style="font-size:12px; color:#8a8178; line-height:1.8;">判定のしかた：星同士の角度が効いている期間（影響期間）を日ごとに数えて、週の濃さを出しています。ピークは、その配置がいちばん強まる日です。詳しい読みは、各週の「内容を詳しく見る」から。1年を通したテーマで見たいときは「年運」のページへ。星は傾けるが、縛りはしない——計画の目安に。</p>';
+html += '<p style="font-size:12.5px; color:#8a8178; line-height:1.8;">判定のしかた：星同士の角度が効いている期間（影響期間）を日ごとに数えて、週の濃さを出しています。ピークは、その配置がいちばん強まる日です。詳しい読みは、各週の「内容を詳しく見る」から。1年を通したテーマで見たいときは「年運」のページへ。星は傾けるが、縛りはしない——計画の目安に。</p>';
 box.innerHTML = html;
 box.scrollIntoView({ behavior: 'smooth', block: 'start'});
 } catch (err) {
