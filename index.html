@@ -11,6 +11,9 @@
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body { background-color: #0d0c0a; font-family: 'Noto Sans JP', sans-serif; color: #faf6f0; line-height: 1.6; }
       .topTab { display: block; text-align: center; padding: 15px 8px; border-radius: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.28), rgba(197,168,128,0.10)); border: 1px solid #c5a880; color: #e8cf9f; font-weight: 700; font-size: 16px; text-decoration: none; }
+      .topCard { display: block; text-align: left; padding: 14px; border-radius: 12px; background: rgba(255,216,138,0.05); border: 1px solid #b98a2f; color: #faf6f0; text-decoration: none; }
+      .topCard .ct { display: block; font-size: 15.5px; font-weight: 700; }
+      .topCard .cd { display: block; font-size: 11.5px; color: #9a8d7a; margin-top: 4px; line-height: 1.6; }
     </style>
   </head>
   <body>
@@ -30,11 +33,13 @@
     <div style="max-width: 880px; margin: 0 auto; padding: 22px 16px 10px;">
       <p style="text-align: center; font-size: 13.5px; color: #9a8d7a; margin-bottom: 16px;">星読みの館へ、ようこそ。ご用件の扉をお選びください。</p>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-        <a href="./seikaku.html" class="topTab">🌟 性格チェック</a>
-        <a href="./unsei.html" class="topTab">🔮 個人の運勢</a>
-        <a href="./aisho.html" class="topTab">💞 相性診断</a>
-        <a href="./omajinai.html" class="topTab">✨ クロノスくんのおまじない</a>
-        <a href="./buzz.html" class="topTab" style="grid-column: 1 / -1;">📣 バズ週間チェッカー（配信者向け）</a>
+        <a href="./seikaku.html" class="topCard"><span class="ct">🌟 性格チェック</span><span class="cd">生まれた星の配置から、あなたの基本の性格を読む</span></a>
+        <a href="./unsei.html" class="topCard"><span class="ct">🔮 個人の運勢</span><span class="cd">見たい日・見たい週の運勢を、その日かかる配置で</span></a>
+        <a href="./aisho.html" class="topCard"><span class="ct">💞 相性診断</span><span class="cd">二人の星の重なりと、これからの二人の流れ</span></a>
+        <a href="./omajinai.html" class="topCard"><span class="ct">✨ クロノスくんのおまじない</span><span class="cd">クロノスくんが、今日のあなたにひとこと</span></a>
+        <a href="./buzz.html" class="topCard" style="grid-column: 1 / -1; border-color: #ffd88a; background: rgba(255,216,138,0.10);"><span class="ct">📣 バズ週間チェッカー <span style="font-size: 10px; color: #ffd88a; border: 1px solid #b98a2f; border-radius: 999px; padding: 2px 8px; vertical-align: 2px;">配信者向け</span></span><span class="cd">これから8週間で、いちばんバズ配置が集まる週と日がわかる</span></a>
+        <a href="./love.html" class="topCard"><span class="ct">💘 恋愛チェッカー</span><span class="cd">これから8週間で、恋の追い風がいちばん集まる7日間がわかる</span></a>
+        <a href="./money.html" class="topCard"><span class="ct">💰 金運チェッカー</span><span class="cd">これから8週間で、金運の追い風がいちばん集まる7日間がわかる</span></a>
       </div>
     </div>
     <div style="max-width: 880px; margin: 26px auto 0; padding: 0 16px 28px; text-align: center;">
