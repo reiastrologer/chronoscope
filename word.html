@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ワード占い | クロノスコープ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Serif+JP:wght@500;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0;}
+body { background-color: #0d0c0a; font-family: 'Noto Sans JP', sans-serif; color: #faf6f0; line-height: 1.6;}
+.topTab { display: block; text-align: center; padding: 13px 8px; border-radius: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.28), rgba(197,168,128,0.10)); border: 1px solid #c5a880; color: #e8cf9f; font-weight: 700; font-size: 15px; text-decoration: none;}
+.topTab.active { background: linear-gradient(135deg, rgba(255,216,138,0.55), rgba(197,168,128,0.25)); color: #ffe9b8; border-color: #ffd88a;}
+.fld select,.fld input { width: 100%; margin-top: 4px; padding: 9px; border-radius: 8px; background: #1c1a17; color: #faf6f0; border: 1px solid #4a4238; font-size: 15px;}
+.fld { font-size: 12.5px; color: #c5a880;}
+.wdChip { background: rgba(197,168,128,0.10); color: #e8cf9f; border: 1px solid #4a4238; border-radius: 999px; padding: 5px 12px; font-size: 12.5px; cursor: pointer; font-family: 'Noto Sans JP', sans-serif;}
+</style>
+<script>
+try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __nav.type === 'reload') location.replace('./index.html');} catch (e) {}
+</script>
+</head>
+<body>
+<div style="max-width: 880px; margin: 0 auto; padding: 24px 16px 0;">
+<div style="border: 1px solid #c5a880; outline: 3px double rgba(197,168,128,0.55); outline-offset: 5px; padding: 16px 12px 12px; text-align: center; background: radial-gradient(ellipse at center, rgba(197,168,128,0.10), rgba(197,168,128,0.02));">
+<div style="font-family: 'Times New Roman', 'Noto Serif JP', serif; font-size: 11px; letter-spacing: 0.55em; color: #9a8d7a;">CHRONOSCOPE</div>
+<div style="font-family: 'Noto Serif JP', serif; font-size: 26px; font-weight: 700; color: #e8cf9f; letter-spacing: 0.16em; margin-top: 4px;">クロノスコープ</div>
+<div style="font-family: 'Times New Roman', serif; font-style: italic; font-size: 12px; color: #bdb098; letter-spacing: 0.08em; margin-top: 6px;">Astra inclinant, non necessitant</div>
+</div>
+</div>
+<div style="max-width: 880px; margin: 0 auto; padding: 14px 16px 10px; position: sticky; top: 0; z-index: 60; background: #0d0c0a; box-shadow: 0 6px 14px rgba(0,0,0,0.45);">
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+<a href="./seikaku.html" class="topTab">🌟 性格チェック</a>
+<a href="./unsei.html" class="topTab">🔮 個人の運勢</a>
+<a href="./aisho.html" class="topTab">💞 相性診断</a>
+<a href="./omajinai.html" class="topTab">✨ クロノスくんのおまじない</a>
+        <a href="./buzz.html" class="topTab" style="grid-column: 1 / -1;">📣 バズ週間チェッカー（配信者向け）</a>
+</div>
+
+</div>
+<div style="max-width: 880px; margin: 10px auto 0; padding: 0 16px; text-align: center;">
+<h1 style="font-family: 'Noto Serif JP', serif; font-size: 22px; color: #e8cf9f; margin-bottom: 6px;">🔤 ワード占い</h1>
+<p style="font-size: 13px; color: #9a8d7a;">知りたいことを言葉で入れると、そのテーマに合った星の配置から、追い風の時期をこれから8週間の中から探します。人の気持ちや、時期じゃないお願いごとは読めないので、下の例みたいに聞いてね。</p>
+</div>
+<div style="max-width: 880px; margin: 14px auto 0; padding: 0 16px;">
+<label class="fld">聞きたいこと（言葉で入力）<input type="text" id="wdWord" placeholder="例：旅にいい時期、資格を取りたい" style="font-size: 16px;"></label><div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; margin-bottom: 12px;"><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='旅にいい時期';">旅にいい時期</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='資格を取りたい';">資格を取りたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='転職したい';">転職したい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='金持ちになりたい';">金持ちになりたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='引っ越ししたい';">引っ越ししたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='バズりたい';">バズりたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='髪を切りたい';">髪を切りたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='仕事行きたくない';">仕事行きたくない</button></div>
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+<label class="fld">生まれた年<select id="bzY"></select></label>
+<label class="fld">月<select id="bzM"></select></label>
+<label class="fld">日<select id="bzD"></select></label>
+</div>
+<div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px;">
+<label class="fld">探し始める日（その日を含む週から8週間を見ます）<input type="date" id="bzStart"></label>
+</div>
+<p style="font-size: 12px; color: #8a8178; margin-top: 8px;">※出生時刻と出生地は不要です（月とハウスを使わない判定のため）。入力はあなたのブラウザの中だけに保存され、送信されません。</p>
+<button id="bzBtn" type="button" style="width: 100%; margin-top: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color: #e8cf9f; border: 1px solid #c5a880; border-radius: 999px; padding: 13px 26px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans JP', sans-serif;">🔤 ワードで占う</button>
+<div id="bzResult" style="margin-top: 18px; padding-bottom: 40px;"></div>
+</div>
+<script>
+(function () {
+var KEY = 'chronoscope_birth_v1';
+var GLYPH = { 0: '☉', 2: '☿', 3: '♀', 4: '♂', 5: '♃', 6: '♄', 7: '♅', 8: '♆', 9: '♇'};
+var NAME = { 0: '太陽', 2: '水星', 3: '金星', 4: '火星', 5: '木星', 6: '土星', 7: '天王星', 8: '海王星', 9: '冥王星'};
+var IDS = [0, 2, 3, 4, 5, 6, 7, 8, 9];
+var ASPG = { 0: '☌', 90: '□', 120: '△', 180: '☍'};
+var yS = document.getElementById('bzY'), mS = document.getElementById('bzM'), dS = document.getElementById('bzD');
+for (var i = 1930; i <= 2030; i++) { var o = document.createElement('option'); o.value = i; o.textContent = i + '年'; yS.appendChild(o);}
+for (var i = 1; i <= 12; i++) { var o2 = document.createElement('option'); o2.value = i; o2.textContent = i + '月'; mS.appendChild(o2);}
+for (var i = 1; i <= 31; i++) { var o3 = document.createElement('option'); o3.value = i; o3.textContent = i + '日'; dS.appendChild(o3);}
+yS.value = '1990'; mS.value = '1'; dS.value = '1';
+try {
+var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+if (saved && saved.y) { yS.value = saved.y; mS.value = saved.m; dS.value = saved.d;}
+} catch (e) {}
+var startEl = document.getElementById('bzStart');
+var now = new Date();
+startEl.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+
+var PM = null, PJD = null;
+async function pInit() {
+if (PM) return;
+const mod = await import('./assets/swisseph-BtfJwKK5.js');
+const factory = typeof mod.default === 'function'? mod.default: mod.SwissEphModule;
+const wasmBinary = await (await fetch('./assets/swisseph-BmP0Bw24.wasm')).arrayBuffer();
+PM = await factory({ instantiateWasm: (imports, success) => { WebAssembly.instantiate(wasmBinary, imports).then(r => success(r.instance, r.module)); return {};}});
+PJD = PM.cwrap('swe_julday_wrap', 'number', ['number', 'number', 'number', 'number', 'number']);
+}
+function pPos(jd, planet) {
+const out = PM._malloc(48), err = PM._malloc(256);
+const rc = PM.ccall('swe_calc_ut_wrap', 'number', ['number', 'number', 'number', 'number', 'number'], [jd, planet, 260, out, err]);
+const lon = rc < 0? NaN: PM.getValue(out, 'double');
+PM._free(out); PM._free(err);
+return lon;
+}
+function verdictOf(g, r) {
+if (!g &&!r) return '静か';
+var df = g - r;
+if (df >= 2) return 'プラス強め';
+if (df === 1) return 'プラス寄り';
+if (df === 0) return '互角';
+if (df === -1) return '注意寄り';
+return '注意強め';
+}
+function fmtD(dt) { return (dt.getUTCMonth() + 1) + '月' + dt.getUTCDate() + '日';}
+
+
+// __WORD_RESOLVER_START__
+var THEMES = [
+ { label: '転職', icon: '🧳', keys: ['転職', '就職', '退職', '辞め', 'やめ'], spread: [5, 7], voice: [0, 2], risk: [6], riskWord: '注意' },
+ { label: '仕事', icon: '💼', keys: ['仕事', '働き', '残業', '出世', '昇進', '上司'], spread: [5, 6], voice: [0, 2], risk: [2, 4, 6], riskWord: '仕事の注意' },
+ { label: '旅', icon: '✈️', keys: ['旅', '遠出', 'ドライブ', '帰省', 'ツーリング', '飛行機', '船旅', 'ツアー'], spread: [2, 5], voice: [0, 2], risk: [2, 6], riskWord: '足止め注意' },
+ { label: '恋愛', icon: '💘', keys: ['恋', '告白', 'デート', '結婚', 'プロポーズ', 'モテ', '婚活'], spread: [0, 5, 7], voice: [3, 4], risk: [2, 3, 4], riskWord: 'すれ違い注意' },
+ { label: '金運', icon: '💰', keys: ['金', '収入', '副業', '投資', '貯金', '宝くじ', 'ギャンブル', '稼', '商売', '売上'], spread: [5], voice: [0, 3], risk: [3, 5, 8], riskWord: '散財注意' },
+ { label: '勉強・資格', icon: '📚', keys: ['勉強', '資格', '試験', '受験', '学び', '習い事', '免許', '合格'], spread: [2, 5], voice: [0, 2], risk: [6], riskWord: '詰まり注意' },
+ { label: '引っ越し', icon: '🏠', keys: ['引っ越し', '引越し', '移住', '転居', '新生活'], spread: [2, 7], voice: [0, 2], risk: [6, 8], riskWord: 'ドタバタ注意' },
+ { label: '配信・発信', icon: '📣', keys: ['配信', 'バズ', '投稿', '動画', 'ライブ', 'フォロワー', 'SNS', 'ブログ'], spread: [5, 7], voice: [0, 2, 3], risk: [2, 5, 7], riskWord: '炎上注意' },
+ { label: '美容', icon: '💇', keys: ['美容', '髪', 'ダイエット', '痩せ', 'キレイ', 'きれい', '美'], spread: [3, 5], voice: [0, 3], risk: [6], riskWord: '注意' }
+];
+function resolveWord(raw) {
+  var t = (raw || '').replace(/\s+/g, '');
+  if (!t) return { type: 'empty' };
+  if (/気持ち|私のこと|僕のこと|俺のこと|あの人|片思い|振り向|嫌われ/.test(t)) return { type: 'feelings' };
+  if (/抱き|抱きたい|セックス|エッチ|エロ|風俗|ソープ|援交|パパ活|ヤリ|やらせて/.test(t)) return { type: 'crude' };
+  if (/食べたい|飲みたい|寿司|ラーメン|焼肉|美味しい店|店探し/.test(t)) return { type: 'food' };
+  var best = null, bestLen = 0;
+  THEMES.forEach(function (th) { th.keys.forEach(function (k) { if (t.indexOf(k) >= 0 && k.length > bestLen) { best = th; bestLen = k.length; } }); });
+  if (!best) return { type: 'nomatch' };
+  var neg = /たくない|辞めたい|やめたい|疲れ|しんど|つら|嫌|イヤ/.test(t);
+  return { type: 'theme', theme: best, negative: neg };
+}
+function deflectHtml(type) {
+  var card = function (inner) { return '<div style="border:1px solid #b98a2f; border-radius:14px; padding:18px 16px; text-align:center; background:rgba(255,216,138,0.05);">' + inner + '</div>'; };
+  if (type === 'feelings') return card('<div style="font-size:15px; color:#ffe9b8; font-weight:700;">誰かの気持ちは、ワード占いでは読まないことにしてるよ</div><div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.9;">相手の気持ちは、専用のページで星とタロットから読んでね。</div><a href="./kimochi.html" style="display:inline-block; margin-top:10px; background:linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color:#e8cf9f; border:1px solid #c5a880; border-radius:999px; padding:10px 22px; font-size:14.5px; font-weight:700; text-decoration:none;">💗 相手の気持ちで見る</a>');
+  if (type === 'crude') return card('<img src="./chronos_hayai.webp" alt="クロノスくん" style="width:170px; max-width:60%; border-radius:12px;"><div style="font-family:\'Noto Serif JP\',serif; font-size:19px; color:#ffe9b8; font-weight:700; margin-top:10px;">ぼ、僕にはちょっと早い…！</div><div style="font-size:13.5px; color:#faf6f0; margin-top:6px;">その言葉は、星でも読めないや。他の言葉で聞いてみて。</div>');
+  if (type === 'food') return card('<div style="font-size:15px; color:#ffe9b8; font-weight:700;">それは星じゃなくて、検索の仕事だよ(笑)</div><div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.9;">ワード占いは「いつがいい？」に答える道具。お店探しは地図アプリでどうぞ。</div>');
+  return card('<div style="font-size:15px; color:#ffe9b8; font-weight:700;">その言葉は、まだ読めないや</div><div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.9;">入力欄の下の例みたいな言葉なら読めるよ。旅・仕事・恋愛・お金・勉強・引っ越し・配信・美容、みたいなテーマで聞いてみて。</div>');
+}
+function scrollToBox(box) {
+  var hd = document.querySelector('.topTab'); hd = hd ? hd.closest('[style*="sticky"]') : null;
+  var yy = box.getBoundingClientRect().top + window.scrollY - (hd ? hd.offsetHeight : 0) - 12;
+  window.scrollTo({ top: yy, behavior: 'smooth' });
+}
+var CUR = null;
+document.getElementById('wdWord').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('bzBtn').click(); } });
+// __WORD_RESOLVER_END__
+document.getElementById('bzBtn').addEventListener('click', async function () {
+var box = document.getElementById('bzResult');
+var RES = resolveWord(document.getElementById('wdWord').value);
+if (RES.type !== 'theme') { box.innerHTML = deflectHtml(RES.type); scrollToBox(box); return; }
+CUR = RES;
+box.innerHTML = '<p style="color:#9a8d7a; font-size:13.5px;">計算中…</p>';
+try {
+await pInit();
+var by = +yS.value, bm = +mS.value, bd = +dS.value;
+try {
+var prev = {};
+try { prev = JSON.parse(localStorage.getItem(KEY) || '{}');} catch (e) {}
+prev.y = by; prev.m = bm; prev.d = bd;
+localStorage.setItem(KEY, JSON.stringify(prev));
+} catch (e) {}
+var sv = (startEl.value || '').split('-');
+if (sv.length!== 3) { box.innerHTML = '<p style="color:#ff9d85;">探し始める日を選んでください。</p>'; return;}
+var jdN = PJD(by, bm, bd, 3.0, 1);
+var natal = {};
+IDS.forEach(function (id) { natal[id] = pPos(jdN, id);});
+var sDate = new Date(Date.UTC(+sv[0], +sv[1] - 1, +sv[2]));
+var monOff = (sDate.getUTCDay() + 6) % 7;
+var mDate = new Date(sDate.getTime() - monOff * 86400000);
+var bv = [mDate.getUTCFullYear(), mDate.getUTCMonth() + 1, mDate.getUTCDate()];
+var jd0 = PJD(bv[0], bv[1], bv[2], 3.0, 1);
+var SPREAD = CUR.theme.spread, VOICE = CUR.theme.voice, RISK = CUR.theme.risk;
+var RISKWORD = CUR.theme.riskWord, NEG = CUR.negative, TLABEL = CUR.theme.label, TICON = CUR.theme.icon;
+var events = {};
+for (var off = -3; off < 59; off++) {
+  var jd = jd0 + off;
+  var tp = {};
+  IDS.forEach(function (id) { tp[id] = pPos(jd, id); });
+  IDS.forEach(function (t) {
+    IDS.forEach(function (n) {
+      var diff = Math.abs(tp[t] - natal[n]) % 360; if (diff > 180) diff = 360 - diff;
+      var asp = null, orb = 99;
+      [0, 90, 120, 180].forEach(function (a) { var oo = Math.abs(diff - a); if (oo < orb) { orb = oo; asp = a; } });
+      if (orb > 3.5 || asp === null) return;
+      var isGoodAsp = (asp === 0 || asp === 120);
+      var tierA = (SPREAD.indexOf(t) >= 0 && VOICE.indexOf(n) >= 0) || (VOICE.indexOf(t) >= 0 && SPREAD.indexOf(n) >= 0);
+      var isBuzzGood = isGoodAsp && (tierA || VOICE.indexOf(n) >= 0);
+      var isBuzzRisk = !isGoodAsp && (RISK.indexOf(t) >= 0 || RISK.indexOf(n) >= 0 || VOICE.indexOf(n) >= 0);
+      if (!isBuzzGood && !isBuzzRisk) return;
+      var mult = tierA ? 1 : 0.5;
+      var key = t + '-' + n + '-' + asp;
+      if (!events[key] || orb < events[key].minOrb) {
+        events[key] = { t: t, n: n, asp: asp, minOrb: orb, peakOff: off, good: isBuzzGood, mult: mult, label: '【 ' + GLYPH[t] + ' ' + ASPG[asp] + ' ' + GLYPH[n] + ' 】' + NAME[t] + '×' + NAME[n] };
+      }
+    });
+  });
+}
+var weeks = [];
+for (var wI = 0; wI < 8; wI++) {
+  var sDt = new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + wI * 7));
+  var eDt = new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + wI * 7 + 6));
+  weeks.push({ i: wI, good: 0, risk: 0, score: 0, label: fmtD(sDt) + ' 〜 ' + fmtD(eDt), topDays: [], evs: [], gN: 0, gS: 0, rN: 0, sv: bv });
+}
+Object.keys(events).forEach(function (key) {
+  var ev = events[key];
+  if (ev.peakOff < 0 || ev.peakOff >= 56) return;
+  var wk = weeks[Math.floor(ev.peakOff / 7)];
+  var wgt = (1 - ev.minOrb / 4) * (ev.mult || 1);
+  wk.evs.push({ off: ev.peakOff, label: ev.label, good: ev.good, w: wgt });
+  if (ev.good) { wk.good += wgt; wk.gN++; if (ev.mult === 1) wk.gS++; wk.topDays.push({ off: ev.peakOff, w: wgt, bestHit: { label: ev.label } }); }
+  else { wk.risk += wgt; wk.rN++; }
+});
+weeks.forEach(function (wk) {
+  wk.score = wk.good - wk.risk;
+  wk.topDays.sort(function (a, b) { return b.w - a.w; });
+  wk.topDays = wk.topDays.slice(0, 3);
+  wk.evs.sort(function (a, b) { return a.off - b.off; });
+});
+var best = null;
+weeks.forEach(function (wk) { if (wk.good > 0 && (!best || wk.score > best.score)) best = wk;});
+var maxGood = Math.max.apply(null, weeks.map(function (wk) { return wk.good;}).concat([0.01]));
+var flat = [];
+Object.keys(events).forEach(function (key) { var ev = events[key]; if (ev.peakOff < 0 || ev.peakOff >= 56) return; flat.push({ off: ev.peakOff, good: ev.good, mult: ev.mult, w: (1 - ev.minOrb / 4) * ev.mult, label: ev.label });});
+var hero = null;
+for (var ws = 0; ws <= 49; ws++) {
+  var hg = 0, hr = 0, hgN = 0, hgS = 0, hrN = 0, htds = [];
+  flat.forEach(function (ev) { if (ev.off < ws || ev.off > ws + 6) return; if (ev.good) { hg += ev.w; hgN++; if (ev.mult === 1) hgS++; htds.push({ off: ev.off, w: ev.w, bestHit: { label: ev.label } }); } else { hr += ev.w; hrN++; } });
+  var hsc = hg - hr;
+  if (hg > 0 && (!hero || hsc > hero.score)) { htds.sort(function (a, b) { return b.w - a.w; }); var hsD = new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + ws)); var heD = new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + ws + 6)); hero = { s: ws, score: hsc, good: hg, risk: hr, gN: hgN, gS: hgS, rN: hrN, label: fmtD(hsD) + ' 〜 ' + fmtD(heD), topDays: htds.slice(0, 3), sv: bv }; }
+}
+var html = '';
+if (NEG) {
+var heavy = null;
+for (var ws2 = 0; ws2 <= 49; ws2++) {
+  var hg2 = 0, hr2 = 0, hrN2 = 0, rds = [];
+  flat.forEach(function (ev) { if (ev.off < ws2 || ev.off > ws2 + 6) return; if (ev.good) hg2 += ev.w; else { hr2 += ev.w; hrN2++; rds.push({ off: ev.off, w: ev.w, bestHit: { label: ev.label } }); } });
+  var sc2 = hg2 - hr2;
+  if (hrN2 > 0 && (!heavy || sc2 < heavy.score)) { rds.sort(function (a, b) { return b.w - a.w; }); var hsD2 = new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + ws2)); var heD2 = new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + ws2 + 6)); heavy = { s: ws2, score: sc2, rN: hrN2, label: fmtD(hsD2) + ' 〜 ' + fmtD(heD2), topDays: rds.slice(0, 3), sv: bv }; }
+}
+if (heavy) {
+html += '<div style="border:1.5px solid #ff9d85; border-radius:14px; padding:18px 16px; background:rgba(255,157,133,0.06); text-align:center;">' +
+'<div style="font-size:13px; color:#ff9d85; font-weight:700;">' + TICON + ' 『' + TLABEL + '』がいちばん重い7日間</div>' +
+'<div style="font-family:\'Noto Serif JP\',serif; font-size:24px; font-weight:700; color:#ffd9cf; margin-top:6px;">' + heavy.label + '</div>' +
+'<div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.8;">' + RISKWORD + 'の配置 ' + heavy.rN + '件。今しんどいのは、この配置のせいかも。</div>' +
+(heavy.topDays.length? '<div style="font-size:13px; color:#c5a880; margin-top:6px;">重さの中心：' + heavy.topDays.map(function (dy) { var dt = new Date(Date.UTC(+heavy.sv[0], +heavy.sv[1] - 1, +heavy.sv[2] + dy.off)); return fmtD(dt) + '（' + '日月火水木金土'[dt.getUTCDay()] + '）' + (dy.bestHit? ' ' + dy.bestHit.label: '');}).join('、') + '</div>': '') +
+'</div>';
+if (hero && hero.s < heavy.s + 7) {
+  var relief = null;
+  for (var ws3 = heavy.s + 7; ws3 <= 49; ws3++) {
+    var hg3 = 0, hr3 = 0, hgN3 = 0, hgS3 = 0, hrN3 = 0, htds3 = [];
+    flat.forEach(function (ev) { if (ev.off < ws3 || ev.off > ws3 + 6) return; if (ev.good) { hg3 += ev.w; hgN3++; if (ev.mult === 1) hgS3++; htds3.push({ off: ev.off, w: ev.w, bestHit: { label: ev.label } }); } else { hr3 += ev.w; hrN3++; } });
+    var hsc3 = hg3 - hr3;
+    if (hg3 > 0 && (!relief || hsc3 > relief.score)) { htds3.sort(function (a, b) { return b.w - a.w; }); var hsD3 = new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + ws3)); var heD3 = new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + ws3 + 6)); relief = { s: ws3, score: hsc3, good: hg3, risk: hr3, gN: hgN3, gS: hgS3, rN: hrN3, label: fmtD(hsD3) + ' 〜 ' + fmtD(heD3), topDays: htds3.slice(0, 3), sv: bv }; }
+  }
+  hero = relief;
+}
+if (hero) {
+html += '<div style="border:1.5px solid #ffd88a; border-radius:14px; padding:18px 16px; background:rgba(255,216,138,0.07); text-align:center; margin-top:12px;">' +
+'<div style="font-size:13px; color:#ffd88a; font-weight:700;">🌿 軽くなってくるのは、ここから</div>' +
+'<div style="font-family:\'Noto Serif JP\',serif; font-size:24px; font-weight:700; color:#ffe9b8; margin-top:6px;">' + hero.label + '</div>' +
+'<div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.8;">追い風の配置 ' + hero.gN + '件（うち強いもの ' + hero.gS + '件）。ここに近づくと、だいぶ楽になってくるはず。</div>' +
+'</div>';
+} else {
+html += '<div style="border:1px solid #4a4238; border-radius:14px; padding:14px; text-align:center; color:#c5a880; font-size:13.5px; margin-top:12px;">その先の8週間は、大きな追い風は控えめ。でも重い配置が抜けるだけでも、かなり違います。</div>';
+}
+} else {
+html += '<div style="border:1px solid #4a4238; border-radius:14px; padding:16px; text-align:center; color:#c5a880; font-size:14px;">この8週間、『' + TLABEL + '』が重くなる配置は見当たらなかったよ。今しんどいのは星のせいじゃなくて、普通の疲れかも。ちゃんと休んでね。</div>';
+hero = null;
+}
+} else if (hero) {
+html += '<div style="border:1.5px solid #ffd88a; border-radius:14px; padding:18px 16px; background:rgba(255,216,138,0.07); text-align:center;">' +
+'<div style="font-size:13px; color:#ffd88a; font-weight:700;">' + TICON + ' 『' + TLABEL + '』の追い風はこの7日間！</div>' +
+'<div style="font-family:\'Noto Serif JP\',serif; font-size:24px; font-weight:700; color:#ffe9b8; margin-top:6px;">' + hero.label + '</div>' +
+'<div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.8;">追い風の配置 ' + hero.gN + '件（うち強いもの ' + hero.gS + '件）・' + verdictOf(Math.round(hero.good), Math.round(hero.risk)) + (hero.rN? '／' + RISKWORD + 'の配置も ' + hero.rN + '件ある週。進め方はいつもより丁寧に。': '') + '</div>' +
+(hero.topDays.length? '<div style="font-size:13px; color:#c5a880; margin-top:6px;">特に向いている日：' + hero.topDays.map(function (dy) { var dt = new Date(Date.UTC(+hero.sv[0], +hero.sv[1] - 1, +hero.sv[2] + dy.off)); return fmtD(dt) + '（' + '日月火水木金土'[dt.getUTCDay()] + '）' + (dy.bestHit? ' ' + dy.bestHit.label: '');}).join('、') + '</div>': '') +
+'<div style="font-size:12px; color:#9a8d7a; margin-top:8px;">※上の期間は、週の区切りをまたぐいちばん濃い7日間。下の週は月曜〜日曜で数えています。</div>' +
+'</div>';
+} else {
+html += '<div style="border:1px solid #4a4238; border-radius:14px; padding:16px; text-align:center; color:#c5a880; font-size:14px;">この8週間は、『' + TLABEL + '』の追い風が集まる週はなかったよ。地道にいく期間です。</div>';
+}
+var maxPos = Math.max.apply(null, weeks.map(function (wk) { return wk.score; }).concat([0.01]));
+var maxNeg = Math.min.apply(null, weeks.map(function (wk) { return wk.score; }).concat([-0.01]));
+html += '<div style="font-size:12.5px; font-weight:700; color:#e8cf9f; margin-top:14px;">📊 8週間の波</div>';
+html += '<div style="display:flex; gap:2px; margin-top:4px;">';
+weeks.forEach(function (wk) {
+var isB = hero && (wk.i * 7 <= hero.s + 6) && (wk.i * 7 + 6 >= hero.s);
+var bh = wk.score > 0 ? 8 + Math.round(wk.score / maxPos * 32) : (wk.score < 0 ? 8 + Math.round(wk.score / maxNeg * 32) : 2);
+var bg = wk.score > 0 ? 'linear-gradient(180deg,#ffd88a,#b98a2f)' : (wk.score < 0 ? 'linear-gradient(180deg,#7a9fc5,#54708f)' : '#38332c');
+var sd = wk.label.split('〜')[0].trim().replace('月', '/').replace('日', '');
+html += '<div onclick="var r=document.getElementById(\'wkRow' + wk.i + '\'); if(r) r.scrollIntoView({behavior:\'smooth\', block:\'center\'}); var d=document.getElementById(\'wkDet' + wk.i + '\'); if(d) d.style.display=\'block\';" style="flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:74px; cursor:pointer; border-radius:6px; padding-top:2px;' + (isB ? ' background:rgba(255,216,138,0.10);' : '') + '">'
++ '<div style="font-size:9px; height:11px; line-height:11px;">' + (isB ? '🔥' : '') + '</div>'
++ '<div style="width:64%; max-width:20px; border-radius:3px 3px 0 0; background:' + bg + '; height:' + bh + 'px;"></div>'
++ '<div style="font-size:9.5px; color:#9a8d7a; margin-top:2px; height:13px;">' + sd + '</div>'
++ '<div style="font-size:9px; color:#8a8178; height:12px;">' + (wk.gN ? wk.gN + '件' : '') + '</div>'
++ '</div>';
+});
+html += '</div>';
+html += '<div style="font-size:11px; color:#8a8178; margin-top:3px; line-height:1.6;">バーの高さはその週の濃さ（追い風−注意）です。週をタップすると、その週の内容が開きます。</div>';
+html += '<div style="margin-top:16px;">';
+weeks.forEach(function (wk) {
+var isBest = hero && (wk.i * 7 <= hero.s + 6) && (wk.i * 7 + 6 >= hero.s);
+html += '<div id="wkRow' + wk.i + '" style="border:1px solid ' + (isBest? '#ffd88a': '#4a4238') + '; border-radius:12px; padding:12px 14px; margin-bottom:10px; background:rgba(255,255,255,0.02);">' +
+'<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;"><span style="font-weight:700; color:' + (isBest? '#ffe9b8': '#faf6f0') + ';">' + (isBest? '🔥 ': '') + wk.label + '</span><span style="font-size:12.5px; color:#ffd88a;">' + verdictOf(Math.round(wk.good), Math.round(wk.risk)) + '</span></div>' +
+'<div style="height:8px; border-radius:99px; background:#262019; margin-top:8px; overflow:hidden;"><div style="height:100%; width:' + Math.round(wk.good / maxGood * 100) + '%; background:linear-gradient(90deg,#b98a2f,#ffd88a);"></div></div>' +
+'<div style="font-size:12.5px; color:#9a8d7a; margin-top:6px;">追い風の配置 ' + wk.gN + '件（うち強いもの ' + wk.gS + '件）' + (wk.rN? ' ／ ' + RISKWORD + ' ' + wk.rN + '件': '') + '</div>' +
+(wk.evs.length? '<button type="button" onclick="var d=this.nextElementSibling; d.style.display = d.style.display === \'none\'? \'block\': \'none\';" style="margin-top:8px; background:transparent; color:#ffd88a; border:1px solid #b98a2f; border-radius:999px; padding:5px 14px; font-size:12.5px; font-weight:700; cursor:pointer;">🔍 内容を詳しく見る</button><div id="wkDet' + wk.i + '" style="display:none; margin-top:8px; font-size:13px; line-height:2;">' + wk.evs.map(function (ev) { var dt = new Date(Date.UTC(+wk.sv[0], +wk.sv[1] - 1, +wk.sv[2] + ev.off)); return fmtD(dt) + '（' + '日月火水木金土'[dt.getUTCDay()] + '） ' + ev.label + (ev.good? ' <span style="color:#ffd88a;">追い風</span>': ' <span style="color:#ff9d85;">' + RISKWORD + '</span>');}).join('<br>') + '</div>': '') +
+'</div>';
+});
+html += '</div>';
+html += '<p style="font-size:12px; color:#8a8178; line-height:1.8;">いちばん上の表示は、週の区切りにこだわらず、配置がいちばん集まる7日間です。下の週リストは月曜〜日曜で数えています。判定のしかた：入力した言葉のテーマに合わせて、関係する星同士の配置のピークを数えています。空の月は除いています。言葉の判定は全部このページの中でやっていて、入力した言葉がどこかへ送信されることはありません。星は傾けるが、縛りはしない——あくまで計画の目安に。</p>';
+box.innerHTML = html;
+var __hd = document.querySelector('.topTab'); __hd = __hd ? __hd.closest('[style*="sticky"]') : null; var yy = box.getBoundingClientRect().top + window.scrollY - (__hd ? __hd.offsetHeight : 0) - 12; window.scrollTo({ top: yy, behavior: 'smooth' });
+} catch (err) {
+box.innerHTML = '<p style="color:#ff9d85;">計算でエラーが出ました。もう一度お試しください。</p>';
+}
+});
+})();
+</script>
+</body>
+</html>
