@@ -428,15 +428,24 @@
             var gtG = topGlyphs(goodThemes), htG = topGlyphs(hardThemes);
             var gt = gtG.map(function (g) { return GOODC[g] || THEME[g]; }).filter(function (x) { return !!x; });
             var ht = htG.map(function (g) { return HARDC[g] || THEME[g]; }).filter(function (x) { return !!x; });
+            var actW = function (t) { return weekMode ? t.replace(/今日/g, 'この週') : t; };
+            var goodBlock = '', hardBlock = '';
             if (gt.length) {
-              summary += ' 活かしどころは「' + gt.join('」「') + '」。';
-              if (goodLead) summary += ' ' + goodLead + '。';
-              if (GOODACT[gtG[0]]) summary += ' ' + (weekMode ? GOODACT[gtG[0]].replace(/今日/g, 'この週') : GOODACT[gtG[0]]) + '。';
+              goodBlock = ' 活かしどころは「' + gt.join('」「') + '」。';
+              if (goodLead) goodBlock += ' ' + goodLead + '。';
+              if (GOODACT[gtG[0]]) goodBlock += ' ' + actW(GOODACT[gtG[0]]) + '。';
             }
             if (ht.length) {
-              summary += ' 注意どころは「' + ht.join('」「') + '」。';
-              if (hardLead) summary += ' ' + hardLead + '。';
-              if (HARDACT[htG[0]]) summary += ' ' + (weekMode ? HARDACT[htG[0]].replace(/今日/g, 'この週') : HARDACT[htG[0]]) + '。';
+              hardBlock = ' 注意どころは「' + ht.join('」「') + '」。';
+              if (hardLead) hardBlock += ' ' + hardLead + '。';
+              if (HARDACT[htG[0]]) hardBlock += ' ' + actW(HARDACT[htG[0]]) + '。';
+            }
+            if (gt.length && ht.length) {
+              var leadGood = (goodN - hardN > 0) || (goodN - hardN === 0 && goodDiff <= hardDiff);
+              if (leadGood) summary += goodBlock + (HARDACT[htG[0]] ? ' その分、' + actW(HARDACT[htG[0]]) + '。' : '');
+              else summary += hardBlock + (GOODACT[gtG[0]] ? ' その分、' + actW(GOODACT[gtG[0]]) + '。' : '');
+            } else {
+              summary += goodBlock + hardBlock;
             }
             if (!gt.length && !ht.length && bestLead) summary += (bestIsPeak ? (weekMode ? ' この週にピークを迎える配置は「' : ' 今日がちょうどピークの配置は「') : ' 特に効いているのは「') + bestLead + '」。';
             else if (bestLead2 && bestLead2 !== goodLead && bestLead2 !== hardLead) summary += ' ' + bestLead2 + '。';
@@ -781,6 +790,22 @@
             new MutationObserver(function () { enhanceCards(list); }).observe(list, { childList: true, subtree: true });
           }
         }, 400);
+      })();
+    </script>
+      <script>
+      (function () {
+        var iv = setInterval(function () {
+          var btn = document.getElementById('calcBtn');
+          if (!btn || document.getElementById('buzzLink')) { if (btn) clearInterval(iv); return; }
+          var a = document.createElement('a');
+          a.id = 'buzzLink';
+          a.href = './buzz.html';
+          a.textContent = '📣 配信者の方へ：バズ週間チェッカー（この先8週間で発信が伸びやすい週を探す）';
+          a.style.cssText = 'display:block;text-align:center;margin-top:14px;color:#ffd88a;font-size:13px;';
+          btn.parentElement.insertBefore(a, btn.nextSibling);
+          clearInterval(iv);
+        }, 400);
+        setTimeout(function () { clearInterval(iv); }, 30000);
       })();
     </script>
   </body>
