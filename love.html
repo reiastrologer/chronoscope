@@ -224,7 +224,7 @@ html += '<div id="wkRow' + wk.i + '" style="border:1px solid ' + (isBest? '#ffd8
 html += '</div>';
 html += '<p style="font-size:12px; color:#8a8178; line-height:1.8;">いちばん上の表示は、週の区切りにこだわらず、配置がいちばん集まる7日間です。下の週リストは月曜〜日曜で数えています。判定のしかた：配置のピークがその期間に来るものを数えています。好調の配置で「恋の星（金星・火星）」と「後押しの星（太陽・木星・天王星）」が組んだものは強く、それ以外の追い風は弱めに数えています。注意の配置で金星・火星・水星が絡むものは「すれ違い注意」。空の月は除いています。星は傾けるが、縛りはしない——あくまで一歩踏み出す目安に。</p>';
 box.innerHTML = html;
-box.scrollIntoView({ behavior: 'smooth', block: 'start'});
+var __hd = document.querySelector('.topTab'); __hd = __hd ? __hd.closest('[style*="sticky"]') : null; var yy = box.getBoundingClientRect().top + window.scrollY - (__hd ? __hd.offsetHeight : 0) - 12; window.scrollTo({ top: yy, behavior: 'smooth' });
 } catch (err) {
 box.innerHTML = '<p style="color:#ff9d85;">計算でエラーが出ました。もう一度お試しください。</p>';
 }

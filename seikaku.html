@@ -274,7 +274,7 @@
             for (const h of hits) det += aspCard(h);
             html += '<details style="margin-top:20px;"><summary style="color:#c5a880; font-weight:700; font-size:15px; cursor:pointer; padding:10px 0;">詳しく見る（惑星ごとの解説）</summary><div style="margin-top:12px;">' + det + '</div></details>';
             box.innerHTML = html;
-            box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            var __hd = document.querySelector('.topTab'); __hd = __hd ? __hd.closest('[style*="sticky"]') : null; var yy = box.getBoundingClientRect().top + window.scrollY - (__hd ? __hd.offsetHeight : 0) - 12; window.scrollTo({ top: yy, behavior: 'smooth' });
           } catch (e) {
             box.innerHTML = '<p style="color:#e8cf9f; text-align:center;">読み取りに失敗しました。ページを再読み込みして、もう一度お試しください。</p>';
           }
@@ -318,7 +318,7 @@
           var iv = setInterval(function () {
             tries++;
             var ready = el.innerHTML.trim().length > 0;
-            if (ready || tries > 30) { clearInterval(iv); if (ready) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+            if (ready || tries > 30) { clearInterval(iv); if (ready) { var __hd2 = document.querySelector('.topTab'); __hd2 = __hd2 ? __hd2.closest('[style*="sticky"]') : null; var yy2 = el.getBoundingClientRect().top + window.scrollY - (__hd2 ? __hd2.offsetHeight : 0) - 12; window.scrollTo({ top: yy2, behavior: 'smooth' }); } }
           }, 200);
         }
         var b = document.getElementById('psBtn');
