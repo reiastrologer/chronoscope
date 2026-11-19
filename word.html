@@ -184,7 +184,8 @@ var NDAYS = CUR.theme.days || 365;
 var SPAN = CUR.theme.spanLabel || '1年';
 function dateAt(off) { return new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + off)); }
 function fmtFull(dt) { return dt.getUTCFullYear() + '年' + (dt.getUTCMonth() + 1) + '月' + dt.getUTCDate() + '日'; }
-function evLine(ev) { var dt = dateAt(ev.off); return fmtD(dt) + '（' + '日月火水木金土'[dt.getUTCDay()] + '） ' + ev.label + (ev.good ? ' <span style="color:#ffd88a;">追い風</span>' : ' <span style="color:#ff9d85;">' + RISKWORD + '</span>'); }
+function fmtW(dt) { return (NDAYS > 400 ? dt.getUTCFullYear() + '年' : '') + fmtD(dt); }
+function evLine(ev) { var dt = dateAt(ev.off); return fmtW(dt) + '（' + '日月火水木金土'[dt.getUTCDay()] + '） ' + ev.label + (ev.good ? ' <span style="color:#ffd88a;">追い風</span>' : ' <span style="color:#ff9d85;">' + RISKWORD + '</span>'); }
 var runs = {};
 var events = [];
 function closeRun(key) { var r = runs[key]; if (r) { events.push(r); delete runs[key]; } }
@@ -221,7 +222,7 @@ function windowAt(ws) {
   var hg = 0, hr = 0, hgN = 0, hgS = 0, hrN = 0, gds = [], rds = [];
   flat.forEach(function (ev) { if (ev.off < ws || ev.off > ws + 6) return; if (ev.good) { hg += ev.w; hgN++; if (ev.mult === 1) hgS++; gds.push(ev); } else { hr += ev.w; hrN++; rds.push(ev); } });
   gds.sort(function (a, b) { return b.w - a.w; }); rds.sort(function (a, b) { return b.w - a.w; });
-  return { s: ws, score: hg - hr, good: hg, risk: hr, gN: hgN, gS: hgS, rN: hrN, gds: gds, rds: rds, label: fmtD(dateAt(ws)) + ' 〜 ' + fmtD(dateAt(ws + 6)) };
+  return { s: ws, score: hg - hr, good: hg, risk: hr, gN: hgN, gS: hgS, rN: hrN, gds: gds, rds: rds, label: fmtW(dateAt(ws)) + ' 〜 ' + fmtW(dateAt(ws + 6)) };
 }
 var hero = null;
 for (var ws = 0; ws <= NDAYS - 7; ws++) { var w = windowAt(ws); if (w.gN > 0 && (!hero || w.score > hero.score)) hero = w; }
