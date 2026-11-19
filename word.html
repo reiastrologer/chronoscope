@@ -107,15 +107,19 @@ function fmtD(dt) { return (dt.getUTCMonth() + 1) + '月' + dt.getUTCDate() + '�
 
 // __WORD_RESOLVER_START__
 var THEMES = [
- { label: '転職', icon: '🧳', keys: ['転職', '就職', '退職', '辞め', 'やめ'], spread: [5, 7], voice: [0, 2], risk: [6], riskWord: '注意' },
+ { label: '転職', icon: '🧳', keys: ['転職', '就職', '退職', '辞め', 'やめ', '就活', '雇用', '面接', '採用', '求人', '応募', 'バイト', 'パート', 'アルバイト', '派遣', 'ハローワーク'], spread: [5, 7], voice: [0, 2], risk: [6], riskWord: '注意' },
  { label: '仕事', icon: '💼', keys: ['仕事', '働き', '残業', '出世', '昇進', '上司'], spread: [5, 6], voice: [0, 2], risk: [2, 4, 6], riskWord: '仕事の注意' },
- { label: '旅', icon: '✈️', keys: ['旅', '遠出', 'ドライブ', '帰省', 'ツーリング', '飛行機', '船旅', 'ツアー'], spread: [2, 5], voice: [0, 2], risk: [2, 6], riskWord: '足止め注意' },
- { label: '恋愛', icon: '💘', keys: ['恋', '告白', 'デート', '結婚', 'プロポーズ', 'モテ', '婚活'], spread: [0, 5, 7], voice: [3, 4], risk: [2, 3, 4], riskWord: 'すれ違い注意' },
+ { label: '旅', icon: '✈️', keys: ['旅', '遠出', 'ドライブ', '帰省', 'ツーリング', '飛行機', '船旅', 'ツアー'], spread: [5], voice: [0], risk: [6], riskWord: '足止め注意' },
+ { label: '恋愛', icon: '💘', keys: ['恋', '告白', 'デート', 'モテ'], spread: [0, 5, 7], voice: [3, 4], risk: [2, 3, 4], riskWord: 'すれ違い注意' },
  { label: '金運', icon: '💰', keys: ['金', '収入', '副業', '投資', '貯金', '宝くじ', 'ギャンブル', '稼', '商売', '売上'], spread: [5], voice: [0, 3], risk: [3, 5, 8], riskWord: '散財注意' },
  { label: '勉強・資格', icon: '📚', keys: ['勉強', '資格', '試験', '受験', '学び', '習い事', '免許', '合格', '警察', '医者', '看護師', '教師', '公務員', '弁護士', '保育士', '薬剤師'], spread: [2, 5], voice: [0, 2], risk: [6], riskWord: '詰まり注意' },
- { label: '引っ越し', icon: '🏠', keys: ['引っ越し', '引越し', '移住', '転居', '新生活'], spread: [2, 7], voice: [0, 2], risk: [6, 8], riskWord: 'ドタバタ注意' },
+ { label: '引っ越し', icon: '🏠', keys: ['引っ越し', '引越し', '移住', '転居', '新生活'], spread: [5, 6], voice: [0, 5, 6], risk: [2, 8], riskWord: 'ドタバタ注意', conjMax: true },
  { label: '配信・発信', icon: '📣', keys: ['配信', 'バズ', '投稿', '動画', 'ライブ', 'フォロワー', 'SNS', 'ブログ'], spread: [5, 7], voice: [0, 2, 3], risk: [2, 5, 7], riskWord: '炎上注意' },
- { label: '美容', icon: '💇', keys: ['美容', '髪', 'ダイエット', '痩せ', 'キレイ', 'きれい', '美'], spread: [3, 5], voice: [0, 3], risk: [6], riskWord: '注意' }
+ { label: '美容', icon: '💇', keys: ['美容', '髪', 'ダイエット', '痩せ', 'キレイ', 'きれい', '美'], spread: [3, 5], voice: [0, 3], risk: [6], riskWord: '注意' },
+ { label: '結婚', icon: '💍', keys: ['結婚', '婚活', 'プロポーズ', '入籍', '婚姻'], spread: [5, 6], voice: [0, 3], risk: [7], riskWord: '注意' },
+ { label: '金持ち', icon: '👑', keys: ['金持ち', '大金持ち', '億万長者', '富豪', '大富豪'], spread: [5, 8, 9], voice: [0, 3], risk: [6], riskWord: '注意' },
+ { label: '研究', icon: '🔬', keys: ['研究', '調査', '開発', '実験', '分析', '論文', '探求', '発明'], spread: [2, 7], voice: [0, 2], risk: [8], riskWord: '混乱注意' },
+ { label: '占い・芸術', icon: '🎨', keys: ['占い', '美術', 'アート', '芸術', 'イラスト', 'デザイン', '創作'], spread: [8, 2], voice: [0, 3], risk: [6], riskWord: '注意' }
 ];
 var DREAM = { label: '夢・挑戦', icon: '🌟', keys: [], spread: [5, 7], voice: [0, 4], risk: [6], riskWord: '壁注意' };
 function resolveWord(raw) {
@@ -197,7 +201,7 @@ for (var off = -3; off < 59; off++) {
       var mult = tierA ? 1 : 0.5;
       var key = t + '-' + n + '-' + asp;
       if (!events[key] || orb < events[key].minOrb) {
-        events[key] = { t: t, n: n, asp: asp, minOrb: orb, peakOff: off, good: isBuzzGood, mult: mult, label: '【 ' + GLYPH[t] + ' ' + ASPG[asp] + ' ' + GLYPH[n] + ' 】' + NAME[t] + '×' + NAME[n] };
+        events[key] = { t: t, n: n, asp: asp, minOrb: orb, peakOff: off, good: isBuzzGood, mult: mult, aw: (CUR.theme.conjMax && asp === 0) ? 1.5 : 1, label: '【 ' + GLYPH[t] + ' ' + ASPG[asp] + ' ' + GLYPH[n] + ' 】' + NAME[t] + '×' + NAME[n] };
       }
     });
   });
@@ -212,7 +216,7 @@ Object.keys(events).forEach(function (key) {
   var ev = events[key];
   if (ev.peakOff < 0 || ev.peakOff >= 56) return;
   var wk = weeks[Math.floor(ev.peakOff / 7)];
-  var wgt = (1 - ev.minOrb / 4) * (ev.mult || 1);
+  var wgt = (1 - ev.minOrb / 4) * (ev.mult || 1) * (ev.aw || 1);
   wk.evs.push({ off: ev.peakOff, label: ev.label, good: ev.good, w: wgt });
   if (ev.good) { wk.good += wgt; wk.gN++; if (ev.mult === 1) wk.gS++; wk.topDays.push({ off: ev.peakOff, w: wgt, bestHit: { label: ev.label } }); }
   else { wk.risk += wgt; wk.rN++; }
@@ -227,7 +231,7 @@ var best = null;
 weeks.forEach(function (wk) { if (wk.good > 0 && (!best || wk.score > best.score)) best = wk;});
 var maxGood = Math.max.apply(null, weeks.map(function (wk) { return wk.good;}).concat([0.01]));
 var flat = [];
-Object.keys(events).forEach(function (key) { var ev = events[key]; if (ev.peakOff < 0 || ev.peakOff >= 56) return; flat.push({ off: ev.peakOff, good: ev.good, mult: ev.mult, w: (1 - ev.minOrb / 4) * ev.mult, label: ev.label });});
+Object.keys(events).forEach(function (key) { var ev = events[key]; if (ev.peakOff < 0 || ev.peakOff >= 56) return; flat.push({ off: ev.peakOff, good: ev.good, mult: ev.mult, w: (1 - ev.minOrb / 4) * ev.mult * (ev.aw || 1), label: ev.label });});
 var hero = null;
 for (var ws = 0; ws <= 49; ws++) {
   var hg = 0, hr = 0, hgN = 0, hgS = 0, hrN = 0, htds = [];
