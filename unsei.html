@@ -737,7 +737,7 @@ if (!tgt) { var nd2 = new Date(); tgt = { y: nd2.getFullYear(), m: nd2.getMonth(
 var wY = new Date(winStart).getUTCFullYear(), wM = new Date(winStart).getUTCMonth();
 if (wY === tgt.y && wM !== tgt.m - 1) {
 var tabB = document.querySelector('#monthTabs button[data-month="' + tgt.m + '"]');
-if (tabB) { sec.style.display = 'none'; tabB.click(); return; }
+if (tabB) { if (sec) sec.style.display = 'none'; tabB.click(); return; }
 }
 pendingJump = false;
 setTimeout(function () { var sc2 = document.getElementById('flowMap'); if (sc2) sc2.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
@@ -896,6 +896,7 @@ setTimeout(function () { clearInterval(iv);}, 30000);
     done = true;
     clearInterval(iv);
     btn.textContent = '🔮 運勢を見る';
+    new MutationObserver(function () { if (btn.textContent !== '🔮 運勢を見る' && btn.textContent.indexOf('中') === -1) btn.textContent = '🔮 運勢を見る'; }).observe(btn, { childList: true, characterData: true, subtree: true });
     var pg = place.closest('.form-group');
     if (pg) pg.style.display = 'none';
     var yg = year.closest('.form-group');
