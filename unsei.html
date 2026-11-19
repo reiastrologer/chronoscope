@@ -480,6 +480,8 @@ c.style.boxShadow = on ? 'inset 0 0 0 1.5px #ffd88a' : '';
 openWeek(selectedWs);
 return;
 }
+var wb = e.target.closest ? e.target.closest('.fmWeekBtn') : null;
+if (wb) { openWeek(+wb.getAttribute('data-ws')); return; }
 var col = e.target.closest? e.target.closest('.fmDay'): null;
 if (col) {
 selectedMs = +col.getAttribute('data-ms');
@@ -796,6 +798,18 @@ html += '</div>';
 });
 html += '</div>';
 html += '<div style="font-size:11px;color:#8a8178;margin-top:3px;line-height:1.6;">バーの高さは、その週の波（良い流れ−注意の重なり）です。◆はピークのある週、金色の帯は「いちばん濃い期間」と重なる週。週をタップすると、その週の配置が詳しく開きます。</div>';
+weeks.forEach(function (w) {
+var inHeroW2 = hero && w.ws <= hero.e && w.we >= hero.s;
+var vd = (w.pg + w.ph === 0 && w.sum === 0) ? '静か' : (w.sum >= 3 ? 'プラス強め' : (w.sum >= 1 ? 'プラス寄り' : (w.sum <= -3 ? 'マイナス強め' : (w.sum <= -1 ? 'マイナス寄り' : '互角'))));
+var fillW = w.sum === 0 ? 0 : Math.max(8, Math.round(Math.abs(w.sum) / maxAbsW * 100));
+var fillBg = w.sum > 0 ? 'linear-gradient(90deg,#8a6a25,#e8cf9f)' : 'linear-gradient(90deg,#54708f,#7a9fc5)';
+html += '<div style="border:1px solid ' + (inHeroW2 ? 'rgba(232,207,159,0.65)' : 'rgba(232,207,159,0.18)') + ';border-radius:14px;padding:13px 15px;margin-top:10px;background:rgba(255,255,255,0.02);">';
+html += '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;"><div style="font-size:16.5px;font-weight:700;color:#faf6f0;">' + (inHeroW2 ? '🔥 ' : '') + fmtFull(w.ws) + ' 〜 ' + fmtFull(w.we) + '</div><div style="font-size:12.5px;color:#c5a880;flex:none;">' + vd + '</div></div>';
+html += '<div style="height:8px;border-radius:99px;background:#2a251c;margin-top:9px;overflow:hidden;"><div style="height:100%;width:' + fillW + '%;background:' + fillBg + ';border-radius:99px;"></div></div>';
+html += '<div style="font-size:12.5px;color:#b6ab9c;margin-top:8px;">良い流れのピーク ' + w.pg + '件 ／ 注意のピーク ' + w.ph + '件</div>';
+html += '<button type="button" class="fmWeekBtn" data-ws="' + w.ws + '" style="margin-top:9px;background:none;border:1px solid rgba(232,207,159,0.55);color:#e8cf9f;border-radius:99px;padding:7px 16px;font-size:13.5px;cursor:pointer;">🔍 内容を詳しく見る</button>';
+html += '</div>';
+});
 html += '<div style="font-size:12px;color:#8a8178;margin-top:12px;line-height:1.6;">配置の影響期間をバーで並べました。◆はピークの日、金は良い流れ・青は注意の流れです。</div>';
 html += '<div style="display:flex;margin-top:8px;"><div style="width:132px;flex:none;"></div><div style="position:relative;flex:1;height:14px;font-size:10.5px;color:#8a8178;">';
 if (dayMode) {
