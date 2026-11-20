@@ -45,7 +45,7 @@ try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __
 <p style="font-size: 12px; color: #8a8178; margin-top: 6px;">※年齢制限や応募条件があるテーマでも、時期の結果はそのまま出ます。条件の確認は公式でお願いします。あしからずご了承ください。</p>
 </div>
 <div style="max-width: 880px; margin: 14px auto 0; padding: 0 16px;">
-<label class="fld">聞きたいこと（言葉で入力）<input type="text" id="wdWord" placeholder="例：旅にいい時期、資格を取りたい" style="font-size: 16px;"></label><div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; margin-bottom: 12px;"><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='旅にいい時期';">旅にいい時期</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='資格を取りたい';">資格を取りたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='転職したい';">転職したい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='金持ちになりたい';">金持ちになりたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='引っ越ししたい';">引っ越ししたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='バズりたい';">バズりたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='髪を切りたい';">髪を切りたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='仕事行きたくない';">仕事行きたくない</button></div>
+<label class="fld">聞きたいこと（言葉で入力）<input type="text" id="wdWord" placeholder="例：旅にいい時期、資格を取りたい" style="font-size: 16px;"></label><div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; margin-bottom: 12px;"><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='旅にいい時期';">旅にいい時期</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='資格を取りたい';">資格を取りたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='転職したい';">転職したい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='金持ちになりたい';">金持ちになりたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='引っ越ししたい';">引っ越ししたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='バズりたい';">バズりたい</button><button type="button" class="wdChip" onclick="document.getElementById('wdWord').value='髪を切りたい';">髪を切りたい</button></div>
 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
 <label class="fld">生まれた年<select id="bzY"></select></label>
 <label class="fld">月<select id="bzM"></select></label>
@@ -114,7 +114,7 @@ var THEMES = [
  { label: '恋愛', icon: '💘', keys: ['恋', '告白', 'デート', 'モテ'], spread: [0, 5, 7], voice: [3, 4], risk: [2, 3, 4], riskWord: 'すれ違い注意' },
  { label: '金運', icon: '💰', keys: ['金', '収入', '副業', '投資', '貯金', '宝くじ', 'ギャンブル', '稼', '商売', '売上'], spread: [5], voice: [0, 3], risk: [3, 5, 8], riskWord: '散財注意' },
  { label: '勉強・資格', icon: '📚', keys: ['勉強', '資格', '試験', '受験', '学び', '習い事', '免許', '合格', '警察', '医者', '看護師', '教師', '公務員', '弁護士', '保育士', '薬剤師'], spread: [2, 5], voice: [0, 2], risk: [6], riskWord: '詰まり注意' },
- { label: '引っ越し', icon: '🏠', keys: ['引っ越し', '引越し', '移住', '転居', '新生活'], spread: [5, 6], voice: [0, 5, 6], risk: [2, 8], riskWord: 'ドタバタ注意', conjMax: true },
+ { label: '引っ越し', icon: '🏠', keys: ['引っ越し', '引越し', '移住', '転居', '新生活'], spread: [5, 6], voice: [0, 5, 6], risk: [2, 8], riskWord: 'ドタバタ注意', conjMax: true, days: 1826, spanLabel: '5年', strictSpread: true },
  { label: '配信・発信', icon: '📣', keys: ['配信', 'バズ', '投稿', '動画', 'ライブ', 'フォロワー', 'SNS', 'ブログ'], spread: [5, 7], voice: [0, 2, 3], risk: [2, 5, 7], riskWord: '炎上注意' },
  { label: '美容', icon: '💇', keys: ['美容', '髪', 'ダイエット', '痩せ', 'キレイ', 'きれい', '美'], spread: [3, 5], voice: [0, 3], risk: [6], riskWord: '注意', days: 61, spanLabel: '2ヶ月' },
  { label: '結婚', icon: '💍', keys: ['結婚', '婚活', 'プロポーズ', '入籍', '婚姻'], spread: [5, 6], voice: [0, 3], risk: [7], riskWord: '注意', days: 1826, spanLabel: '5年' },
@@ -130,6 +130,7 @@ function resolveWord(raw) {
   if (/気持ち|私のこと|僕のこと|俺のこと|あの人|片思い|振り向|嫌われ/.test(t)) return { type: 'feelings' };
   if (/抱き|抱きたい|セックス|エッチ|エロ|風俗|ソープ|援交|パパ活|ヤリ|やらせて/.test(t)) return { type: 'crude' };
   if (/食べたい|飲みたい|寿司|ラーメン|焼肉|美味しい店|店探し/.test(t)) return { type: 'food' };
+  if (/したくない|行きたくない|やりたくない/.test(t)) return { type: 'nowish' };
   var best = null, bestLen = 0;
   THEMES.forEach(function (th) { th.keys.forEach(function (k) { if (t.indexOf(k) >= 0 && k.length > bestLen) { best = th; bestLen = k.length; } }); });
   var neg = /たくない|辞めたい|やめたい|疲れ|しんど|つら|嫌|イヤ/.test(t);
@@ -145,6 +146,7 @@ function deflectHtml(type) {
   if (type === 'pregnancy') return card('<div style="font-size:15px; color:#ffe9b8; font-weight:700;">妊娠・出産のことは、ここでは読まないことにしてるよ</div><div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.9;">大事なことだから、時期のことも含めて星では扱わないよ。心配なことがあったら、お医者さんに相談してね。</div>');
   if (type === 'feelings') return card('<div style="font-size:15px; color:#ffe9b8; font-weight:700;">誰かの気持ちは、ワード占いでは読まないことにしてるよ</div><div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.9;">相手の気持ちは、専用のページで星とタロットから読んでね。</div><a href="./kimochi.html" style="display:inline-block; margin-top:10px; background:linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color:#e8cf9f; border:1px solid #c5a880; border-radius:999px; padding:10px 22px; font-size:14.5px; font-weight:700; text-decoration:none;">💗 相手の気持ちで見る</a>');
   if (type === 'crude') return card('<img src="./chronos_hayai.webp" alt="クロノスくん" style="width:170px; max-width:60%; border-radius:12px;"><div style="font-family:\'Noto Serif JP\',serif; font-size:19px; color:#ffe9b8; font-weight:700; margin-top:10px;">ぼ、僕にはちょっと早い…！</div><div style="font-size:13.5px; color:#faf6f0; margin-top:6px;">その言葉は、星でも読めないや。他の言葉で聞いてみて。</div>');
+  if (type === 'nowish') return card('<div style="font-size:15px; color:#ffe9b8; font-weight:700;">『したくない』は、時期じゃなくて今の気持ちだよね(笑)</div><div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.9;">星で読めるのは「辞めるならいつ」「いつ楽になるか」みたいな未来の話。今しんどいなら、まず休んでいいんだよ。辞める時期が知りたければ「転職したい」で聞いてみて。</div>');
   if (type === 'food') return card('<div style="font-size:15px; color:#ffe9b8; font-weight:700;">それは星じゃなくて、検索の仕事だよ(笑)</div><div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.9;">ワード占いは「いつがいい？」に答える道具。お店探しは地図アプリでどうぞ。</div>');
   return card('<div style="font-size:15px; color:#ffe9b8; font-weight:700;">その言葉は、まだ読めないや</div><div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.9;">入力欄の下の例みたいな言葉なら読めるよ。旅・仕事・恋愛・お金・勉強・引っ越し・配信・美容、みたいなテーマで聞いてみて。</div>');
 }
@@ -185,7 +187,18 @@ var NDAYS = CUR.theme.days || 365;
 var SPAN = CUR.theme.spanLabel || '1年';
 function dateAt(off) { return new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + off)); }
 function fmtFull(dt) { return dt.getUTCFullYear() + '年' + (dt.getUTCMonth() + 1) + '月' + dt.getUTCDate() + '日'; }
-function fmtW(dt) { return (NDAYS > 400 ? dt.getUTCFullYear() + '年' : '') + fmtD(dt); }
+function fmtW(dt) { return (NDAYS >= 365 ? dt.getUTCFullYear() + '年' : '') + fmtD(dt); }
+window.__icsFor = function (off, kind) {
+  function p2(n) { return (n < 10 ? '0' : '') + n; }
+  function dstr(dt) { return dt.getUTCFullYear() + p2(dt.getUTCMonth() + 1) + p2(dt.getUTCDate()); }
+  var now = new Date();
+  var stamp = now.getUTCFullYear() + p2(now.getUTCMonth() + 1) + p2(now.getUTCDate()) + 'T' + p2(now.getUTCHours()) + p2(now.getUTCMinutes()) + p2(now.getUTCSeconds()) + 'Z';
+  var title = TICON + ' ' + TLABEL + (kind === 'relief' ? '：軽くなってくる7日間' : kind === 'cand' ? '：次点の候補' : '：追い風の7日間');
+  var ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Chronoscope//Word//JA', 'BEGIN:VEVENT', 'UID:' + Date.now() + '-' + off + '@chronoscope', 'DTSTAMP:' + stamp, 'DTSTART;VALUE=DATE:' + dstr(dateAt(off)), 'DTEND;VALUE=DATE:' + dstr(dateAt(off + 7)), 'SUMMARY:' + title, 'DESCRIPTION:クロノスコープのワード占いで出た期間です', 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+  var blob = new Blob([ics], { type: 'text/calendar' });
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'chronoscope.ics'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+};
 function evLine(ev) { var dt = dateAt(ev.off); return fmtW(dt) + '（' + '日月火水木金土'[dt.getUTCDay()] + '） ' + ev.label + (ev.good ? ' <span style="color:#ffd88a;">追い風</span>' : ' <span style="color:#ff9d85;">' + RISKWORD + '</span>'); }
 var runs = {};
 var events = [];
@@ -203,7 +216,7 @@ for (var off = -3; off <= NDAYS + 3; off++) {
       if (orb > 3.5 || asp === null) return;
       var isGoodAsp = (asp === 0 || asp === 120);
       var tierA = (SPREAD.indexOf(t) >= 0 && VOICE.indexOf(n) >= 0) || (VOICE.indexOf(t) >= 0 && SPREAD.indexOf(n) >= 0);
-      var isGood = isGoodAsp && (tierA || VOICE.indexOf(n) >= 0);
+      var isGood = isGoodAsp && (tierA || (!CUR.theme.strictSpread && VOICE.indexOf(n) >= 0));
       var isRisk = !isGoodAsp && (RISK.indexOf(t) >= 0 || RISK.indexOf(n) >= 0 || VOICE.indexOf(n) >= 0);
       if (!isGood && !isRisk) return;
       var key = t + '-' + n + '-' + asp;
@@ -233,6 +246,7 @@ if (hero && !NEG) {
   for (var ws = 0; ws <= NDAYS - 7; ws++) { if (Math.abs(ws - hero.s) < 30) continue; var w2 = windowAt(ws); if (w2.gN > 0) all.push(w2); }
   all.sort(function (a, b) { return b.score - a.score; });
   for (var ci = 0; ci < all.length && cands.length < 2; ci++) { var c = all[ci]; if (cands.every(function (p) { return Math.abs(p.s - c.s) >= 30; })) cands.push(c); }
+  cands.sort(function (a, b) { return a.s - b.s; });
 }
 var html = '';
 html += '<p style="font-size:12.5px; color:#9a8d7a; margin-bottom:10px;">対象期間：' + fmtFull(sDate) + ' 〜 ' + fmtFull(dateAt(NDAYS - 1)) + '（' + SPAN + '）／テーマ：' + TICON + ' ' + TLABEL + '</p>';
@@ -254,6 +268,7 @@ html += '<div style="border:1.5px solid #ffd88a; border-radius:14px; padding:18p
 '<div style="font-size:13px; color:#ffd88a; font-weight:700;">🌿 軽くなってくるのは、ここから</div>' +
 '<div style="font-family:\'Noto Serif JP\',serif; font-size:24px; font-weight:700; color:#ffe9b8; margin-top:6px;">' + relief.label + '</div>' +
 '<div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.8;">追い風の配置 ' + relief.gN + '件（うち強いもの ' + relief.gS + '件）。ここに近づくと、だいぶ楽になってくるはず。</div>' +
+'<div style="margin-top:12px;"><button type="button" onclick="__icsFor(' + relief.s + ',\'relief\')" style="background:linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color:#e8cf9f; border:1px solid #c5a880; border-radius:999px; padding:9px 20px; font-size:13.5px; font-weight:700; cursor:pointer;">📅 この7日間をカレンダーに入れる</button></div>' +
 '</div>';
 } else {
 html += '<div style="border:1px solid #4a4238; border-radius:14px; padding:14px; text-align:center; color:#c5a880; font-size:13.5px; margin-top:12px;">その先は、大きな追い風は控えめ。でも重い配置が抜けるだけでも、かなり違います。</div>';
@@ -267,12 +282,14 @@ html += '<div style="border:1.5px solid #ffd88a; border-radius:14px; padding:18p
 '<div style="font-family:\'Noto Serif JP\',serif; font-size:24px; font-weight:700; color:#ffe9b8; margin-top:6px;">' + hero.label + '</div>' +
 '<div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.8;">追い風の配置 ' + hero.gN + '件（うち強いもの ' + hero.gS + '件）・' + verdictOf(Math.round(hero.good), Math.round(hero.risk)) + (hero.rN ? '／' + RISKWORD + 'の配置も ' + hero.rN + '件ある週。進め方はいつもより丁寧に。' : '') + '</div>' +
 (hero.gds.length ? '<div style="font-size:13px; color:#c5a880; margin-top:6px; line-height:1.9;">中心の配置：<br>' + hero.gds.slice(0, 3).map(evLine).join('<br>') + '</div>' : '') +
+'<div style="margin-top:12px;"><button type="button" onclick="__icsFor(' + hero.s + ',\'hero\')" style="background:linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color:#e8cf9f; border:1px solid #c5a880; border-radius:999px; padding:9px 20px; font-size:13.5px; font-weight:700; cursor:pointer;">📅 この7日間をカレンダーに入れる</button></div>' +
 '</div>';
 cands.forEach(function (c, idx) {
 html += '<div style="border:1px solid #b98a2f; border-radius:12px; padding:12px 14px; margin-top:10px; background:rgba(255,255,255,0.02);">' +
 '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;"><span style="font-weight:700; color:#ffe9b8;">次点の候補' + (idx + 1) + '：' + c.label + '</span><span style="font-size:12.5px; color:#ffd88a;">' + verdictOf(Math.round(c.good), Math.round(c.risk)) + '</span></div>' +
 '<div style="font-size:12.5px; color:#9a8d7a; margin-top:6px;">追い風の配置 ' + c.gN + '件（うち強いもの ' + c.gS + '件）' + (c.rN ? ' ／ ' + RISKWORD + ' ' + c.rN + '件' : '') + '</div>' +
 (c.gds.length ? '<div style="font-size:12.5px; color:#c5a880; margin-top:4px; line-height:1.9;">' + c.gds.slice(0, 2).map(evLine).join('<br>') + '</div>' : '') +
+'<div style="margin-top:8px;"><button type="button" onclick="__icsFor(' + c.s + ',\'cand\')" style="background:linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color:#e8cf9f; border:1px solid #c5a880; border-radius:999px; padding:9px 20px; font-size:13.5px; font-weight:700; cursor:pointer;">📅 カレンダーに入れる</button></div>' +
 '</div>';
 });
 } else {
@@ -311,7 +328,7 @@ html += '<div style="flex:1 1 0; min-width:0; display:flex; flex-direction:colum
 });
 html += '</div>';
 html += '<div style="font-size:11px; color:#8a8178; margin-top:3px; line-height:1.6;">バーの高さはその期間の濃さ（追い風−注意）です。🔥は一番の時期があるところ。</div>';
-html += '<p style="font-size:12px; color:#8a8178; line-height:1.8; margin-top:14px;">判定のしかた：入力した言葉のテーマに合わせて、関係する星同士の配置のピークを数えています。期間はテーマで違って、ふつう1年、結婚は5年、美容は2ヶ月です。いちばん追い風が集まる7日間と、次点の候補を出しています。空の月は除いています。言葉の判定は全部このページの中でやっていて、入力した言葉がどこかへ送信されることはありません。星は傾けるが、縛りはしない——あくまで計画の目安に。</p>';
+html += '<p style="font-size:12px; color:#8a8178; line-height:1.8; margin-top:14px;">判定のしかた：入力した言葉のテーマに合わせて、関係する星同士の配置のピークを数えています。期間はテーマで違って、ふつう1年、結婚と引っ越しは5年、美容は2ヶ月です。いちばん追い風が集まる7日間と、次点の候補を出しています。空の月は除いています。言葉の判定は全部このページの中でやっていて、入力した言葉がどこかへ送信されることはありません。星は傾けるが、縛りはしない——あくまで計画の目安に。</p>';
 box.innerHTML = html;
 scrollToBox(box);
 } catch (err) {
