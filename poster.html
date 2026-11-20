@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>星図ポスター | クロノスコープ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Serif+JP:wght@500;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0;}
+body { background-color: #0d0c0a; font-family: 'Noto Sans JP', sans-serif; color: #faf6f0; line-height: 1.6;}
+.topTab { display: block; text-align: center; padding: 13px 8px; border-radius: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.28), rgba(197,168,128,0.10)); border: 1px solid #c5a880; color: #e8cf9f; font-weight: 700; font-size: 15px; text-decoration: none;}
+.topTab.active { background: linear-gradient(135deg, rgba(255,216,138,0.55), rgba(197,168,128,0.25)); color: #ffe9b8; border-color: #ffd88a;}
+.fld select,.fld input { width: 100%; margin-top: 4px; padding: 9px; border-radius: 8px; background: #1c1a17; color: #faf6f0; border: 1px solid #4a4238; font-size: 15px;}
+.fld { font-size: 12.5px; color: #c5a880;}
+</style>
+<script>
+try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __nav.type === 'reload') location.replace('./index.html');} catch (e) {}
+</script>
+</head>
+<body>
+<div style="max-width: 880px; margin: 0 auto; padding: 24px 16px 0;">
+<div style="border: 1px solid #c5a880; outline: 3px double rgba(197,168,128,0.55); outline-offset: 5px; padding: 16px 12px 12px; text-align: center; background: radial-gradient(ellipse at center, rgba(197,168,128,0.10), rgba(197,168,128,0.02));">
+<div style="font-family: 'Times New Roman', 'Noto Serif JP', serif; font-size: 11px; letter-spacing: 0.55em; color: #9a8d7a;">CHRONOSCOPE</div>
+<div style="font-family: 'Noto Serif JP', serif; font-size: 26px; font-weight: 700; color: #e8cf9f; letter-spacing: 0.16em; margin-top: 4px;">クロノスコープ</div>
+<div style="font-family: 'Times New Roman', serif; font-style: italic; font-size: 12px; color: #bdb098; letter-spacing: 0.08em; margin-top: 6px;">Astra inclinant, non necessitant</div>
+</div>
+</div>
+<div style="max-width: 880px; margin: 0 auto; padding: 14px 16px 10px; position: sticky; top: 0; z-index: 60; background: #0d0c0a; box-shadow: 0 6px 14px rgba(0,0,0,0.45);">
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+<a href="./seikaku.html" class="topTab">🌟 性格チェック</a>
+<a href="./unsei.html" class="topTab">🔮 個人の運勢</a>
+<a href="./aisho.html" class="topTab">💞 相性診断</a>
+<a href="./omajinai.html" class="topTab">✨ クロノスくんのおまじない</a>
+        <a href="./buzz.html" class="topTab" style="grid-column: 1 / -1;">📣 バズ週間チェッカー（配信者向け）</a>
+</div>
+</div>
+<div style="max-width: 880px; margin: 10px auto 0; padding: 0 16px; text-align: center;">
+<h1 style="font-family: 'Noto Serif JP', serif; font-size: 22px; color: #e8cf9f; margin-bottom: 6px;">🎨 星図ポスター</h1>
+<p style="font-size: 13px; color: #9a8d7a;">あなたのホロスコープを、保存できる1枚のポスターに。SNSに貼ったり、待ち受けにも。</p>
+</div>
+<div style="max-width: 880px; margin: 14px auto 0; padding: 0 16px 40px;">
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+<label class="fld">生まれた年<select id="pY"></select></label>
+<label class="fld">月<select id="pM"></select></label>
+<label class="fld">日<select id="pD"></select></label>
+</div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+<label class="fld">出生時刻<input id="pTime" type="time" value="12:00"></label>
+<label class="fld">出生地<select id="pPref"></select></label>
+</div>
+<label style="display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13.5px; color: #c5bba9;"><input id="pUnk" type="checkbox"> 出生時刻が不明（正午で計算し、ハウスは出しません）</label>
+<button id="pBtn" type="button" style="width: 100%; margin-top: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color: #e8cf9f; border: 1px solid #c5a880; border-radius: 999px; padding: 13px 26px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans JP', sans-serif;">🎨 ポスターを作る</button>
+<div id="pResult" style="margin-top: 16px;"></div>
+</div>
+<script>
+(function () {
+var PREFS = [
+  ['北海道', 141.35, 43.06], ['青森県', 140.74, 40.82], ['岩手県', 141.15, 39.70], ['宮城県', 140.87, 38.27],
+  ['秋田県', 140.10, 39.72], ['山形県', 140.34, 38.26], ['福島県', 140.47, 37.75], ['茨城県', 140.45, 36.34],
+  ['栃木県', 139.88, 36.57], ['群馬県', 139.06, 36.39], ['埼玉県', 139.65, 35.86], ['千葉県', 140.12, 35.61],
+  ['東京都', 139.69, 35.69], ['神奈川県', 139.64, 35.45], ['新潟県', 139.02, 37.90], ['富山県', 137.21, 36.70],
+  ['石川県', 136.63, 36.60], ['福井県', 136.22, 36.07], ['山梨県', 138.57, 35.66], ['長野県', 138.18, 36.65],
+  ['岐阜県', 136.72, 35.39], ['静岡県', 138.38, 34.98], ['愛知県', 136.91, 35.18], ['三重県', 136.51, 34.73],
+  ['滋賀県', 135.87, 35.00], ['京都府', 135.76, 35.01], ['大阪府', 135.50, 34.69], ['兵庫県', 135.18, 34.69],
+  ['奈良県', 135.83, 34.69], ['和歌山県', 135.17, 34.23], ['鳥取県', 134.24, 35.50], ['島根県', 133.05, 35.47],
+  ['岡山県', 133.92, 34.66], ['広島県', 132.46, 34.40], ['山口県', 131.47, 34.18], ['徳島県', 134.56, 34.07],
+  ['香川県', 134.04, 34.34], ['愛媛県', 132.77, 33.84], ['高知県', 133.53, 33.56], ['福岡県', 130.40, 33.61],
+  ['佐賀県', 130.30, 33.25], ['長崎県', 129.87, 32.75], ['熊本県', 130.74, 32.79], ['大分県', 131.60, 33.24],
+  ['宮崎県', 131.42, 31.91], ['鹿児島県', 130.56, 31.56], ['沖縄県', 127.68, 26.21]
+];
+var GLYPH = { 0: '☉', 1: '☽', 2: '☿', 3: '♀', 4: '♂', 5: '♃', 6: '♄', 7: '♅', 8: '♆', 9: '♇', 11: '☊' };
+var NAME = { 0: '太陽', 1: '月', 2: '水星', 3: '金星', 4: '火星', 5: '木星', 6: '土星', 7: '天王星', 8: '海王星', 9: '冥王星', 11: 'ドラゴンヘッド' };
+var SIGNG = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
+var SIGNN = ['牡羊座', '牡牛座', '双子座', '蟹座', '獅子座', '乙女座', '天秤座', '蠍座', '射手座', '山羊座', '水瓶座', '魚座'];
+var ELEMC = ['#B03A2E', '#8A6D1F', '#148F77', '#1A5276'];
+var IDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11];
+var yS = document.getElementById('pY'), mS = document.getElementById('pM'), dS = document.getElementById('pD');
+for (var i = 1930; i <= 2030; i++) { var o = document.createElement('option'); o.value = i; o.textContent = i + '年'; yS.appendChild(o); }
+for (var i = 1; i <= 12; i++) { var o2 = document.createElement('option'); o2.value = i; o2.textContent = i + '月'; mS.appendChild(o2); }
+for (var i = 1; i <= 31; i++) { var o3 = document.createElement('option'); o3.value = i; o3.textContent = i + '日'; dS.appendChild(o3); }
+var prefS = document.getElementById('pPref');
+PREFS.forEach(function (pr, ix) { var o4 = document.createElement('option'); o4.value = ix; o4.textContent = pr[0]; prefS.appendChild(o4); });
+yS.value = '1990'; mS.value = '1'; dS.value = '1';
+PREFS.forEach(function (pr, ix) { if (pr[0] === '東京都') prefS.value = ix; });
+try {
+  var sv = JSON.parse(localStorage.getItem('chronoscope_poster_v1') || 'null');
+  if (sv && sv.y) { yS.value = sv.y; mS.value = sv.m; dS.value = sv.d; if (sv.time) document.getElementById('pTime').value = sv.time; if (sv.pref !== undefined) prefS.value = sv.pref; document.getElementById('pUnk').checked = !!sv.unknown; }
+  else { var bv = JSON.parse(localStorage.getItem('chronoscope_birth_v1') || 'null'); if (bv && bv.y) { yS.value = bv.y; mS.value = bv.m; dS.value = bv.d; } }
+} catch (e) {}
+var PM = null, PJD = null;
+async function pInit() {
+if (PM) return;
+const mod = await import('./assets/swisseph-BtfJwKK5.js');
+const factory = typeof mod.default === 'function' ? mod.default : mod.SwissEphModule;
+const wasmBinary = await (await fetch('./assets/swisseph-BmP0Bw24.wasm')).arrayBuffer();
+PM = await factory({ instantiateWasm: (imports, success) => { WebAssembly.instantiate(wasmBinary, imports).then(r => success(r.instance, r.module)); return {}; } });
+PJD = PM.cwrap('swe_julday_wrap', 'number', ['number', 'number', 'number', 'number', 'number']);
+}
+function pPos(jd, planet) {
+const out = PM._malloc(48), err = PM._malloc(256);
+const rc = PM.ccall('swe_calc_ut_wrap', 'number', ['number', 'number', 'number', 'number', 'number'], [jd, planet, 260, out, err]);
+const lon = rc < 0 ? NaN : PM.getValue(out, 'double');
+PM._free(out); PM._free(err);
+return lon;
+}
+function calcHouses(jd, lat, lon) {
+  const cusps = PM._malloc(104), ascmc = PM._malloc(80);
+  PM.ccall('swe_houses_wrap', 'number', ['number', 'number', 'number', 'number', 'number', 'number'], [jd, lat, lon, 80, cusps, ascmc]);
+  const asc = PM.getValue(ascmc, 'double'), mc = PM.getValue(ascmc + 8, 'double');
+  const cuspArr = [];
+  for (let i = 1; i <= 12; i++) cuspArr.push(PM.getValue(cusps + i * 8, 'double'));
+  PM._free(cusps); PM._free(ascmc);
+  return { asc: asc, mc: mc, cusps: cuspArr };
+}
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+document.getElementById('pBtn').addEventListener('click', async function () {
+  var box = document.getElementById('pResult');
+  box.innerHTML = '<p style="color:#9a8d7a; font-size:13.5px;">描いています…</p>';
+  try {
+    await pInit();
+    var by = +yS.value, bm = +mS.value, bd = +dS.value;
+    var unk = document.getElementById('pUnk').checked;
+    var tval = document.getElementById('pTime').value || '12:00';
+    var th = unk ? 12 : (+tval.split(':')[0] || 0), tm = unk ? 0 : (+tval.split(':')[1] || 0);
+    var pr = PREFS[+prefS.value];
+    try { localStorage.setItem('chronoscope_poster_v1', JSON.stringify({ y: by, m: bm, d: bd, time: tval, pref: +prefS.value, unknown: unk })); } catch (e) {}
+    var jd = PJD(by, bm, bd, (th + tm / 60) - 9, 1);
+    var pos = {}, retro = {};
+    IDS.forEach(function (id) { pos[id] = pPos(jd, id); var d = pPos(jd + 1, id) - pos[id]; if (d < -180) d += 360; if (d > 180) d -= 360; retro[id] = d < 0; });
+    var houses = unk ? null : calcHouses(jd, pr[2], pr[1]);
+    var rot = houses ? houses.asc : 0;
+    var CX = 450, CY = 590;
+    function P(lon, r) { var a = (lon - rot) * Math.PI / 180; return [CX - r * Math.cos(a), CY + r * Math.sin(a)]; }
+    var s = '';
+    s += '<svg id="posterSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200" style="width:100%; max-width:520px; display:block; margin:0 auto; border-radius:12px;">';
+    s += '<rect x="0" y="0" width="900" height="1200" fill="#FBF7EC"/>';
+    s += '<rect x="18" y="18" width="864" height="1164" fill="none" stroke="#8A6D1F" stroke-width="2"/>';
+    s += '<text x="450" y="96" text-anchor="middle" font-family="serif" font-size="46" fill="#4a3b28">わたしの星図</text>';
+    s += '<text x="450" y="140" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#6b5a43">' + by + '年' + bm + '月' + bd + '日 ' + (unk ? '時刻不明' : (' ' + String(th).padStart(2, '0') + ':' + String(tm).padStart(2, '0'))) + ' ／ ' + esc(pr[0]) + '生まれ</text>';
+    s += '<circle cx="' + CX + '" cy="' + CY + '" r="330" fill="#FFFDF6" stroke="#8A6D1F" stroke-width="2.5"/>';
+    s += '<circle cx="' + CX + '" cy="' + CY + '" r="266" fill="none" stroke="#8A6D1F" stroke-width="1.5"/>';
+    for (var sg = 0; sg < 12; sg++) {
+      var a0 = P(sg * 30, 330), a1 = P(sg * 30, 266);
+      s += '<line x1="' + a0[0].toFixed(1) + '" y1="' + a0[1].toFixed(1) + '" x2="' + a1[0].toFixed(1) + '" y2="' + a1[1].toFixed(1) + '" stroke="#8A6D1F" stroke-width="1.5"/>';
+      var gp = P(sg * 30 + 15, 298);
+      s += '<text x="' + gp[0].toFixed(1) + '" y="' + (gp[1] + 11).toFixed(1) + '" text-anchor="middle" font-size="30" fill="' + ELEMC[sg % 4] + '">' + SIGNG[sg] + '</text>';
+    }
+    if (houses) {
+      houses.cusps.forEach(function (c, ix) {
+        var h0 = P(c, 130), h1 = P(c, 266);
+        var main = (ix === 0 || ix === 9);
+        s += '<line x1="' + h0[0].toFixed(1) + '" y1="' + h0[1].toFixed(1) + '" x2="' + h1[0].toFixed(1) + '" y2="' + h1[1].toFixed(1) + '" stroke="' + (main ? '#8A6D1F' : '#C9B892') + '" stroke-width="' + (main ? 2.5 : 1) + '"/>';
+        var np = P(c + 6, 148);
+        s += '<text x="' + np[0].toFixed(1) + '" y="' + (np[1] + 6).toFixed(1) + '" text-anchor="middle" font-size="17" fill="#6b5a43">' + (ix + 1) + '</text>';
+      });
+    }
+    s += '<circle cx="' + CX + '" cy="' + CY + '" r="208" fill="none" stroke="#D8C9A3" stroke-width="1"/>';
+    for (var i = 0; i < IDS.length; i++) for (var j = i + 1; j < IDS.length; j++) {
+      var d2 = Math.abs(pos[IDS[i]] - pos[IDS[j]]) % 360; if (d2 > 180) d2 = 360 - d2;
+      var asp = null, orb = 99;
+      [0, 90, 120, 180].forEach(function (a) { var oo = Math.abs(d2 - a); if (oo < orb) { orb = oo; asp = a; } });
+      var lim = (asp === 0 ? 6 : 5) + ((IDS[i] <= 1 || IDS[j] <= 1) ? 1 : 0);
+      if (asp === null || orb > lim) continue;
+      var p1 = P(pos[IDS[i]], 208), p2 = P(pos[IDS[j]], 208);
+      var col = asp === 0 ? '#D9A514' : asp === 120 ? '#2E9E5B' : '#D95F43';
+      s += '<line x1="' + p1[0].toFixed(1) + '" y1="' + p1[1].toFixed(1) + '" x2="' + p2[0].toFixed(1) + '" y2="' + p2[1].toFixed(1) + '" stroke="' + col + '" stroke-width="1.6" opacity="0.55"/>';
+    }
+    IDS.forEach(function (id) {
+      var gp = P(pos[id], 238);
+      s += '<text x="' + gp[0].toFixed(1) + '" y="' + (gp[1] + 11).toFixed(1) + '" text-anchor="middle" font-size="31" font-weight="bold" fill="#1F3BB3">' + GLYPH[id] + '</text>';
+      if (retro[id]) { var rp = P(pos[id], 216); s += '<text x="' + (rp[0] + 14).toFixed(1) + '" y="' + (rp[1] + 4).toFixed(1) + '" font-size="13" fill="#B03A2E">R</text>'; }
+    });
+    if (houses) {
+      var ap = P(houses.asc, 352); s += '<text x="' + ap[0].toFixed(1) + '" y="' + (ap[1] + 6).toFixed(1) + '" text-anchor="middle" font-size="19" font-weight="bold" fill="#4a3b28">ASC</text>';
+      var mp = P(houses.mc, 352); s += '<text x="' + mp[0].toFixed(1) + '" y="' + (mp[1] + 6).toFixed(1) + '" text-anchor="middle" font-size="19" font-weight="bold" fill="#4a3b28">MC</text>';
+    }
+    var lines = IDS.map(function (id) { var sg2 = Math.floor(pos[id] / 30); var dg = pos[id] % 30; return GLYPH[id] + ' ' + NAME[id] + '：' + SIGNN[sg2] + ' ' + Math.floor(dg) + '°' + String(Math.floor((dg % 1) * 60)).padStart(2, '0') + '′' + (retro[id] ? '（逆行）' : ''); });
+    var col1 = lines.slice(0, 6), col2 = lines.slice(6);
+    col1.forEach(function (t, ix) { s += '<text x="120" y="' + (1004 + ix * 27) + '" font-family="sans-serif" font-size="17.5" fill="#4a3b28">' + t + '</text>'; });
+    col2.forEach(function (t, ix) { s += '<text x="480" y="' + (1004 + ix * 27) + '" font-family="sans-serif" font-size="17.5" fill="#4a3b28">' + t + '</text>'; });
+    s += '<text x="450" y="1152" text-anchor="middle" font-family="sans-serif" font-size="15" fill="#8A6D1F">CHRONOSCOPE ♄ ― 星は人を傾けるが、縛りはしない ―</text>';
+    s += '</svg>';
+    box.innerHTML = s + '<div style="text-align:center; margin-top:12px;"><button id="pngBtn" type="button" style="background: linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color: #e8cf9f; border: 1px solid #c5a880; border-radius: 999px; padding: 12px 26px; font-size: 15px; font-weight: 700; cursor: pointer;">🖼️ PNG画像で保存する</button>'
+      + (unk ? '<p style="font-size:12px; color:#9a8d7a; margin-top:8px;">出生時刻が不明のため、正午で計算し、ハウスとASC・MCは出していません。</p>' : '') + '</div>';
+    document.getElementById('pngBtn').addEventListener('click', function () {
+      var svg = document.getElementById('posterSvg');
+      var xml = new XMLSerializer().serializeToString(svg);
+      var img = new Image();
+      img.onload = function () {
+        var cv = document.createElement('canvas'); cv.width = 1350; cv.height = 1800;
+        var ctx = cv.getContext('2d'); ctx.fillStyle = '#FBF7EC'; ctx.fillRect(0, 0, cv.width, cv.height);
+        ctx.drawImage(img, 0, 0, cv.width, cv.height);
+        var a = document.createElement('a'); a.download = 'chronoscope_poster.png'; a.href = cv.toDataURL('image/png'); a.click();
+      };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+    });
+  } catch (err) {
+    box.innerHTML = '<p style="color:#ff9d85;">作成でエラーが出ました。もう一度お試しください。</p>';
+  }
+});
+})();
+</script>
+</body>
+</html>

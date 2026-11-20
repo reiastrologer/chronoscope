@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>空のカレンダー | クロノスコープ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Serif+JP:wght@500;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0;}
+body { background-color: #0d0c0a; font-family: 'Noto Sans JP', sans-serif; color: #faf6f0; line-height: 1.6;}
+.topTab { display: block; text-align: center; padding: 13px 8px; border-radius: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.28), rgba(197,168,128,0.10)); border: 1px solid #c5a880; color: #e8cf9f; font-weight: 700; font-size: 15px; text-decoration: none;}
+.topTab.active { background: linear-gradient(135deg, rgba(255,216,138,0.55), rgba(197,168,128,0.25)); color: #ffe9b8; border-color: #ffd88a;}
+.fld select,.fld input { width: 100%; margin-top: 4px; padding: 9px; border-radius: 8px; background: #1c1a17; color: #faf6f0; border: 1px solid #4a4238; font-size: 15px;}
+.fld { font-size: 12.5px; color: #c5a880;}
+</style>
+<script>
+try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __nav.type === 'reload') location.replace('./index.html');} catch (e) {}
+</script>
+</head>
+<body>
+<div style="max-width: 880px; margin: 0 auto; padding: 24px 16px 0;">
+<div style="border: 1px solid #c5a880; outline: 3px double rgba(197,168,128,0.55); outline-offset: 5px; padding: 16px 12px 12px; text-align: center; background: radial-gradient(ellipse at center, rgba(197,168,128,0.10), rgba(197,168,128,0.02));">
+<div style="font-family: 'Times New Roman', 'Noto Serif JP', serif; font-size: 11px; letter-spacing: 0.55em; color: #9a8d7a;">CHRONOSCOPE</div>
+<div style="font-family: 'Noto Serif JP', serif; font-size: 26px; font-weight: 700; color: #e8cf9f; letter-spacing: 0.16em; margin-top: 4px;">クロノスコープ</div>
+<div style="font-family: 'Times New Roman', serif; font-style: italic; font-size: 12px; color: #bdb098; letter-spacing: 0.08em; margin-top: 6px;">Astra inclinant, non necessitant</div>
+</div>
+</div>
+<div style="max-width: 880px; margin: 0 auto; padding: 14px 16px 10px; position: sticky; top: 0; z-index: 60; background: #0d0c0a; box-shadow: 0 6px 14px rgba(0,0,0,0.45);">
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+<a href="./seikaku.html" class="topTab">🌟 性格チェック</a>
+<a href="./unsei.html" class="topTab">🔮 個人の運勢</a>
+<a href="./aisho.html" class="topTab">💞 相性診断</a>
+<a href="./omajinai.html" class="topTab">✨ クロノスくんのおまじない</a>
+        <a href="./buzz.html" class="topTab" style="grid-column: 1 / -1;">📣 バズ週間チェッカー（配信者向け）</a>
+</div>
+</div>
+<div style="max-width: 880px; margin: 10px auto 0; padding: 0 16px; text-align: center;">
+<h1 style="font-family: 'Noto Serif JP', serif; font-size: 22px; color: #e8cf9f; margin-bottom: 6px;">🌙 空のカレンダー</h1>
+<p style="font-size: 13px; color: #9a8d7a;">誕生日はいりません。今の空の動きだけ。今日の月、満月・新月、水星逆行のはじまりと終わりがわかります。</p>
+</div>
+<div style="max-width: 880px; margin: 14px auto 0; padding: 0 16px 40px;">
+<div id="sResult"><p style="color:#9a8d7a; font-size:13.5px;">空を読んでいます…</p></div>
+</div>
+<script>
+(function () {
+var PM = null, PJD = null;
+async function pInit() {
+if (PM) return;
+const mod = await import('./assets/swisseph-BtfJwKK5.js');
+const factory = typeof mod.default === 'function' ? mod.default : mod.SwissEphModule;
+const wasmBinary = await (await fetch('./assets/swisseph-BmP0Bw24.wasm')).arrayBuffer();
+PM = await factory({ instantiateWasm: (imports, success) => { WebAssembly.instantiate(wasmBinary, imports).then(r => success(r.instance, r.module)); return {}; } });
+PJD = PM.cwrap('swe_julday_wrap', 'number', ['number', 'number', 'number', 'number', 'number']);
+}
+function pPos(jd, planet) {
+const out = PM._malloc(48), err = PM._malloc(256);
+const rc = PM.ccall('swe_calc_ut_wrap', 'number', ['number', 'number', 'number', 'number', 'number'], [jd, planet, 260, out, err]);
+const lon = rc < 0 ? NaN : PM.getValue(out, 'double');
+PM._free(out); PM._free(err);
+return lon;
+}
+var SIGNS = ['牡羊座', '牡牛座', '双子座', '蟹座', '獅子座', '乙女座', '天秤座', '蠍座', '射手座', '山羊座', '水瓶座', '魚座'];
+var PNAMES = { 2: '水星', 3: '金星', 4: '火星', 5: '木星', 6: '土星', 7: '天王星', 8: '海王星', 9: '冥王星' };
+function wrap180(x) { x = ((x + 180) % 360 + 360) % 360 - 180; return x; }
+function elong(jd) { return ((pPos(jd, 1) - pPos(jd, 0)) % 360 + 360) % 360; }
+function speed(jd, id) { return wrap180(pPos(jd + 0.4, id) - pPos(jd - 0.4, id)) / 0.8; }
+function jdToDate(jd) { var z = Math.floor(jd + 0.5 + 9 / 24); return new Date(Date.UTC(1970, 0, 1) + (z - 2440588) * 86400000); }
+function fmtFull(dt) { return dt.getUTCFullYear() + '年' + (dt.getUTCMonth() + 1) + '月' + dt.getUTCDate() + '日'; }
+async function run() {
+  var box = document.getElementById('sResult');
+  try {
+    await pInit();
+    var now = new Date();
+    var jdT = PJD(now.getFullYear(), now.getMonth() + 1, now.getDate(), 3.0, 1);
+    function phaseNext(target) {
+      var jd = jdT, prevD = wrap180(elong(jd) - target);
+      for (var i = 0; i < 220; i++) {
+        var jd2 = jd + 0.25, d2 = wrap180(elong(jd2) - target);
+        if (prevD < 0 && d2 >= 0) { return jd + 0.25 * (0 - prevD) / (d2 - prevD); }
+        jd = jd2; prevD = d2;
+      }
+      return null;
+    }
+    function nextStation(id, maxDays) {
+      var jd = jdT, prevS = speed(jd, id);
+      for (var i = 0; i < maxDays; i++) {
+        var jd2 = jd + 1, s2 = speed(jd2, id);
+        if ((prevS < 0) !== (s2 < 0)) {
+          var lo = jd, hi = jd2;
+          for (var k = 0; k < 24; k++) { var mid = (lo + hi) / 2; if ((speed(mid, id) < 0) === (prevS < 0)) lo = mid; else hi = mid; }
+          return { jd: (lo + hi) / 2, toRetro: prevS > 0 };
+        }
+        jd = jd2; prevS = s2;
+      }
+      return null;
+    }
+    var moonLon = pPos(jdT, 1), el = elong(jdT);
+    var age = el / 360 * 29.5306;
+    var illum = Math.round((1 - Math.cos(el * Math.PI / 180)) / 2 * 100);
+    var nextNew = phaseNext(0), nextFull = phaseNext(180);
+    var events = [];
+    var jdN = nextNew, jdF = nextFull, guard = 0;
+    while (jdN !== null && jdN < jdT + 90 && guard++ < 5) { events.push({ jd: jdN, icon: '🌑', label: '新月（' + SIGNS[Math.floor(pPos(jdN, 1) / 30)] + '）' }); jdN = (function (from) { var jd = from + 1, prevD = wrap180(elong(jd) - 0); for (var i = 0; i < 220; i++) { var jd2 = jd + 0.25, d2 = wrap180(elong(jd2) - 0); if (prevD < 0 && d2 >= 0) return jd + 0.25 * (0 - prevD) / (d2 - prevD); jd = jd2; prevD = d2; } return null; })(jdN); }
+    guard = 0;
+    while (jdF !== null && jdF < jdT + 90 && guard++ < 5) { events.push({ jd: jdF, icon: '🌕', label: '満月（' + SIGNS[Math.floor(pPos(jdF, 1) / 30)] + '）' }); jdF = (function (from) { var jd = from + 1, prevD = wrap180(elong(jd) - 180); for (var i = 0; i < 220; i++) { var jd2 = jd + 0.25, d2 = wrap180(elong(jd2) - 180); if (prevD < 0 && d2 >= 0) return jd + 0.25 * (0 - prevD) / (d2 - prevD); jd = jd2; prevD = d2; } return null; })(jdF); }
+    var retroInfo = {};
+    [2, 3, 4, 5, 6, 7, 8, 9].forEach(function (id) {
+      var st = nextStation(id, 370);
+      retroInfo[id] = { now: speed(jdT, id) < 0, next: st };
+      if (st && st.jd < jdT + 90) events.push({ jd: st.jd, icon: st.toRetro ? '🔄' : '⏩', label: PNAMES[id] + (st.toRetro ? 'の逆行開始' : 'の逆行終了（順行に戻ります）') });
+    });
+    events.sort(function (a, b) { return a.jd - b.jd; });
+    var merc = retroInfo[2];
+    var html = '';
+    html += '<div style="border:1.5px solid #ffd88a; border-radius:14px; padding:18px 16px; background:rgba(255,216,138,0.07);">'
+      + '<div style="font-size:13px; color:#ffd88a; font-weight:700;">🌙 今日の空（' + (now.getMonth() + 1) + '月' + now.getDate() + '日）</div>'
+      + '<div style="font-size:15.5px; color:#faf6f0; line-height:1.9; margin-top:8px;">今日の月は' + SIGNS[Math.floor(moonLon / 30)] + '。月齢は約' + age.toFixed(1) + '日、光っている部分は約' + illum + '%です。</div>'
+      + '<div style="font-size:13.5px; color:#e8cf9f; margin-top:6px; line-height:1.9;">'
+      + (nextFull ? '次の満月は' + fmtFull(jdToDate(nextFull)) + '（あと約' + Math.max(0, Math.round(nextFull - jdT)) + '日）。' : '')
+      + (nextNew ? '次の新月は' + fmtFull(jdToDate(nextNew)) + '（あと約' + Math.max(0, Math.round(nextNew - jdT)) + '日）。' : '')
+      + '</div>'
+      + '<div style="font-size:13.5px; color:#faf6f0; margin-top:6px; line-height:1.9;">水星は今、' + (merc.now ? '<b>逆行中</b>です' : '順行中です') + (merc.next ? '。次に' + (merc.next.toRetro ? '逆行が始まる' : '順行に戻る') + 'のは' + fmtFull(jdToDate(merc.next.jd)) + 'ごろ（あと約' + Math.max(0, Math.round(merc.next.jd - jdT)) + '日）。' : '。') + '</div>'
+      + '</div>';
+    var retroNowList = [2, 3, 4, 5, 6, 7, 8, 9].filter(function (id) { return retroInfo[id].now; });
+    html += '<div style="font-size:13px; font-weight:700; color:#e8cf9f; margin-top:16px;">🔄 いま逆行中の星</div>';
+    html += '<div style="font-size:13.5px; color:#faf6f0; line-height:1.9; margin-top:4px;">' + (retroNowList.length ? retroNowList.map(function (id) { return PNAMES[id] + '（〜' + (retroInfo[id].next ? fmtFull(jdToDate(retroInfo[id].next.jd)) + 'ごろ' : '当面') + '）'; }).join('、') : 'いま逆行中の星はありません。') + '</div>';
+    html += '<div style="font-size:13px; font-weight:700; color:#e8cf9f; margin-top:16px;">📅 これから90日の空のイベント</div>';
+    html += '<div style="margin-top:4px;">';
+    events.forEach(function (ev) {
+      html += '<div style="font-size:13.5px; color:#faf6f0; line-height:1.8; padding:6px 0; border-top:1px solid rgba(197,168,128,0.18);">' + ev.icon + ' ' + fmtFull(jdToDate(ev.jd)) + 'ごろ　' + ev.label + '</div>';
+    });
+    html += '</div>';
+    html += '<p style="font-size:12px; color:#8a8178; line-height:1.8; margin-top:14px;">日付は日本時間の正午計算をもとにした「ごろ」の目安です。逆行は、地球から見て星が逆向きに動いて見える期間のこと。物事の見直しや、足踏みに合う時期と読まれます。</p>';
+    box.innerHTML = html;
+  } catch (err) {
+    box.innerHTML = '<p style="color:#ff9d85;">読み取りでエラーが出ました。もう一度開いてみてください。</p>';
+  }
+}
+run();
+})();
+</script>
+</body>
+</html>
