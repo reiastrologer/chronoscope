@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>連絡が来る時期 | クロノスコープ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500&family=Noto+Serif+JP:wght@500;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0;}
+body { background-color: #0d0c0a; font-family: 'Noto Sans JP', sans-serif; color: #faf6f0; line-height: 1.6;}
+.topTab { display: block; text-align: center; padding: 13px 8px; border-radius: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.28), rgba(197,168,128,0.10)); border: 1px solid #c5a880; color: #e8cf9f; font-weight: 700; font-size: 15px; text-decoration: none;}
+.topTab.active { background: linear-gradient(135deg, rgba(255,216,138,0.55), rgba(197,168,128,0.25)); color: #ffe9b8; border-color: #ffd88a;}
+.fld select,.fld input { width: 100%; margin-top: 4px; padding: 9px; border-radius: 8px; background: #1c1a17; color: #faf6f0; border: 1px solid #4a4238; font-size: 15px;}
+.fld { font-size: 12.5px; color: #c5a880;}
+</style>
+<script>
+try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __nav.type === 'reload') location.replace('./index.html');} catch (e) {}
+</script>
+</head>
+<body>
+<div style="max-width: 880px; margin: 0 auto; padding: 24px 16px 0;">
+<div style="border: 1px solid #c5a880; outline: 3px double rgba(197,168,128,0.55); outline-offset: 5px; padding: 16px 12px 12px; text-align: center; background: radial-gradient(ellipse at center, rgba(197,168,128,0.10), rgba(197,168,128,0.02));">
+<div style="font-family: 'Times New Roman', 'Noto Serif JP', serif; font-size: 11px; letter-spacing: 0.55em; color: #9a8d7a;">CHRONOSCOPE</div>
+<div style="font-family: 'Noto Serif JP', serif; font-size: 26px; font-weight: 700; color: #e8cf9f; letter-spacing: 0.16em; margin-top: 4px;">クロノスコープ</div>
+<div style="font-family: 'Times New Roman', serif; font-style: italic; font-size: 12px; color: #bdb098; letter-spacing: 0.08em; margin-top: 6px;">Astra inclinant, non necessitant</div>
+</div>
+</div>
+<div style="max-width: 880px; margin: 0 auto; padding: 14px 16px 10px; position: sticky; top: 0; z-index: 60; background: #0d0c0a; box-shadow: 0 6px 14px rgba(0,0,0,0.45);">
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+<a href="./seikaku.html" class="topTab">🌟 性格チェック</a>
+<a href="./unsei.html" class="topTab">🔮 個人の運勢</a>
+<a href="./aisho.html" class="topTab">💞 相性診断</a>
+<a href="./omajinai.html" class="topTab">✨ クロノスくんのおまじない</a>
+<a href="./buzz.html" class="topTab" style="grid-column: 1 / -1;">📣 バズ週間チェッカー（配信者向け）</a>
+</div>
+<div style="display: flex; gap: 8px; justify-content: center; margin-top: 10px; flex-wrap: wrap;"><span style="font-size: 11px; color: #8a8178; align-self: center;">チェッカー：</span><a href="./buzz.html" style="font-size: 12px; padding: 5px 12px; border-radius: 999px; border: 1px solid; text-decoration: none; border-color: #4a4238; color: #9a8d7a;">📣 バズ週間</a><a href="./love.html" style="font-size: 12px; padding: 5px 12px; border-radius: 999px; border: 1px solid; text-decoration: none; border-color: #4a4238; color: #9a8d7a;">💘 恋愛</a><a href="./money.html" style="font-size: 12px; padding: 5px 12px; border-radius: 999px; border: 1px solid; text-decoration: none; border-color: #4a4238; color: #9a8d7a;">💰 金運</a><a href="./work.html" style="font-size: 12px; padding: 5px 12px; border-radius: 999px; border: 1px solid; text-decoration: none; border-color: #4a4238; color: #9a8d7a;">💼 仕事</a><a href="./renraku.html" style="font-size: 12px; padding: 5px 12px; border-radius: 999px; border: 1px solid; text-decoration: none; border-color: #ffd88a; color: #ffd88a; background: rgba(255,216,138,0.08);">💌 連絡</a></div>
+</div>
+<div style="max-width: 880px; margin: 10px auto 0; padding: 0 16px; text-align: center;">
+<h1 style="font-family: 'Noto Serif JP', serif; font-size: 22px; color: #e8cf9f; margin-bottom: 6px;">💌 連絡が来る時期</h1>
+<p style="font-size: 13px; color: #9a8d7a;">気になるあの人と、連絡がつながりやすい日。これから8週間のなかから、水星を軸にした強い配置が集まる日だけを出します。「来ない」という日は出しません。</p>
+</div>
+<div style="max-width: 880px; margin: 14px auto 0; padding: 0 16px;">
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+<label class="fld">あなたの生まれた年<select id="rkAY"></select></label>
+<label class="fld">月<select id="rkAM"></select></label>
+<label class="fld">日<select id="rkAD"></select></label>
+</div>
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px;">
+<label class="fld">相手の生まれた年<select id="rkBY"></select></label>
+<label class="fld">月<select id="rkBM"></select></label>
+<label class="fld">日<select id="rkBD"></select></label>
+</div>
+<div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px;">
+<label class="fld">探し始める日（その日を含む週から8週間を見ます）<input type="date" id="rkStart"></label>
+</div>
+<p style="font-size: 12px; color: #8a8178; margin-top: 8px;">※出生時刻と出生地は不要です（月とハウスを使わない判定のため）。相性診断で入れた二人がそのまま使われます。入力はあなたのブラウザの中だけに保存され、送信されません。</p>
+<button id="rkBtn" type="button" style="width: 100%; margin-top: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color: #e8cf9f; border: 1px solid #c5a880; border-radius: 999px; padding: 13px 26px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans JP', sans-serif;">💌 連絡が来やすい日を探す</button>
+<div id="rkResult" style="margin-top: 18px; padding-bottom: 40px;"></div>
+</div>
+<script>
+(function () {
+var AKEY = 'chronoscope_aisho_v1';
+var SHARED = 'chronoscope_birth_v1';
+var GLYPH = { 0: '☉', 1: '☽', 2: '☿', 3: '♀', 4: '♂', 5: '♃', 6: '♄', 7: '♅', 8: '♆', 9: '♇'};
+var NAME = { 0: '太陽', 1: '月', 2: '水星', 3: '金星', 4: '火星', 5: '木星', 6: '土星', 7: '天王星', 8: '海王星', 9: '冥王星'};
+var ASPG = { 0: '☌', 120: '△'};
+function mkSelects(pfx, defY) {
+var yS = document.getElementById(pfx + 'Y'), mS = document.getElementById(pfx + 'M'), dS = document.getElementById(pfx + 'D');
+for (var i = 1930; i <= 2030; i++) { var o = document.createElement('option'); o.value = i; o.textContent = i + '年'; yS.appendChild(o);}
+for (var i = 1; i <= 12; i++) { var o2 = document.createElement('option'); o2.value = i; o2.textContent = i + '月'; mS.appendChild(o2);}
+for (var i = 1; i <= 31; i++) { var o3 = document.createElement('option'); o3.value = i; o3.textContent = i + '日'; dS.appendChild(o3);}
+yS.value = defY; mS.value = '1'; dS.value = '1';
+return { y: yS, m: mS, d: dS};
+}
+var SA = mkSelects('rkA', '1995'), SB = mkSelects('rkB', '1990');
+function pad(n) { return (n < 10? '0': '') + n;}
+function setFromDate(sel, ds) { var p = (ds || '').split('-'); if (p.length === 3) { sel.y.value = +p[0]; sel.m.value = +p[1]; sel.d.value = +p[2];}}
+function getDate(sel) { return sel.y.value + '-' + pad(+sel.m.value) + '-' + pad(+sel.d.value);}
+try {
+var raw = localStorage.getItem(AKEY);
+if (raw) { var dd = JSON.parse(raw); if (dd.A) setFromDate(SA, dd.A.date); if (dd.B) setFromDate(SB, dd.B.date);}
+else { var sh = JSON.parse(localStorage.getItem(SHARED) || 'null'); if (sh && sh.y) { SA.y.value = sh.y; SA.m.value = sh.m; SA.d.value = sh.d;}}
+} catch (e) {}
+var startEl = document.getElementById('rkStart');
+var now = new Date();
+startEl.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+
+var PM = null, PJD = null;
+async function pInit() {
+if (PM) return;
+const mod = await import('./assets/swisseph-BtfJwKK5.js');
+const factory = typeof mod.default === 'function'? mod.default: mod.SwissEphModule;
+const wasmBinary = await (await fetch('./assets/swisseph-BmP0Bw24.wasm')).arrayBuffer();
+PM = await factory({ instantiateWasm: (imports, success) => { WebAssembly.instantiate(wasmBinary, imports).then(r => success(r.instance, r.module)); return {};}});
+PJD = PM.cwrap('swe_julday_wrap', 'number', ['number', 'number', 'number', 'number', 'number']);
+}
+function pPos(jd, planet) {
+const out = PM._malloc(48), err = PM._malloc(256);
+const rc = PM.ccall('swe_calc_ut_wrap', 'number', ['number', 'number', 'number', 'number', 'number'], [jd, planet, 260, out, err]);
+const lon = rc < 0? NaN: PM.getValue(out, 'double');
+PM._free(out); PM._free(err);
+return lon;
+}
+function natalOf(ds) {
+var p = ds.split('-');
+var jd = PJD(+p[0], +p[1], +p[2], 3.0, 1);
+var pos = {};
+[0, 1, 2, 3, 5].forEach(function (id) { pos[id] = pPos(jd, id);});
+return pos;
+}
+function fmtD(dt) { return (dt.getUTCMonth() + 1) + '月' + dt.getUTCDate() + '日';}
+
+document.getElementById('rkBtn').addEventListener('click', async function () {
+var box = document.getElementById('rkResult');
+box.innerHTML = '<p style="color:#9a8d7a; font-size:13.5px;">計算中…</p>';
+try {
+await pInit();
+var dA = getDate(SA), dB = getDate(SB);
+try {
+var cur = {};
+try { cur = JSON.parse(localStorage.getItem(AKEY) || '{}');} catch (e) {}
+cur.A = cur.A || {}; cur.B = cur.B || {};
+cur.A.date = dA; cur.B.date = dB;
+localStorage.setItem(AKEY, JSON.stringify(cur));
+} catch (e) {}
+var sv = (startEl.value || '').split('-');
+if (sv.length!== 3) { box.innerHTML = '<p style="color:#ff9d85;">探し始める日を選んでください。</p>'; return;}
+var nA = natalOf(dA), nB = natalOf(dB);
+var sDate = new Date(Date.UTC(+sv[0], +sv[1] - 1, +sv[2]));
+var monOff = (sDate.getUTCDay() + 6) % 7;
+var mDate = new Date(sDate.getTime() - monOff * 86400000);
+var bv = [mDate.getUTCFullYear(), mDate.getUTCMonth() + 1, mDate.getUTCDate()];
+var jd0 = PJD(bv[0], bv[1], bv[2], 3.0, 1);
+// 連絡特化：トランジットは水星・木星・金星のみ。良いアスペクト（合・トライン）のみ、オーブ3度。
+// 強いもの：トランジット水星×ネイタル水星・金星・木星、トランジット木星×ネイタル水星（水星と木星の重なりが連絡の合図）。
+// それ以外の良い組み合わせは弱めに数える。注意の配置は出さない。トランジットの月は使わない。
+var TP = [2, 5, 3], NT = [2, 3, 1, 0, 5];
+var events = {};
+for (var off = -3; off < 59; off++) {
+var jd = jd0 + off;
+var tp = {};
+TP.forEach(function (id) { tp[id] = pPos(jd, id);});
+TP.forEach(function (t) {
+[['A', nA], ['B', nB]].forEach(function (pair) {
+var side = pair[0], natal = pair[1];
+NT.forEach(function (n) {
+var diff = Math.abs(tp[t] - natal[n]) % 360; if (diff > 180) diff = 360 - diff;
+var asp = null, orb = 99;
+[0, 120].forEach(function (a) { var oo = Math.abs(diff - a); if (oo < orb) { orb = oo; asp = a;}});
+if (orb > 3 || asp === null) return;
+var strong = (t === 2 && (n === 2 || n === 3 || n === 5)) || (t === 5 && n === 2);
+var mult = strong? 1: 0.5;
+var key = t + '-' + n + '-' + side + '-' + asp;
+if (!events[key] || orb < events[key].minOrb) {
+events[key] = { t: t, n: n, side: side, asp: asp, minOrb: orb, peakOff: off, strong: strong, mult: mult, label: '' + NAME[t] + '×' + NAME[n] + (side === 'B'? '（相手）': '（あなた）')};
+}
+});
+});
+});
+}
+var weeks = [];
+for (var wI = 0; wI < 8; wI++) {
+var sDt = new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + wI * 7));
+var eDt = new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + wI * 7 + 6));
+weeks.push({ i: wI, good: 0, label: fmtD(sDt) + ' 〜 ' + fmtD(eDt), evs: [], gN: 0, gS: 0, sv: bv});
+}
+Object.keys(events).forEach(function (key) {
+var ev = events[key];
+if (ev.peakOff < 0 || ev.peakOff >= 56) return;
+var wk = weeks[Math.floor(ev.peakOff / 7)];
+var wgt = (1 - ev.minOrb / 4) * (ev.mult || 1);
+wk.evs.push({ off: ev.peakOff, label: ev.label, strong: ev.strong, w: wgt});
+wk.gN++;
+if (ev.strong) { wk.good += wgt; wk.gS++;}
+});
+weeks.forEach(function (wk) { wk.evs.sort(function (a, b) { return a.off - b.off;});});
+var maxGood = Math.max.apply(null, weeks.map(function (wk) { return wk.good;}).concat([0.01]));
+// 強い日だけを集めた、1日単位のトップ5
+var dayMap = {};
+Object.keys(events).forEach(function (key) {
+var ev = events[key];
+if (!ev.strong || ev.peakOff < 0 || ev.peakOff >= 56) return;
+var w = (1 - ev.minOrb / 4) * ev.mult;
+if (!dayMap[ev.peakOff]) dayMap[ev.peakOff] = { off: ev.peakOff, w: 0, label: ev.label};
+dayMap[ev.peakOff].w += w;
+if (w > (dayMap[ev.peakOff].bw || 0)) { dayMap[ev.peakOff].bw = w; dayMap[ev.peakOff].label = ev.label;}
+});
+var topDays = Object.keys(dayMap).map(function (k) { return dayMap[k];}).sort(function (a, b) { return b.w - a.w;}).slice(0, 5);
+// いちばん濃い7日間（週の区切りをまたぐスライド窓。強い配置だけを数える）
+var flat = [];
+Object.keys(events).forEach(function (key) { var ev = events[key]; if (!ev.strong || ev.peakOff < 0 || ev.peakOff >= 56) return; flat.push({ off: ev.peakOff, w: (1 - ev.minOrb / 4) * ev.mult, label: ev.label});});
+var hero = null;
+for (var ws = 0; ws <= 49; ws++) {
+var hg = 0, hgN = 0, htds = [];
+flat.forEach(function (ev) { if (ev.off < ws || ev.off > ws + 6) return; hg += ev.w; hgN++; htds.push({ off: ev.off, w: ev.w, bestHit: { label: ev.label}});});
+if (hg > 0 && (!hero || hg > hero.good)) { htds.sort(function (a, b) { return b.w - a.w;}); var hsD = new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + ws)); var heD = new Date(Date.UTC(bv[0], bv[1] - 1, bv[2] + ws + 6)); hero = { s: ws, good: hg, gN: hgN, label: fmtD(hsD) + ' 〜 ' + fmtD(heD), topDays: htds.slice(0, 3), sv: bv};}
+}
+var html = '';
+if (hero) {
+html += '<div style="border:1.5px solid #ffd88a; border-radius:14px; padding:18px 16px; background:rgba(255,216,138,0.07); text-align:center;">' +
+'<div style="font-size:13px; color:#ffd88a; font-weight:700;">💌 連絡がつながりやすい7日間！</div>' +
+'<div style="font-family:\'Noto Serif JP\',serif; font-size:24px; font-weight:700; color:#ffe9b8; margin-top:6px;">' + hero.label + '</div>' +
+'<div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.8;">連絡の強い配置 ' + hero.gN + '件が集まっています。言葉が通りやすい週です。</div>' +
+(topDays.length? '<div style="font-size:13px; color:#c5a880; margin-top:6px;">特に連絡が来やすい日：' + topDays.map(function (dy) { var dt = new Date(Date.UTC(+hero.sv[0], +hero.sv[1] - 1, +hero.sv[2] + dy.off)); return fmtD(dt) + '（' + '日月火水木金土'[dt.getUTCDay()] + '）' + ' ' + dy.label;}).join('、') + '</div>': '') +
+'<div style="font-size:12px; color:#9a8d7a; margin-top:8px;">※上の期間は、週の区切りをまたぐいちばん濃い7日間。下の週は月曜〜日曜で数えています。ここに出るのは、強い日だけです。</div>' +
+'</div>';
+} else {
+html += '<div style="border:1px solid #4a4238; border-radius:14px; padding:16px; text-align:center; color:#c5a880; font-size:14px;">この8週間は、連絡の強い配置は少なめでした。「来ない」という意味ではありません。言葉が通りやすい日は、下の週リストから探してみてください。</div>';
+}
+html += '<div style="font-size:12.5px; font-weight:700; color:#e8cf9f; margin-top:14px;">📊 8週間の波</div>';
+html += '<div style="display:flex; gap:2px; margin-top:4px;">';
+weeks.forEach(function (wk) {
+var isB = hero && (wk.i * 7 <= hero.s + 6) && (wk.i * 7 + 6 >= hero.s);
+var bh = wk.good > 0? 8 + Math.round(wk.good / maxGood * 32): 2;
+var bg = wk.good > 0? 'linear-gradient(180deg,#ffd88a,#b98a2f)': '#38332c';
+var sd = wk.label.split('〜')[0].trim().replace('月', '/').replace('日', '');
+html += '<div onclick="var r=document.getElementById(\'wkRow' + wk.i + '\'); if(r) r.scrollIntoView({behavior:\'smooth\', block:\'center\'}); var d=document.getElementById(\'wkDet' + wk.i + '\'); if(d) d.style.display=\'block\';" style="flex:1 1 0; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:74px; cursor:pointer; border-radius:6px; padding-top:2px;' + (isB? ' background:rgba(255,216,138,0.10);': '') + '">'
++ '<div style="font-size:9px; height:11px; line-height:11px;">' + (isB? '🔥': '') + '</div>'
++ '<div style="width:64%; max-width:20px; border-radius:3px 3px 0 0; background:' + bg + '; height:' + bh + 'px;"></div>'
++ '<div style="font-size:9.5px; color:#9a8d7a; margin-top:2px; height:13px;">' + sd + '</div>'
++ '<div style="font-size:9px; color:#8a8178; height:12px;">' + (wk.gS? wk.gS + '件': '') + '</div>'
++ '</div>';
+});
+html += '</div>';
+html += '<div style="font-size:11px; color:#8a8178; margin-top:3px; line-height:1.6;">バーの高さはその週の連絡の配置の濃さです。週をタップすると、その週の内容が開きます。</div>';
+html += '<div style="margin-top:16px;">';
+weeks.forEach(function (wk) {
+var isBest = hero && (wk.i * 7 <= hero.s + 6) && (wk.i * 7 + 6 >= hero.s);
+html += '<div id="wkRow' + wk.i + '" style="border:1px solid ' + (isBest? '#ffd88a': '#4a4238') + '; border-radius:12px; padding:12px 14px; margin-bottom:10px; background:rgba(255,255,255,0.02);">' +
+'<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;"><span style="font-weight:700; color:' + (isBest? '#ffe9b8': '#faf6f0') + ';">' + (isBest? '🔥 ': '') + wk.label + '</span><span style="font-size:12.5px; color:#ffd88a;">' + (wk.gS? '連絡がつながりやすい': '静か') + '</span></div>' +
+'<div style="height:8px; border-radius:99px; background:#262019; margin-top:8px; overflow:hidden;"><div style="height:100%; width:' + Math.round(wk.good / maxGood * 100) + '%; background:linear-gradient(90deg,#b98a2f,#ffd88a);"></div></div>' +
+'<div style="font-size:12.5px; color:#9a8d7a; margin-top:6px;">連絡の配置 ' + wk.gN + '件（うち強いもの ' + wk.gS + '件）</div>' +
+(wk.evs.length? '<button type="button" onclick="var d=this.nextElementSibling; d.style.display = d.style.display === \'none\'? \'block\': \'none\';" style="margin-top:8px; background:transparent; color:#ffd88a; border:1px solid #b98a2f; border-radius:999px; padding:5px 14px; font-size:12.5px; font-weight:700; cursor:pointer;">🔍 内容を詳しく見る</button><div id="wkDet' + wk.i + '" style="display:none; margin-top:8px; font-size:13px; line-height:2;">' + wk.evs.map(function (ev) { var dt = new Date(Date.UTC(+wk.sv[0], +wk.sv[1] - 1, +wk.sv[2] + ev.off)); return fmtD(dt) + '（' + '日月火水木金土'[dt.getUTCDay()] + '） ' + ev.label + (ev.strong? ' <span style="color:#ffd88a;">連絡がつながりやすい</span>': ' <span style="color:#c5a880;">言葉が通りやすい</span>');}).join('<br>') + '</div>': '') +
+'</div>';
+});
+html += '</div>';
+html += '<p style="font-size:12px; color:#8a8178; line-height:1.8;">いちばん上の表示は、週の区切りにこだわらず、連絡の強い配置がいちばん集まる7日間です。下の週リストは月曜〜日曜で数えています。判定のしかた：水星・木星・金星のトランジットが、二人の水星・金星・月・太陽・木星に良い角度（合・トライン）で触れるものを数えています。オーブは3度。なかでも水星×水星・水星×木星・水星×金星は強く数えています。空の月は除いています。「来ない」という日は出しません。星は傾けるが、縛りはしない——あくまで連絡を待つ目安に。</p>';
+box.innerHTML = html;
+var __hd = document.querySelector('.topTab'); __hd = __hd? __hd.closest('[style*="sticky"]'): null; var yy = box.getBoundingClientRect().top + window.scrollY - (__hd? __hd.offsetHeight: 0) - 12; window.scrollTo({ top: yy, behavior: 'smooth'});
+} catch (err) {
+box.innerHTML = '<p style="color:#ff9d85;">計算でエラーが出ました。もう一度お試しください。</p>';
+}
+});
+})();
+</script>
+</body>
+</html>

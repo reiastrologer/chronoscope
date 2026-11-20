@@ -265,19 +265,20 @@ document.getElementById('kBtn').addEventListener('click', async function () {
     });
     html += '</div>';
     html += '<div style="font-size:13px; font-weight:700; color:#e8cf9f; margin-top:16px;">⭐ 星からの裏づけ</div>';
+    html += '<div style="font-size:11.5px; color:#9a8d7a; margin-top:2px; line-height:1.7;">「出生」＝生まれた時の星どうしの触れ合い、「現行」＝いま空を動いている星が、相手の星に触れているものです。</div>';
     html += '<div style="margin-top:6px;">';
     if (syn.contacts.length) {
       syn.contacts.forEach(function (ct) {
-        html += '<div style="font-size:13.5px; color:#faf6f0; line-height:1.8; padding:6px 0; border-top:1px solid rgba(197,168,128,0.18);">相手の' + GLYPH[ct.bp] + NAME[ct.bp] + ' × あなたの' + GLYPH[ct.ap] + NAME[ct.ap] + '（' + (ct.asp === 0 ? '合' : ct.asp === 120 ? 'トライン' : ct.asp === 90 ? 'スクエア' : 'オポジション') + '）<br><span style="color:#c5bba9;">' + ct.txt + '</span></div>';
+        html += '<div style="font-size:13.5px; color:#faf6f0; line-height:1.8; padding:6px 0; border-top:1px solid rgba(197,168,128,0.18);"><span style="display:inline-block; font-size:10.5px; font-weight:700; color:#0d0c0a; background:#c5a880; border-radius:6px; padding:1px 7px; margin-right:6px; vertical-align:2px;">出生</span>相手の' + GLYPH[ct.bp] + NAME[ct.bp] + ' × あなたの' + GLYPH[ct.ap] + NAME[ct.ap] + '（' + (ct.asp === 0 ? '合' : ct.asp === 120 ? 'トライン' : ct.asp === 90 ? 'スクエア' : 'オポジション') + '）<br><span style="color:#c5bba9;">' + ct.txt + '</span></div>';
       });
     } else {
       html += '<div style="font-size:13.5px; color:#c5bba9; line-height:1.8;">二人の星に、気持ちを強く動かす配置は見つかりませんでした。穏やかな関係のようです。</div>';
     }
     trs.forEach(function (line) {
-      html += '<div style="font-size:13.5px; color:#faf6f0; line-height:1.8; padding:6px 0; border-top:1px solid rgba(197,168,128,0.18);">🌙 ' + line + '</div>';
+      html += '<div style="font-size:13.5px; color:#faf6f0; line-height:1.8; padding:6px 0; border-top:1px solid rgba(197,168,128,0.18);"><span style="display:inline-block; font-size:10.5px; font-weight:700; color:#0d0c0a; background:#7a9fc5; border-radius:6px; padding:1px 7px; margin-right:6px; vertical-align:2px;">現行</span>' + line + '</div>';
     });
     html += '</div>';
-    html += '<p style="font-size:12px; color:#8a8178; line-height:1.8; margin-top:14px;">読み方：相手の星（金星・月・火星・太陽）が、あなたの星にどう触れているかと、今日の星の流れ、そしてタロット3枚を合わせて読んでいます。タロットは「今日の二人の組み合わせ」で引くので、その日は何度見ても同じ結果です。気持ちは変わるもの。目安として楽しんでね。出生時刻は使わないので、正午で計算しています。</p>';
+    html += '<p style="font-size:12px; color:#8a8178; line-height:1.8; margin-top:14px;">読み方：二人の出生図の星の触れ合いと、今日の空の星（現行）が相手にどう触れているか、そしてタロット3枚を合わせて読んでいます。タロットは「今日の二人の組み合わせ」で引くので、その日は何度見ても同じ結果です。気持ちは変わるもの。目安として楽しんでね。出生時刻は使わないので、正午で計算しています。</p>';
     box.innerHTML = html;
     var __hd = document.querySelector('.topTab'); __hd = __hd ? __hd.closest('[style*="sticky"]') : null; var yy = box.getBoundingClientRect().top + window.scrollY - (__hd ? __hd.offsetHeight : 0) - 12; window.scrollTo({ top: yy, behavior: 'smooth' });
   } catch (err) {
