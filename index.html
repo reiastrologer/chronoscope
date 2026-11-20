@@ -53,5 +53,28 @@
     <div style="max-width: 880px; margin: 26px auto 0; padding: 0 16px 28px; text-align: center;">
       <p style="font-size: 12px; color: #8a8178;"><a href="./privacy.html" style="color: #9a8d7a;">プライバシーと安全性について（入力した情報は送信されません）</a></p>
     </div>
+<div id="chronosPop" style="position:fixed; right:14px; bottom:14px; z-index:80; display:flex; align-items:flex-end; gap:8px; opacity:0; pointer-events:none; transition:opacity .6s ease, transform .6s ease; transform:translateY(10px); max-width:80vw;">
+<div id="chronosBubble" style="background:#FBF7EC; color:#2A2419; border:1.5px solid #C5A880; border-radius:14px; padding:10px 14px; font-size:14.5px; line-height:1.6; box-shadow:0 6px 18px rgba(0,0,0,0.35);"></div>
+<img src="./chronos_magic_poster.jpg" alt="クロノスくん" style="width:74px; height:74px; object-fit:cover; border-radius:50%; border:2px solid #C5A880; box-shadow:0 6px 18px rgba(0,0,0,0.35); flex:none;">
+</div>
+<script>
+(function () {
+  var msgs = ['ゆっくり深呼吸だよー', '今日もおつかれさま', '肩の力、抜いてみて', '温かいもの、飲んだ？', '大丈夫、ちゃんと進んでるよ', '少しだけ、目を休めて', '明日のことは、明日でいいよ', 'あなたは一人じゃないよ'];
+  var pop = document.getElementById('chronosPop'), bub = document.getElementById('chronosBubble');
+  var last = -1, t1 = null, t2 = null;
+  function show() {
+    var i; do { i = Math.floor(Math.random() * msgs.length); } while (i === last); last = i;
+    bub.textContent = msgs[i];
+    pop.style.opacity = '1'; pop.style.transform = 'translateY(0)'; pop.style.pointerEvents = 'auto';
+    clearTimeout(t1); t1 = setTimeout(hide, 7000);
+  }
+  function hide() {
+    pop.style.opacity = '0'; pop.style.transform = 'translateY(10px)'; pop.style.pointerEvents = 'none';
+    clearTimeout(t1); clearTimeout(t2); t2 = setTimeout(show, 50000 + Math.random() * 40000);
+  }
+  pop.addEventListener('click', hide);
+  setTimeout(show, 5000);
+})();
+</script>
   </body>
 </html>
