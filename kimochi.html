@@ -58,6 +58,17 @@ try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __
 <label class="fld">日<select id="kBD"></select></label>
 </div>
 <p style="font-size: 12.5px; color: #8a8178; margin-top: 8px; line-height: 1.8;">※出生時刻は不要です（正午で計算します）。相性診断で入力した二人が、そのまま入ります。入力はあなたのブラウザの中だけに保存され、送信されません。</p>
+<div style="font-size: 13px; font-weight: 700; color: #e8cf9f; margin: 12px 0 6px;">相手はどんな人？</div>
+<select id="kMode" style="width: 100%; background: #171410; color: #faf6f0; border: 1px solid #4a4238; border-radius: 10px; padding: 11px 12px; font-size: 15px; font-family: 'Noto Sans JP', sans-serif;">
+<option value="crush">気になる人・片思い</option>
+<option value="lover">恋人</option>
+<option value="ex">元恋人</option>
+<option value="partner">結婚相手・パートナー</option>
+<option value="friend">友達</option>
+<option value="family">家族（親・兄弟）</option>
+<option value="work">職場の人・上司</option>
+<option value="online">オンラインの繋がり（まだ会ったことない人）</option>
+</select>
 <button id="kBtn" type="button" style="width: 100%; margin-top: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color: #e8cf9f; border: 1px solid #c5a880; border-radius: 999px; padding: 13px 26px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans JP', sans-serif;">💗 相手の気持ちを見る</button>
 <div id="kResult" style="margin-top: 18px; padding-bottom: 40px;"></div>
 </div>
@@ -170,48 +181,6 @@ var HARD_DETAIL = {
   '4>5': 'あなたと何かしたくなる気持ちが大きくなりすぎて、空回りしやすいみたい。期待と勢いの調整が必要な時期だね。',
   '4>6': 'あなたのために動きたいのに、壁とか遠慮が邪魔してるんだよ。真剣なぶん、簡単には踏み込めない気持ちだね。'
 };
-var TR_DETAIL = {
-  '0>0g': '今日はね、相手が素直に自分を出せる日だよ。あなたへの態度も、まっすぐ出やすくなってるみたい。',
-  '0>0h': '今日は相手のプライドが前に出やすい日だね。意地を張ってても、本音は別にあると思うよ。',
-  '0>1g': '今日は相手の本音が表れやすい日だよ。ふとした表情とか言葉に、気持ちが出ると思うな。',
-  '0>1h': '今日は相手が意地と本音の間で揺れてる日だね。素直じゃない態度ほど、本音の裏返しだよ。',
-  '0>3g': '今日は相手の愛情表現が素直な日だよ。好意が態度に出やすくなってるみたいだね。',
-  '0>3h': '今日は相手が好意を素直に出せない日だね。照れとか意地で、気持ちが隠れがちだよ。',
-  '0>4g': '今日は相手が積極的になれる日だよ。近づくきっかけを作りやすい日だね。',
-  '0>4h': '今日は相手の勢いが強く出る日だよ。張り合いになりやすいから、受け止めは柔らかくね。',
-  '2>0g': '今日は相手が自分の気持ちを言葉にしやすい日だよ。連絡とか会話が弾みやすくなってるみたい。',
-  '2>0h': '今日は相手の言葉がちょっと堅くなりやすい日だね。言い方の裏にある本音を見てあげて。',
-  '2>1g': '今日は相手の本音が言葉に乗りやすい日だよ。何気ない一言に、気持ちがにじむと思うな。',
-  '2>1h': '今日は相手の言葉と本音がズレやすい日だね。言われたことだけで判断しない方がいいよ。',
-  '2>3g': '今日は相手から嬉しい言葉が届きやすい日だよ。好意が言葉になって表れやすくなってるみたい。',
-  '2>3h': '今日は相手の言葉が遠回しになりやすい日だね。好意があっても、表現が不器用なんだよ。',
-  '2>4g': '今日は相手が勢いよく話しかけてきやすい日だよ。テンポのいいやり取りが期待できるね。',
-  '2>4h': '今日は言葉がヒートしやすい日だね。大事な話は、タイミングを選んだ方がいいよ。',
-  '3>0g': '今日は相手の恋愛気分が高まる日だよ。あなたへの好意が、態度に表れやすくなってるみたい。',
-  '3>0h': '今日は相手が恋愛面で意地を張りやすい日だね。好意とプライドがぶつかってるんだよ。',
-  '3>1g': '今日は相手が甘えたくなりやすい日だよ。優しくされると、気持ちがほどけると思うな。',
-  '3>1h': '今日は相手の気持ちが揺れやすい日だね。甘えたいのに素直になれない、気まぐれな日だよ。',
-  '3>3g': '今日は相手の「好き」がいちばん表に出やすい日だよ。好意のサイン、見逃さないでね。',
-  '3>3h': '今日は相手の好みとか気分が変わりやすい日だね。好意があっても、表現が安定しないんだよ。',
-  '3>4g': '今日は相手の惹かれる気持ちに火がつきやすい日だよ。ドキドキする接近があるかもしれないね。',
-  '3>4h': '今日は相手の熱と好意がぶつかりやすい日だね。強く出るのは、意識してる証拠だよ。',
-  '4>0g': '今日は相手がまっすぐアプローチしやすい日だよ。行動に気持ちが出る日だね。',
-  '4>0h': '今日は相手が強引になりやすい日だね。勢いの裏には、意識してる気持ちがあるんだよ。',
-  '4>1g': '今日は相手があなたの気持ちに応えたくなる日だよ。守りたい・近づきたいが動いてるみたい。',
-  '4>1h': '今日は相手の勢いと本音がズレやすい日だね。空回りしても、悪気はないと思うよ。',
-  '4>3g': '今日は相手の好意が行動になって表れる日だよ。誘いとか接近があるかもしれないね。',
-  '4>3h': '今日は相手のアプローチが不器用になりやすい日だね。熱はあるのに、出し方が荒いんだよ。',
-  '4>4g': '今日は相手とあなたの勢いが噛み合う日だよ。一緒に動くと楽しい日だね。',
-  '4>4h': '今日は勢い同士がぶつかりやすい日だね。衝突するのは、熱があるからこそだよ。',
-  '5>0g': '今日は相手が大きく構えられる日だよ。あなたへの気持ちも、温かく広く出てるみたい。',
-  '5>0h': '今日は相手の期待が大きくなりすぎやすい日だね。悪気はないけど、落差には注意だよ。',
-  '5>1g': '今日は相手の心がほぐれやすい日だよ。安心感と幸せな気持ちが広がってるみたいだね。',
-  '5>1h': '今日は相手が甘えと期待で揺れやすい日だね。応えてもらえると、大きく安心すると思うよ。',
-  '5>3g': '今日は相手の好意が大きく膨らむ日だよ。楽しい時間を一緒に作りやすくなってるみたい。',
-  '5>3h': '今日は相手の理想が高くなりやすい日だね。現実との差を、責めないであげてね。',
-  '5>4g': '今日は相手が前向きに動きたくなる日だよ。一緒に何か始めると、弾みがつくと思うな。',
-  '5>4h': '今日は相手の勢いが大きくなりすぎやすい日だね。やりすぎ・言いすぎに注意の日だよ。'
-};
 var OPENER = {
   '0g': 'まず全体の空気だけど、相手にとってあなたは、かなり中心に近いところにいる存在だよ。気持ちの置き場所がはっきりしてて、迷いの少ない好意だね。',
   '0h': 'まず全体の空気だけど、相手はあなたのことを強く意識してるよ。ただ、その出方が素直とは限らなくて、意地とか張り合いみたいに出てくることもある時期だね。',
@@ -237,18 +206,6 @@ var CLOSER = {
   mid: '全体を通すと、相手の気持ちは静かに育ってる最中だね。焦って確かめようとするより、安心できるやり取りを重ねていく方が、気持ちは近づくよ。',
   cool: '全体を通すと、今は相手の気持ちが表に出にくい時期だよ。気持ちがないんじゃなくて、出てくるまでに時間がかかるタイプの流れだね。追いかけすぎず、自分のペースも大切にしてね。'
 };
-var TR_LINE = {
-  '3g': '今日は相手の恋愛気分が高まりやすい日。好意が表に出やすくなっています。',
-  '3h': '今日の相手は恋愛面で少し気まぐれ。甘えと意地が混ざる日です。',
-  '4g': '今日は相手が積極的になれる日。アプローチがあるかもしれません。',
-  '4h': '今日の相手は勢いが強め。ぶつかりやすいので、受け止めは柔らかく。',
-  '0g': '今日の相手は素直さが出やすい日。気持ちが表れやすくなっています。',
-  '0h': '今日の相手はプライドが邪魔しやすい日。意地を張りがちです。',
-  '2g': '今日は相手との言葉がスムーズな日。連絡が弾みやすくなっています。',
-  '2h': '今日は言葉がすれ違いやすい日。大事な話は急がない方がよさそうです。',
-  '5g': '今日の相手は気持ちが大きく温かい日。寛大さが出ています。',
-  '5h': '今日の相手は期待が大きくなりすぎやすい日。落差に注意です。'
-};
 function mkSelects(pfx) {
   var yS = document.getElementById(pfx + 'Y'), mS = document.getElementById(pfx + 'M'), dS = document.getElementById(pfx + 'D');
   for (var i = 1930; i <= 2030; i++) { var o = document.createElement('option'); o.value = i; o.textContent = i + '年'; yS.appendChild(o); }
@@ -258,6 +215,10 @@ function mkSelects(pfx) {
   return { y: yS, m: mS, d: dS };
 }
 var SA = mkSelects('kA'), SB = mkSelects('kB');
+var kModeEl = document.getElementById('kMode');
+try { var mv0 = localStorage.getItem('kimochi_mode_v1'); if (mv0) kModeEl.value = mv0; } catch (e) {}
+kModeEl.addEventListener('change', function () { try { localStorage.setItem('kimochi_mode_v1', kModeEl.value); } catch (e) {} });
+var FAMMAP = { crush: 'std', lover: 'std', partner: 'std', ex: 'ex', friend: 'friend', family: 'family', work: 'work', online: 'online' };
 function pad(n) { return (n < 10 ? '0' : '') + n; }
 function setFromDate(sel, ds) { var p = (ds || '').split('-'); if (p.length === 3) { sel.y.value = +p[0]; sel.m.value = +p[1]; sel.d.value = +p[2]; } }
 function getDate(sel) { return sel.y.value + '-' + pad(+sel.m.value) + '-' + pad(+sel.d.value); }
@@ -317,26 +278,112 @@ function synastry(nA, nB) {
   contacts.sort(function (a, b) { return b.w - a.w; });
   var shown = contacts.slice(0, 3);
   for (var ci = 3; ci < contacts.length && shown.length < 5; ci++) { if (contacts[ci].w >= 0.9) shown.push(contacts[ci]); }
-  return { contacts: shown, warmth: warmth };
+  return { contacts: shown, all: contacts, warmth: warmth };
 }
-function transitLines(nB) {
+var NOTICE = {
+  0: '明るさと笑顔', 1: '素顔や、ふとした表情', 2: '言葉や、気の利いた一言', 3: '雰囲気や、可愛らしいところ', 4: '一生懸命なところ', 5: '優しさや、広い心', 6: '何気ない優しさや、真面目なところ'
+};
+var ACT_LEAD = {
+  0: 'あなたと明るく楽しい時間を過ごしたいと思ってるよ。ランチとか、笑える場所が合いそうだね。会えない距離なら、他愛ないメッセージのやり取りでも気持ちは十分伝わると思うな。',
+  2: 'あなたと話したくて、連絡のきっかけを探してるみたいだよ。何気ないメッセージや通話が来たら、それが気持ちのサインだね。',
+  3: '愛情豊かに、あなたと出かけたいと思ってるよ。カフェとか映画とか、よかったら誘ってみて。会えない距離なら、通話で顔を見て話すだけでも気持ちは伝わると思うな。',
+  4: 'あなたと盛り上がりたい気持ちが強い日だよ。カラオケとか居酒屋とか、賑やかなところが合いそう。会えない距離なら、通話でわいわい話す形でもいいと思うな。',
+  5: 'あなたともっと大きな楽しみを分かち合いたいと思ってるよ。遠出の計画とか、ごちそうとか。会えない距離なら、通話で旅行の計画を立てるのも楽しそうだね。'
+};
+var ACT_HARD_SOLO = 'あなたに気持ちをぶつけたいのに、うまく出せなくてイライラしやすい日だよ。気持ちがないんじゃなくて、近づきたいのに近づけないもどかしさだね。今日は深追いしない方がいいかも。';
+var ACT_HARD_AFTER = 'ただ、その気持ちが強いぶん、伝わらなかったり誘えなかったりすると、イライラが出ちゃうこともあるみたい。それは仕方ないことだよね。';
+var LEADS = {
+  ex: {
+    0: 'あなたのことを、ふとした瞬間に思い出してるみたいだよ。気持ちは完全には消えてないと思うな。',
+    2: 'あなたの様子が気になって、連絡するかどうか迷ってるみたいだよ。何気ないやり取りなら、まだ繋がってると思うな。',
+    3: 'あなたと楽しかった時間を、懐かしく思い出してるみたいだよ。ただ、戻りたいかどうかは、向こうもまだ決めかねてる感じだね。',
+    4: 'あなたへの気持ちがぶつかり合って、イライラや未練が混ざってる日だよ。熱が残ってる証拠でもあるけど、近づき方は慎重にね。',
+    5: 'あなたの幸せを願う気持ちが大きくなってるみたいだよ。離れていても、応援する気持ちは本物だと思うな。'
+  },
+  friend: {
+    0: 'あなたとまた笑い合いたいと思ってるよ。明るい誘いなら、素直に乗ってくれると思うな。',
+    2: 'あなたと話したくて、きっかけを探してるみたいだよ。何気ない連絡が、仲直りの糸口になりそうだね。',
+    3: 'あなたと楽しい時間を過ごしたいと思ってるよ。カフェとか映画とか、軽い誘いが合いそうだね。',
+    4: 'あなたと盛り上がりたい気持ちが強い日だよ。カラオケとか居酒屋とか、賑やかな場所で笑い合うのが一番の仲直りかも。',
+    5: 'あなたのことを大事な友達だと思って、応援してる気持ちが大きい日だよ。一緒に楽しめる計画を立てると喜ぶと思うな。'
+  },
+  family: {
+    0: 'あなたの元気な顔が見たいと思ってるよ。たまには連絡して、声を聞かせてあげてね。',
+    2: 'あなたの様子が気になって、連絡を待ってるみたいだよ。何気ない一言でも、すごく安心すると思うな。',
+    3: 'あなたに美味しいものを食べさせたい、楽しい時間を一緒に過ごしたいと思ってるよ。顔を見せに行くとか、ごはんに行くとか、よかったらね。',
+    4: 'あなたのために何かしてあげたい気持ちが強い日だよ。頼ると、張り切って動いてくれると思うな。',
+    5: 'あなたのことを誇らしく思って、応援してる気持ちが大きい日だよ。近況を教えてあげると喜ぶと思うな。'
+  },
+  work: {
+    0: 'あなたの仕事ぶりを、明るく評価してるみたいだよ。堂々と意見を言うと、さらに印象が良くなりそうだね。',
+    2: 'あなたと話を合わせたい、相談したいと思ってるみたいだよ。こまめな連絡を丁寧にすると、信頼が上がると思うな。',
+    3: 'あなたのセンスや人当たりの良さを気に入ってるみたいだよ。一緒に仕事がしやすい相手だと思われてるね。',
+    4: 'あなたと一緒に物事を進めたい、頼りたいと思ってる日だよ。勢いのある提案が通りやすいかも。',
+    5: 'あなたの将来性に期待してるみたいだよ。大きな仕事を任せたい気持ちがあると思うな。'
+  },
+  oshi: {
+    0: 'ファンと明るく盛り上がりたい気持ちが強い日だよ。配信や投稿のノリも良さそう。お、これは応援が届きやすい日かも。',
+    2: 'ファンの声を拾いたい、やり取りを楽しみたい日だよ。コメントやメッセージが力になりそうだね。',
+    3: 'ファンに楽しんでもらいたい、喜ばせたい気持ちが強い日だよ。リアクションが大きいと、すごく喜ぶと思うな。',
+    4: 'ファンと熱く盛り上がりたい日だよ。ライブや配信の熱量が上がりそう。応援の声、届きやすいと思うな。',
+    5: 'もっと大きな景色をファンと見たい、期待に応えたい気持ちが大きい日だよ。応援がそのまま力になるね。'
+  },
+  online: {
+    0: 'あなたとのやり取りを、明るく楽しんでるみたいだよ。笑える話を振ると、ノリよく返してくれると思うな。',
+    2: 'あなたと話したくて、メッセージのきっかけを探してるみたいだよ。何気ない一言が来たら、それが気持ちのサインだね。',
+    3: 'あなたのことが気になって、もっと知りたいと思ってるみたいだよ。通話で顔を見て話せたら、距離がぐっと縮まると思うな。',
+    4: 'あなたと盛り上がりたい気持ちが強い日だよ。通話でわいわい話すと、距離が縮まりそうだね。',
+    5: 'あなたともっと繋がりを深めたいと思ってるみたいだよ。長めの通話や、楽しい計画の話が合いそうだね。'
+  }
+};
+var HARDS = {
+  std: { solo: 'あなたに気持ちをぶつけたいのに、うまく出せなくてイライラしやすい日だよ。気持ちがないんじゃなくて、近づきたいのに近づけないもどかしさだね。今日は深追いしない方がいいかも。', after: 'ただ、その気持ちが強いぶん、伝わらなかったり誘えなかったりすると、イライラが出ちゃうこともあるみたい。それは仕方ないことだよね。' },
+  ex: { solo: '今は距離を置きたい気持ちの方が強いみたいだよ。気持ちがなかったわけじゃない。時間が味方になるのを待つ方がいいかもね。', after: 'ただ、距離を取りたい気持ちも同時にあるみたい。無理に近づこうとすると、逆に離れてしまうかも。' },
+  friend: { solo: '今日は相手も意地を張っちゃってる日だよ。本当は仲直りしたいのに、素直になれないだけだと思うな。軽い一言から入ると、ほぐれやすいかも。', after: 'ただ、お互い意地を張りやすい日でもあるから、言い合いだけは避けてね。' },
+  family: { solo: '今日は心配が裏返って、小言っぽく出やすい日だよ。あなたのためを思ってのことだから、気にしすぎないでね。', after: 'ただ、心配が強いぶん、小言っぽく出ちゃうこともあるみたい。それも愛情の裏返しだよ。' },
+  work: { solo: '今日は相手に余裕がなくて、言葉がきつく出やすい日だよ。あなたの評価が下がったわけじゃないから、気にしすぎないでね。', after: 'ただ、今日は忙しさで言葉が荒くなりやすいから、大事な話は外した方がいいかも。' },
+  oshi: { solo: '今日は推しさんに余裕がなさそうな日。反応がなくても気にしすぎないでね。静かに応援してる人が、いちばん長く力になるよ。', after: 'ただ、今日は余裕がなさそうだから、反応は薄いかも。気にしすぎないでね。' },
+  online: { solo: '今日は返信が遅くなりそうな日だよ。気持ちが離れたわけじゃなくて、向こうの都合だと思うな。連投は控えた方がいいかも。', after: 'ただ、今日は返信が遅れたり、そっけなくなりやすいかも。気にしすぎないでね。' }
+};
+function noticeText(fam, subj, word) {
+  if (fam === 'oshi') return subj + '、あなたの何気ない応援にちゃんと気づいて、力にしてるタイプみたいだよ。声援は届いてると思うな。';
+  if (fam === 'ex') return subj + '、あなたの' + word + 'を、今でも懐かしく思い出すことがあるみたいだよ。';
+  if (fam === 'friend') return subj + '、あなたの' + word + 'を大事に思ってるみたいだよ。喧嘩しても、根っこは友達だね。';
+  if (fam === 'family') return subj + '、あなたの' + word + 'を、ちゃんと見ててくれてるみたいだよ。口には出さなくても、心配して応援してるからね。';
+  if (fam === 'work') return subj + '、あなたの' + word + 'を、ちゃんと評価してるみたいだよ。';
+  if (fam === 'online') return subj + '、あなたの' + word + 'を、画面越しでもちゃんと感じてるみたいだよ。';
+  return subj + '、あなたの' + word + 'を気に入ってるみたいだよ。そういう何気ないところ、ちゃんと気づいてるからね。';
+}
+function approachToday(nB, synAll, tSum, bName, fam) {
   var now = new Date();
   var jd = PJD(now.getFullYear(), now.getMonth() + 1, now.getDate(), 3.0, 1);
-  var found = [];
+  var act = {};
   [0, 2, 3, 4, 5].forEach(function (tp) {
     var tl = pPos(jd, tp);
     [0, 1, 3, 4].forEach(function (bp) {
       var f = findAsp(tl, nB[bp], 3);
       if (!f) return;
-      var line = TR_DETAIL[tp + '>' + bp + ((f.asp === 0 || f.asp === 120) ? 'g' : 'h')] || TR_LINE[tp + ((f.asp === 0 || f.asp === 120) ? 'g' : 'h')];
-      if (line && f.orb <= 1) line += '今日はいちばん出やすい日だよ。';
-      if (line) found.push({ orb: f.orb, line: line });
+      if (!act[bp] || f.orb < act[bp].orb) act[bp] = { tp: tp, bp: bp, asp: f.asp, orb: f.orb, good: (f.asp === 0 || f.asp === 120) };
     });
   });
-  found.sort(function (a, b) { return a.orb - b.orb; });
-  var out = [], seen = {};
-  found.forEach(function (x) { if (!seen[x.line] && out.length < 2) { seen[x.line] = 1; out.push(x.line); } });
-  return out;
+  var lit = [];
+  synAll.forEach(function (ct) { var a = act[ct.bp]; if (a) lit.push({ ct: ct, act: a, score: ct.w * (1 - a.orb / 4) }); });
+  lit.sort(function (x, y) { return y.score - x.score; });
+  var subj = bName ? bName + 'さんは' : '相手は';
+  var bestG = null, bestH = null;
+  lit.forEach(function (L) { if (L.ct.good && L.act.good && !bestG) bestG = L; if ((!L.ct.good || !L.act.good) && !bestH) bestH = L; });
+  var para = '';
+  var chains = [];
+  lit.slice(0, 3).forEach(function (L) { chains.push({ tp: L.act.tp, bp: L.ct.bp, asp: L.act.asp, orb: L.act.orb, ap: L.ct.ap }); });
+  var LD = (fam === 'std') ? ACT_LEAD : LEADS[fam];
+  if (bestG) { para = subj + '、' + LD[bestG.act.tp]; if (bestH) para += HARDS[fam].after; }
+  else if (bestH) { para = subj + '、' + HARDS[fam].solo; }
+  else { para = '今日は、相手の星に強く火がつく配置はないみたい。気持ちは上の読みのまま、静かに続いてる日だよ。'; }
+  if (bestG || bestH) {
+    if (tSum >= 2) para += bestG ? '今日はタロットも後押ししてるから、その気持ち、素直に受け取ってみてね。' : 'でもタロットは悪くない流れだから、このイライラは一時的だと思うな。';
+    else if (tSum <= -2) para += '今日はタロットが慎重モードだから、動きがなくても気にしすぎないでね。気持ちは育ってるよ。';
+  }
+  return { para: para, chains: chains };
 }
 function transitAll(nB) {
   var now = new Date();
@@ -363,11 +410,12 @@ document.getElementById('kBtn').addEventListener('click', async function () {
       try { cur = JSON.parse(localStorage.getItem(AKEY) || '{}'); } catch (e) {}
       cur.A = cur.A || {}; cur.B = cur.B || {};
       cur.A.date = dA; cur.B.date = dB;
+      bName = (cur.B && cur.B.name) ? String(cur.B.name) : '';
       localStorage.setItem(AKEY, JSON.stringify(cur));
     } catch (e) {}
+    var bName = '';
     var nA = natalOf(dA), nB = natalOf(dB);
     var syn = synastry(nA, nB);
-    var trs = transitLines(nB);
     var trAll = transitAll(nB);
     var now = new Date();
     var today = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
@@ -382,6 +430,8 @@ document.getElementById('kBtn').addEventListener('click', async function () {
       cards.push({ c: c, ci: ci, rev: rev, text: rev ? c.rev : c.up, w: rev ? c.wr : c.wu });
     }
     var tSum = cards[0].w + cards[1].w + cards[2].w;
+    var mode = kModeEl.value; var fam = FAMMAP[mode] || 'std';
+    var appr = approachToday(nB, syn.all, tSum, bName, fam);
     var aw = syn.warmth;
     var headline, advice;
     if (aw >= 1 && tSum >= 1) headline = '星もカードも、相手の好意があなたに向いていると伝えています。';
@@ -424,13 +474,14 @@ document.getElementById('kBtn').addEventListener('click', async function () {
     } else {
       html += '<p style="font-size:14px; color:#efe8da; line-height:1.95; margin:0 0 10px;">二人の間には、強く引っ張り合うような流れは今のところ見当たらないね。穏やかで、波の少ない関係だよ。無理に読み解くようなものがない分、日常のやり取りそのものが二人の答えだと思うな。</p>';
     }
-    if (trs.length) {
-      html += '<p style="font-size:14px; color:#efe8da; line-height:1.95; margin:0 0 10px;">' + trs.join('') + '</p>';
-    }
+    var bgc = null;
+    syn.contacts.concat(syn.all).forEach(function (ct) { if (ct.good && (!bgc || ct.w > bgc.w)) bgc = ct; });
+    if (bgc) html += '<p style="font-size:14px; color:#efe8da; line-height:1.95; margin:0 0 10px;">' + noticeText(fam, (bName ? bName + 'さんは' : '相手は'), NOTICE[bgc.ap]) + '</p>';
+    html += '<p style="font-size:14px; color:#efe8da; line-height:1.95; margin:0 0 10px;">' + appr.para + '</p>';
     html += '<p style="font-size:14px; color:#faf6f0; line-height:1.95; margin:0;">' + (syn.warmth >= 2.5 ? CLOSER.warm : syn.warmth >= 0.5 ? CLOSER.mid : CLOSER.cool) + '</p>';
     html += '</div>';
     html += '<div style="font-size:13px; font-weight:700; color:#e8cf9f; margin-top:16px;">⭐ 星からの裏づけ</div>';
-    html += '<div style="font-size:11.5px; color:#9a8d7a; margin-top:2px; line-height:1.7;">「出生」＝生まれた時の星どうしの触れ合い、「現行」＝いま空を動いている星が、相手の星に触れているものです。</div>';
+    html += '<div style="font-size:11.5px; color:#9a8d7a; margin-top:2px; line-height:1.7;">「出生」＝生まれた時の星どうしの触れ合い、「現行」＝いま空を動いている星が相手の星に触れて、その気持ちがあなたに向かっているものです。</div>';
     html += '<div style="margin-top:6px;">';
     if (syn.contacts.length) {
       syn.contacts.forEach(function (ct) {
@@ -439,8 +490,8 @@ document.getElementById('kBtn').addEventListener('click', async function () {
     } else {
       html += '<div style="font-size:13.5px; color:#c5bba9; line-height:1.8;">二人の星に、気持ちを強く動かす配置は見つかりませんでした。穏やかな関係のようです。</div>';
     }
-    trs.forEach(function (line) {
-      html += '<div style="font-size:13.5px; color:#faf6f0; line-height:1.8; padding:6px 0; border-top:1px solid rgba(197,168,128,0.18);"><span style="display:inline-block; font-size:10.5px; font-weight:700; color:#0d0c0a; background:#7a9fc5; border-radius:6px; padding:1px 7px; margin-right:6px; vertical-align:2px;">現行</span>' + line + '</div>';
+    appr.chains.forEach(function (ch) {
+      html += '<div style="font-size:13.5px; color:#faf6f0; line-height:1.8; padding:6px 0; border-top:1px solid rgba(197,168,128,0.18);"><span style="display:inline-block; font-size:10.5px; font-weight:700; color:#0d0c0a; background:#7a9fc5; border-radius:6px; padding:1px 7px; margin-right:6px; vertical-align:2px;">現行</span>現行の' + GLYPH[ch.tp] + NAME[ch.tp] + ' × 相手の' + GLYPH[ch.bp] + NAME[ch.bp] + '（' + (ch.asp === 0 ? '合' : ch.asp === 120 ? 'トライン' : ch.asp === 90 ? 'スクエア' : 'オポジション') + '）→ あなたの' + GLYPH[ch.ap] + NAME[ch.ap] + 'に届く形<span style="color:#8a8178; font-size:12px;"> オーブ' + ch.orb.toFixed(1) + '°</span></div>';
     });
     html += '</div>';
     html += '<details style="margin-top:12px; border:1px solid #4a4238; border-radius:10px; padding:8px 12px;">';
