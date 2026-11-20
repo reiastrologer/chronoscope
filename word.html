@@ -117,7 +117,7 @@ var THEMES = [
  { label: '引っ越し', icon: '🏠', keys: ['引っ越し', '引越し', '移住', '転居', '新生活'], spread: [5, 6], voice: [0, 5, 6], risk: [2, 8], riskWord: 'ドタバタ注意', conjMax: true, days: 1826, spanLabel: '5年', strictSpread: true },
  { label: '配信・発信', icon: '📣', keys: ['配信', 'バズ', '投稿', '動画', 'ライブ', 'フォロワー', 'SNS', 'ブログ'], spread: [5, 7], voice: [0, 2, 3], risk: [2, 5, 7], riskWord: '炎上注意' },
  { label: '美容', icon: '💇', keys: ['美容', '髪', 'ダイエット', '痩せ', 'キレイ', 'きれい', '美'], spread: [3, 5], voice: [0, 3], risk: [6], riskWord: '注意', days: 61, spanLabel: '2ヶ月' },
- { label: '結婚', icon: '💍', keys: ['結婚', '婚活', 'プロポーズ', '入籍', '婚姻'], spread: [5, 6], voice: [0, 3], risk: [7], riskWord: '注意', days: 1826, spanLabel: '5年' },
+ { label: '結婚', icon: '💍', keys: ['結婚', '婚活', 'プロポーズ', '入籍', '婚姻'], spread: [5, 6], voice: [0, 3], risk: [7], riskWord: '注意', days: 1826, spanLabel: '5年', strictSpread: true },
  { label: '金持ち', icon: '👑', keys: ['金持ち', '大金持ち', '億万長者', '富豪', '大富豪'], spread: [5, 8, 9], voice: [0, 3], risk: [6], riskWord: '注意' },
  { label: '研究', icon: '🔬', keys: ['研究', '調査', '開発', '実験', '分析', '論文', '探求', '発明'], spread: [2, 7], voice: [0, 2], risk: [8], riskWord: '混乱注意' },
  { label: '占い・芸術', icon: '🎨', keys: ['占い', '美術', 'アート', '芸術', 'イラスト', 'デザイン', '創作'], spread: [8, 2], voice: [0, 3], risk: [6], riskWord: '注意' }
@@ -215,7 +215,7 @@ for (var off = -3; off <= NDAYS + 3; off++) {
       [0, 90, 120, 180].forEach(function (a) { var oo = Math.abs(diff - a); if (oo < orb) { orb = oo; asp = a; } });
       if (orb > 3.5 || asp === null) return;
       var isGoodAsp = (asp === 0 || asp === 120);
-      var tierA = (SPREAD.indexOf(t) >= 0 && VOICE.indexOf(n) >= 0) || (VOICE.indexOf(t) >= 0 && SPREAD.indexOf(n) >= 0);
+      var tierA = (SPREAD.indexOf(t) >= 0 && VOICE.indexOf(n) >= 0) || (!CUR.theme.strictSpread && VOICE.indexOf(t) >= 0 && SPREAD.indexOf(n) >= 0);
       var isGood = isGoodAsp && (tierA || (!CUR.theme.strictSpread && VOICE.indexOf(n) >= 0));
       var isRisk = !isGoodAsp && (RISK.indexOf(t) >= 0 || RISK.indexOf(n) >= 0 || VOICE.indexOf(n) >= 0);
       if (!isGood && !isRisk) return;
