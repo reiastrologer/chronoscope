@@ -374,6 +374,16 @@ function noticeText(fam, subj, word) {
   if (fam === 'online') return subj + '、あなたの' + word + 'を、画面越しでもちゃんと感じてるみたいだよ。';
   return subj + '、あなたの' + word + 'を気に入ってるみたいだよ。そういう何気ないところ、ちゃんと気づいてるからね。';
 }
+var BWORD = { 0: '\u300cその人らしさ\u300d', 1: '\u300c素の気持ち\u300d', 3: '\u300c好き\u300d', 4: '\u300cやる気\u300d' };
+var AWORD = { 0: '\u300cあなた自身\u300d', 1: '\u300c素の気持ち\u300d', 2: '\u300c言葉・連絡\u300d', 3: '\u300c愛情\u300d', 4: '\u300c行動力\u300d', 5: '\u300c優しさ\u300d', 6: '\u300c真面目さ\u300d' };
+var FOLLOW_GOOD = { 0: 'あなたがまっすぐ受け取れる日。', 1: '素のあなたに響く日。', 2: '連絡や会話で伝わりやすい日。', 3: '気持ちが届きやすい日。', 4: '一緒に動くと弾む日。', 5: '優しさで受け止められる日。', 6: 'ちゃんと受け止めようとしてくれる日。' };
+var FOLLOW_HARD = { 0: 'あなたが構えてしまうだけかも。', 1: 'あなたの気持ちが揺れやすいだけ。', 2: '言葉がすれ違いやすいだけ。', 3: '好みや温度差が出やすいだけ。', 4: '勢いがぶつかりやすいだけ。', 5: '期待が大きくなりやすいだけ。', 6: '真面目に受け止めすぎやすいだけ。' };
+function chainGloss(ch) {
+  var tone = ch.sasp === 0 ? '重なる形で届く' : ch.sasp === 120 ? 'スムーズに届く' : ch.sasp === 90 ? 'ぶつかる形で届く' : '引っ張り合う形で届く';
+  var hard = (ch.sasp === 90 || ch.sasp === 180);
+  return '相手の' + (BWORD[ch.bp] || '') + 'の星に火がついて、その気持ちがあなたの' + (AWORD[ch.ap] || '') + 'の星に' + tone + '。' + (hard ? '気持ちが強い分、' + (FOLLOW_HARD[ch.ap] || '') : (FOLLOW_GOOD[ch.ap] || ''));
+}
+
 function approachToday(nB, synAll, tSum, bName, fam) {
   var now = new Date();
   var jd = PJD(now.getFullYear(), now.getMonth() + 1, now.getDate(), 3.0, 1);
@@ -393,7 +403,7 @@ function approachToday(nB, synAll, tSum, bName, fam) {
   var bestG = null, bestH = null;
   lit.forEach(function (L) { if (L.ct.good && L.act.good && !bestG) bestG = L; if ((!L.ct.good || !L.act.good) && !bestH) bestH = L; });
   var chains = [];
-  lit.slice(0, 3).forEach(function (L) { chains.push({ tp: L.act.tp, bp: L.ct.bp, asp: L.act.asp, orb: L.act.orb, ap: L.ct.ap }); });
+  lit.slice(0, 3).forEach(function (L) { chains.push({ tp: L.act.tp, bp: L.ct.bp, asp: L.act.asp, orb: L.act.orb, ap: L.ct.ap, sasp: L.ct.asp }); });
   var tw = 0;
   lit.forEach(function (L) { tw += ((L.ct.good && L.act.good) ? 1 : -1) * L.score; });
   return { lit: lit, tw: tw, chains: chains, bestG: bestG, bestH: bestH, subj: subj };
@@ -505,7 +515,7 @@ document.getElementById('kBtn').addEventListener('click', async function () {
       html += '<div style="font-size:13.5px; color:#c5bba9; line-height:1.8;">今日は、あなたに届く形の配置はありません。静かな日です。</div>';
     }
     appr.chains.forEach(function (ch) {
-      html += '<div style="font-size:13.5px; color:#faf6f0; line-height:1.8; padding:6px 0; border-top:1px solid rgba(197,168,128,0.18);"><span style="display:inline-block; font-size:10.5px; font-weight:700; color:#0d0c0a; background:#7a9fc5; border-radius:6px; padding:1px 7px; margin-right:6px; vertical-align:2px;">現行</span>現行の' + GLYPH[ch.tp] + NAME[ch.tp] + ' × 相手の' + GLYPH[ch.bp] + NAME[ch.bp] + '（' + (ch.asp === 0 ? '合' : ch.asp === 120 ? 'トライン' : ch.asp === 90 ? 'スクエア' : 'オポジション') + '）→ あなたの' + GLYPH[ch.ap] + NAME[ch.ap] + 'に届く形<span style="color:#8a8178; font-size:12px;"> オーブ' + ch.orb.toFixed(1) + '°</span></div>';
+      html += '<div style="font-size:13.5px; color:#faf6f0; line-height:1.8; padding:6px 0; border-top:1px solid rgba(197,168,128,0.18);"><span style="display:inline-block; font-size:10.5px; font-weight:700; color:#0d0c0a; background:#7a9fc5; border-radius:6px; padding:1px 7px; margin-right:6px; vertical-align:2px;">現行</span>現行の' + GLYPH[ch.tp] + NAME[ch.tp] + ' × 相手の' + GLYPH[ch.bp] + NAME[ch.bp] + '（' + (ch.asp === 0 ? '合' : ch.asp === 120 ? 'トライン' : ch.asp === 90 ? 'スクエア' : 'オポジション') + '）→ 相手の' + GLYPH[ch.bp] + NAME[ch.bp] + ' × あなたの' + GLYPH[ch.ap] + NAME[ch.ap] + '（' + (ch.sasp === 0 ? '合' : ch.sasp === 120 ? 'トライン' : ch.sasp === 90 ? 'スクエア' : 'オポジション') + '）<span style="color:#8a8178; font-size:12px;"> 点火オーブ' + ch.orb.toFixed(1) + '°</span><div style="font-size:12.5px; color:#a89a83; margin-top:2px;">\uD83D\uDCAC ' + chainGloss(ch) + '</div></div>';
     });
     html += '</div>';
     html += '<details style="margin-top:12px; border:1px solid #4a4238; border-radius:10px; padding:8px 12px;">';
