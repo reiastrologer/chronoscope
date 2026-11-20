@@ -510,9 +510,9 @@ function coupleTail(tId, nIds, kind) {
   return love ? '二人でいると恋の熱がすれ違いやすい日。決めつけず、相手のペースを待つと◎です。' : '二人でいると少しギクシャクしやすい日。無理に進めず、距離感を大切にすると◎です。';
 }
 function coupleTextSingle(ownerName, otherName, h) {
-  // ブレンド読み: 「相手のトランジット × 自分のネイタル」のクロス接触として、方向を持たせて読む
+  // ブレンド読み: 「相手の今日の星 × 自分の生まれ持った星」のクロス接触として、方向を持たせて読む（星用語なし・語り口調）
   const theme = synInfo({ a: h.tb, b: h.nb, asp: h.asp }).desc;
-  return otherName + 'さんのトランジット' + h.tb.name + 'が、' + ownerName + 'さんのネイタル' + h.nb.name + '（' + TOUCH[h.nb.id] + '）に届く日。二人の間にテーマが流れる日です。' + (theme ? theme + ' ' : '') + coupleTail(h.tb.id, [h.nb.id], h.asp.kind);
+  return otherName + 'さんの今日の星が、' + ownerName + 'さんの「' + TOUCH[h.nb.id] + '」に届く日。' + (theme ? theme + ' ' : '') + coupleTail(h.tb.id, [h.nb.id], h.asp.kind);
 }
 const THEME_T = {
   0: '二人の時間や予定', 1: '気持ちのやり取り', 2: '連絡や会話',
@@ -571,7 +571,8 @@ monthSel.innerHTML = Array.from({length: 12}, (_, i) => `<option value="${i + 1}
 document.getElementById('periodMode').addEventListener('change', (e) => {
   document.getElementById('periodMonthFld').style.display = e.target.value === 'month' ? '' : 'none';
 });
-document.getElementById('periodBtn').addEventListener('click', async () => {
+document.getElementById('periodBtn').addEventListener('click', async (e) => {
+  if (e && e.currentTarget) e.currentTarget.blur();
   const C = window.__charts;
   if (!C) { alert('先に二人の相性を計算してください🔮'); return; }
   const btn = document.getElementById('periodBtn');
@@ -662,8 +663,8 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
     const cardFor = (it) => {
       const ownerName = it.owner === 'A' ? C.A.name : C.B.name;
       const otherName = it.owner === 'A' ? C.B.name : C.A.name;
-      return `<div class="card ${it.h.asp.kind === 'hard' ? 'hard' : ''}" style="cursor:pointer;" onclick="showPeriodWheel(${topCards.indexOf(it)})"><div class="ttl">${it.day.m}月${it.day.d}日 ― ${esc(otherName)}のトランジット${it.h.tb.emoji}${it.h.tb.name} × ${esc(ownerName)}のネイタル${it.h.nb.emoji}${it.h.nb.name}</div>` +
-        `<div class="asp">${it.h.asp.kind === 'hard' ? '⚠️ 注意' : '💖 好調'} ― ${it.h.asp.emoji} ${it.h.asp.name}（オーブ ${it.h.orb.toFixed(1)}°）</div>` +
+      return `<div class="card ${it.h.asp.kind === 'hard' ? 'hard' : ''}" style="cursor:pointer;" onclick="showPeriodWheel(${topCards.indexOf(it)})"><div class="ttl">${it.day.m}月${it.day.d}日 ― ${THEME_T[it.h.tb.id]}が動く日</div>` +
+        `<div class="asp">${it.h.asp.kind === 'hard' ? '⚠️ 注意' : '💖 好調'}</div>` +
         `<div style="font-size:12px; color:#8a8178; margin-bottom:6px;">影響する期間：${spanFor(it)}（${it.day.m}月${it.day.d}日がピーク）</div>` +
         `<div class="desc">${coupleTextSingle(ownerName, otherName, it.h)}</div></div>`;
     };
@@ -687,11 +688,11 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
       const fmt = (x) => `${x.m}月${x.d}日（${x.score}）`;
       html = `<div class="scorebox"><div style="color:#8a8178;font-size:13px;">${year}年${month}月の二人の空模様</div><div class="score">${avg}</div>` +
         `<div class="verdict">${verdict(avg)}</div><div style="font-size:12px; color:#8a8178; margin-top:6px;">※シンクロ度（生まれ持った相性）とは別のものさしです。この点数は40前後が真ん中で、50あれば良い時期です。</div></div>` +
-        `<p style="font-size:12px; color:#8a8178; margin:2px 0 6px;">※月間は、動きの速い星（太陽・水星・金星・火星）だけで読んでいます。大きな星の流れは、年間で見てね。</p>` +
+        `<p style="font-size:12px; color:#8a8178; margin:2px 0 6px;">※月間は、動きの速い星だけで読んでいます。大きな星の流れは、年間で見てね。</p>` +
         `<p class="counts">💞 おすすめの日: ${byDate(sorted.slice(0, 3)).map(fmt).join(' ／ ')}<br>⚡ すれ違い注意: ${byDate(sorted.slice(-3)).map(fmt).join(' ／ ')}</p>` +
         `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※おすすめの日は「その日の二人の総合点」、ハイライトは「この期間で一番くっきり出る配置」で選んでいます。選び方が違うため、日付が重なることも、ずれることもあります。</p>` +
         `<h3 class="sec">✨ この月のハイライト</h3>` +
-        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ハイライトは「相手のトランジット（空の星）が、あなたのネイタル（出生の星）に届く日」と、その逆を選んでいます。片方の空が、もう片方の星に触れる日です。説明文をタップすると、その日の円（チャート）が開きます。</p>` + cardsHtml;
+        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ハイライトは「片方の今日の星が、もう片方の生まれ持った星に触れる日」を選んでいます。説明文をタップすると、その日の円（チャート）が開きます。</p>` + cardsHtml;
     } else {
       const rows = [];
       for (let m = 1; m <= 12; m++) {
@@ -706,10 +707,10 @@ document.getElementById('periodBtn').addEventListener('click', async () => {
         rows.map(r => `<div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><span style="width:38px; font-size:13px;">${r.m}月</span><div style="flex:1; background:rgba(255,255,255,0.05); border-radius:4px;"><div style="width:${r.ma}%; background:linear-gradient(90deg,#9a7d55,#c5a880); height:14px; border-radius:4px;"></div></div><span style="width:30px; font-size:13px;">${r.ma}</span></div>`).join('') +
         `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ベスト月・注意月は「月ごとの平均点」、ハイライトは「この期間で一番くっきり出る配置」で選んでいます。選び方が違うため、月と日付がずれることもあります。</p>` +
         `<h3 class="sec">✨ この年のハイライト</h3>` +
-        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ハイライトは「相手のトランジット（空の星）が、あなたのネイタル（出生の星）に届く日」と、その逆を選んでいます。片方の空が、もう片方の星に触れる日です。説明文をタップすると、その日の円（チャート）が開きます。</p>` + cardsHtml;
+        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ハイライトは「片方の今日の星が、もう片方の生まれ持った星に触れる日」を選んでいます。説明文をタップすると、その日の円（チャート）が開きます。</p>` + cardsHtml;
     }
     out.innerHTML = html;
-    var __hdO = document.querySelector('.topTab'); __hdO = __hdO ? __hdO.closest('[style*="sticky"]') : null; var yyO = out.getBoundingClientRect().top + window.scrollY - (__hdO ? __hdO.offsetHeight : 0) - 12; window.scrollTo({ top: yyO, behavior: 'smooth' });
+    requestAnimationFrame(() => { var __hdO = document.querySelector('.topTab'); __hdO = __hdO ? __hdO.closest('[style*="sticky"]') : null; var yyO = out.getBoundingClientRect().top + window.scrollY - (__hdO ? __hdO.offsetHeight : 0) - 12; window.scrollTo({ top: yyO, behavior: 'auto' }); });
   } catch (e) {
     console.error(e);
     alert('計算中にエラーが発生しました。');
