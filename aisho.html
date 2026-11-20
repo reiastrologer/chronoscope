@@ -383,6 +383,38 @@ window.showPeriodWheel = (i) => {
   document.getElementById('wheelBody').innerHTML = wheelSVG(ownerPos, it.day.tPos, h2, ownerName + 'のネイタル', 'その日の空');
   document.getElementById('wheelModal').style.display = 'flex';
 };
+
+function narrativeFor(A, B, hits) {
+  const nA = A.name + (A.name.endsWith('さん') ? '' : 'さん'), nB = B.name + (B.name.endsWith('さん') ? '' : 'さん');
+  const good = hits.filter(h => h.asp.kind === 'harmony');
+  const hard = hits.filter(h => h.asp.kind === 'hard');
+  const has = (h, ids) => ids.includes(h.a.id) || ids.includes(h.b.id);
+  const paras = [];
+  const g0 = good.length ? good[0] : null;
+  if (g0 && has(g0, [5])) paras.push('まず、二人の間には「広げ合う」追い風がはっきりあるよ。' + nA + 'の広げようとする力と、' + nB + 'の伸びようとする力が、気持ちいいくらい噛み合ってる。一緒にいると、物事が前に進む感じがする二人だと思うな。');
+  else if (g0 && has(g0, [1])) paras.push('まず、二人の間には安心感の土台があるよ。素の自分を出しやすくて、一緒にいて落ち着く組み合わせ。無理に盛り上げなくても、静かに通じ合える二人だと思うな。');
+  else if (g0 && has(g0, [3])) paras.push('まず、二人の間には「一緒にいて楽しい」空気が流れてるよ。惹かれ合う力も、居心地の良さもある。自然と笑顔が増える組み合わせだと思うな。');
+  else if (g0 && has(g0, [2])) paras.push('まず、二人は話の合う組み合わせだよ。頭の回転や言葉の好みが近くて、会話が途切れない。話しているうちに仲が深まるタイプだと思うな。');
+  else if (g0) paras.push('まず、二人の星は気持ちよく響き合うところがあるよ。得意なところを活かし合える、自然体の組み合わせだと思うな。');
+  else paras.push('まず、二人は「静かに育てる」タイプの組み合わせだよ。派手な追い風はないけど、その分、時間をかけて作っていく関係になると思うな。');
+  const mG = good.filter(h => has(h, [2])), mH = hard.filter(h => has(h, [2]));
+  if (mG.length && mH.length) paras.push('言葉の相性はね、半分は抜群で、半分は要注意。通じ合うところは驚くほど通じ合うのに、言い方や正しさの話になると、どっちも譲らなくて白熱しやすい。悪気はないの。頭の回転が二人とも速いからこその摩擦だね。');
+  else if (mG.length) paras.push('言葉の相性はいいよ。話し方や考え方のテンポが合っていて、連絡のやり取りも自然に続くと思うな。');
+  else if (mH.length) paras.push('言葉の相性は、ちょっと注意がいるところ。言い方ひとつで白熱しやすいから、「勝ち負け」じゃなく「分かり合うため」の会話を意識すると、ずっと楽になるよ。');
+  const fG = good.filter(h => has(h, [3, 1])), fH = hard.filter(h => has(h, [3, 1]));
+  if (fG.length && fH.length) paras.push('気持ちの面では、惹かれ合う力と、すれ違いやすい部分が両方あるよ。楽しい時間は本当に楽しい分、気持ちが届かない日はモヤッとしやすい。感じたことを言葉にする習慣が、二人を助けてくれると思うな。');
+  else if (fG.length && !(g0 && has(g0, [1, 3]))) paras.push('気持ちの面では、居心地の良さがある組み合わせ。甘えたり頼ったりが自然にできて、一緒にいる時間が癒しになると思うな。');
+  else if (fH.length) paras.push('気持ちの面では、すれ違いに注意したいところ。大事に思う気持ちはあっても、届き方が違うだけかも。決めつけずに確認し合うと、だいぶ違うよ。');
+  const sH = hard.filter(h => has(h, [6, 4, 7, 9, 8]));
+  if (sH.length) {
+    const t0 = sH[0];
+    if (has(t0, [6])) paras.push('ひとつだけ、重さの話。片方の厳しさが、もう片方には少し重く届くことがあるよ。悪気じゃなく、ちゃんとしたい気持ちの裏返しだと思うな。そこだけ言葉をひとつ柔らかくすると、ずっと長続きする二人だと思うよ。');
+    else if (has(t0, [4])) paras.push('勢いのぶつかり合いには注意だね。どっちも譲れない場面では熱くなりやすいけど、その分、一緒に動く時のパワーは本物だよ。熱くなったら一回深呼吸、それで十分だと思うな。');
+    else if (has(t0, [7])) paras.push('距離感の波には注意だね。近づきたい時と、一人でいたい時のタイミングがずれやすい。「自由」と「放置」の線引きだけ、軽く話しておくと安心だよ。');
+    else paras.push('刺激の強いところもあって、たまに圧やモヤモヤを感じるかも。でもそれは、どうでもいい相手には生まれない種類の反応だと思うな。深く関わる二人だからこその刺激だよ。');
+  } else if (!mH.length && !fH.length) paras.push('大きなぶつかり合いの配置は見当たらないよ。穏やかに、自然に育っていく二人だと思うな。');
+  return paras;
+}
 function signOf(lon) { return SIGNS[Math.floor(((lon % 360) + 360) % 360 / 30)]; }
 function degOf(lon) { return (((lon % 30) + 30) % 30).toFixed(1); }
 function esc(s) { return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -429,11 +461,16 @@ document.getElementById('calcBtn').addEventListener('click', async () => {
     res.innerHTML =
       `<div class="scorebox"><div style="color:#8a8178;font-size:13px;">${esc(A.name)} × ${esc(B.name)} のシンクロ度</div><div class="score">${score}</div><div class="verdict">${verdict(score)}</div></div>` +
       (fateChecks(posA, posB, A.name, B.name).map(f => `<div style="background:linear-gradient(135deg, rgba(197,168,128,0.25), rgba(197,168,128,0.08)); border:1px solid #c5a880; border-radius:10px; padding:12px 14px; margin-bottom:12px;"><div style="font-weight:700; color:#c5a880; margin-bottom:4px;">💫 運命の人の配置 ― ${esc(f.fromName)}の${f.body === 0 ? '☉太陽' : '♀金星'} × ${esc(f.toName)}の☊ドラゴンヘッド ☌（オーブ ${f.orb.toFixed(1)}°）</div><div style="font-size:14px;">${f.text}<br><span style="color:#c5a880;">（割と多いですが相性良いのは間違いなし！）</span></div></div>`).join('')) +
+      `<div style="background:rgba(197,168,128,0.07); border:1px solid rgba(197,168,128,0.35); border-radius:12px; padding:16px; margin-bottom:14px;"><div style="font-weight:700; color:#e8cf9f; margin-bottom:8px;">📖 二人のまとめ</div>` +
+      narrativeFor(A, B, hits).map(p => `<p style="font-size:14.5px; line-height:1.9; margin:0 0 10px;">${p}</p>`).join('') +
+      '</div>' +
+      '<details style="margin-bottom:12px;"><summary style="cursor:pointer; color:#c5a880; font-size:14px; padding:6px 0;">📋 配置の内訳を見る（根拠）</summary>' +
       `<p class="counts">ハーモニー ${harmony.length}件 ／ 刺激・課題 ${hard.length}件</p>` +
       '<p class="note" style="margin-top:0;">説明文をタップすると、そのアスペクトの円（チャート）が開きます。</p>' +
       ((A.unknown || B.unknown) ? '<p class="note">※出生時刻が不明な方については、ASC・MCを除いて計算しています。</p>' : '') +
       `<h3 class="sec">💞 ハーモニー</h3>` + (harmony.slice(0, 10).map(card).join('') || '<p class="note">該当するアスペクトはありませんでした。</p>') +
       `<h3 class="sec">⚡ 刺激・課題</h3>` + (hard.slice(0, 8).map(card).join('') || '<p class="note">該当するアスペクトはありませんでした。</p>') +
+      '</details>' +
       '<p class="note">※相性は星の響き合いの傾向です。実際の関係は、二人の歩み寄りでいくらでも育ちます。</p>';
     window.__hits = hits;
     window.__charts = { A, B, posA, posB };
