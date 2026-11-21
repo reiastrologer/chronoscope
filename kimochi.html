@@ -436,6 +436,34 @@ function chainGloss(ch) {
   var tone = ch.asp === 0 ? '重なる形で届く' : ch.asp === 120 ? 'スムーズに届く' : ch.asp === 90 ? 'ぶつかる形で届く' : '引っ張り合う形で届く';
   return '相手があなたに向ける星が、あなたの' + (AWORD[ch.ap] || '') + 'の星に' + tone + '。' + (ch.good ? (FOLLOW_GOOD[ch.ap] || '') : '気持ちが強い分、' + (FOLLOW_HARD[ch.ap] || ''));
 }
+function spreadPos(pos, ids, minSep) {
+  var pts = ids.filter(function (id) { return pos[id] != null; }).map(function (id) { return { id: id, lon: ((pos[id] % 360) + 360) % 360 }; }).sort(function (a, b) { return a.lon - b.lon; });
+  var out = {};
+  if (!pts.length) return out;
+  if (pts.length === 1) { out[pts[0].id] = pts[0].lon; return out; }
+  var gi = 0, gmax = -1;
+  for (var i = 0; i < pts.length; i++) {
+    var gap = ((pts[(i + 1) % pts.length].lon - pts[i].lon) % 360 + 360) % 360;
+    if (gap > gmax) { gmax = gap; gi = (i + 1) % pts.length; }
+  }
+  var seq = [], add = 0, prevRaw = null;
+  for (var j = 0; j < pts.length; j++) {
+    var p = pts[(gi + j) % pts.length];
+    if (prevRaw !== null && p.lon < prevRaw) add += 360;
+    seq.push({ id: p.id, lon: p.lon + add });
+    prevRaw = p.lon;
+  }
+  var disp = seq.map(function (p) { return p.lon; });
+  for (var it = 0; it < 80; it++) {
+    var moved = false;
+    for (var k = 1; k < disp.length; k++) {
+      if (disp[k] - disp[k - 1] < minSep) { var push = (minSep - (disp[k] - disp[k - 1])) / 2; disp[k - 1] -= push; disp[k] += push; moved = true; }
+    }
+    if (!moved) break;
+  }
+  seq.forEach(function (p, idx) { out[p.id] = disp[idx]; });
+  return out;
+}
 function wheelSVG(nA, nB, tPos, contacts) {
   var S = 340, C = S / 2;
   var SIGNS = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
@@ -453,20 +481,33 @@ function wheelSVG(nA, nB, tPos, contacts) {
     var pg = P(i * 30 + 15, 153);
     s += '<text x="' + pg[0].toFixed(1) + '" y="' + pg[1].toFixed(1) + '" font-size="15" fill="' + ECOL[i % 4] + '" text-anchor="middle" dominant-baseline="middle">' + SIGNS[i] + '</text>';
   }
+  var dispT = spreadPos(tPos, [0, 2, 3, 4, 5], 6.8);
+  var dispA = spreadPos(nA, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 8.7);
+  var dispB = spreadPos(nB, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 11.1);
   contacts.forEach(function (ch) {
     if (!tPos[ch.tp]) return;
-    var p1 = P(tPos[ch.tp], 118), p2 = P(nA[ch.ap], 106);
+    var p1 = P(dispT[ch.tp] != null ? dispT[ch.tp] : tPos[ch.tp], 118), p2 = P(dispA[ch.ap] != null ? dispA[ch.ap] : nA[ch.ap], 106);
     var col = ch.asp === 0 ? '#d9a514' : ch.good ? '#2e9e5b' : '#d95f43';
     s += '<line x1="' + p1[0].toFixed(1) + '" y1="' + p1[1].toFixed(1) + '" x2="' + p2[0].toFixed(1) + '" y2="' + p2[1].toFixed(1) + '" stroke="' + col + '" stroke-width="1.6" opacity="0.75"/>';
   });
-  function ring(pos, r, col, fs) {
+  function ring(pos, r, col, fs, disp, tickR) {
     var out = '';
-    for (var pid = 0; pid <= 9; pid++) { if (pos[pid] == null) continue; var pp = P(pos[pid], r); out += '<text x="' + pp[0].toFixed(1) + '" y="' + pp[1].toFixed(1) + '" font-size="' + fs + '" fill="' + col + '" text-anchor="middle" dominant-baseline="middle">' + GLYPH[pid] + '</text>'; }
+    for (var pid = 0; pid <= 9; pid++) {
+      if (pos[pid] == null) continue;
+      var dl = disp && disp[pid] != null ? disp[pid] : pos[pid];
+      var d = ((dl - pos[pid]) % 360 + 360) % 360; if (d > 180) d -= 360;
+      if (Math.abs(d) > 0.05) {
+        var l1 = P(dl, (r + tickR) / 2), l2 = P(pos[pid], tickR);
+        out += '<line x1="' + l1[0].toFixed(1) + '" y1="' + l1[1].toFixed(1) + '" x2="' + l2[0].toFixed(1) + '" y2="' + l2[1].toFixed(1) + '" stroke="' + col + '" stroke-width="1" opacity="0.55"/><circle cx="' + l2[0].toFixed(1) + '" cy="' + l2[1].toFixed(1) + '" r="2" fill="' + col + '"/>';
+      }
+      var pp = P(dl, r);
+      out += '<text x="' + pp[0].toFixed(1) + '" y="' + pp[1].toFixed(1) + '" font-size="' + fs + '" fill="' + col + '" text-anchor="middle" dominant-baseline="middle">' + GLYPH[pid] + '</text>';
+    }
     return out;
   }
-  s += ring(tPos, 126, '#e0685c', 15);
-  s += ring(nA, 99, '#7a9fc5', 15);
-  s += ring(nB, 72, '#c39bd8', 14);
+  s += ring(tPos, 126, '#e0685c', 15, dispT, 140);
+  s += ring(nA, 99, '#7a9fc5', 15, dispA, 112);
+  s += ring(nB, 72, '#c39bd8', 14, dispB, 86);
   s += '<text x="' + C + '" y="' + C + '" font-size="20" fill="#c9b892" text-anchor="middle" dominant-baseline="middle">♄</text>';
   s += '</svg>';
   return s;

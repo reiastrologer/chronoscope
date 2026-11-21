@@ -308,12 +308,45 @@ function verdict(score) {
   if (score >= 42) return '刺激多めの成長型相性。違いを楽しめるかどうかが鍵です。';
   return '静かに育てるタイプの相性。時間をかけるほど良さが見えてきます。';
 }
+
+// 記号が重なる時は横に広げ、本当の度数へリーダー線を引く（一般のホロスコープサイト方式）
+function spreadPos(pos, ids, minSep) {
+  const pts = ids.filter(id => pos[id] !== undefined).map(id => ({ id, lon: ((pos[id] % 360) + 360) % 360 })).sort((a, b) => a.lon - b.lon);
+  const out = {};
+  if (!pts.length) return out;
+  if (pts.length === 1) { out[pts[0].id] = pts[0].lon; return out; }
+  let gi = 0, gmax = -1;
+  for (let i = 0; i < pts.length; i++) {
+    const gap = ((pts[(i + 1) % pts.length].lon - pts[i].lon) % 360 + 360) % 360;
+    if (gap > gmax) { gmax = gap; gi = (i + 1) % pts.length; }
+  }
+  const seq = [];
+  let add = 0, prevRaw = null;
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[(gi + i) % pts.length];
+    if (prevRaw !== null && p.lon < prevRaw) add += 360;
+    seq.push({ id: p.id, lon: p.lon + add });
+    prevRaw = p.lon;
+  }
+  const disp = seq.map(p => p.lon);
+  for (let iter = 0; iter < 80; iter++) {
+    let moved = false;
+    for (let i = 1; i < disp.length; i++) {
+      if (disp[i] - disp[i - 1] < minSep) { const push = (minSep - (disp[i] - disp[i - 1])) / 2; disp[i - 1] -= push; disp[i] += push; moved = true; }
+    }
+    if (!moved) break;
+  }
+  seq.forEach((p, i) => { out[p.id] = disp[i]; });
+  return out;
+}
 // ===== アスペクトの円（二重円チャート） =====
 function wheelSVG(posA, posB, h, nameA, nameB) {
   const cx = 160, cy = 160;
   const P = (lon, r) => [cx - r * Math.cos(lon * Math.PI / 180), cy + r * Math.sin(lon * Math.PI / 180)]; // 通常のチャートと同じ反時計回り
   const rotBase = posA[11] === undefined ? 0 : posA[11]; // Aのアセンを左端に合わせる
   const Q = (lon, r) => P(lon - rotBase, r);
+  const dispA = spreadPos(posA, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 7.0);
+  const dispB = spreadPos(posB, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 5.6);
   const SG = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
   let s = '<svg viewBox="0 0 320 320" style="width:100%; max-width:340px; display:block; margin:0 auto;">';
   s += '<circle cx="160" cy="160" r="152" fill="none" stroke="#c5a880" stroke-opacity="0.5"/>';
@@ -336,14 +369,21 @@ function wheelSVG(posA, posB, h, nameA, nameB) {
       s += `<text x="${nx.toFixed(1)}" y="${ny.toFixed(1)}" fill="#9a8a70" font-size="8" text-anchor="middle" dominant-baseline="middle">${i + 1}</text>`;
     });
   }
-  const [ax, ay] = Q(posA[h.a.id], 92), [bx, by] = Q(posB[h.b.id], 116);
+  const [ax, ay] = Q(dispA[h.a.id] !== undefined ? dispA[h.a.id] : posA[h.a.id], 92), [bx, by] = Q(dispB[h.b.id] !== undefined ? dispB[h.b.id] : posB[h.b.id], 116);
   const col = h.asp.kind === 'hard' ? '#e07856' : '#8fd0a8';
   s += `<line x1="${ax.toFixed(1)}" y1="${ay.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${col}" stroke-width="2" stroke-opacity="0.9"/>`;
-  const dots = (pos, r, color, hl) => Object.keys(pos).map(k => {
+  const dots = (pos, r, color, hl, disp, tickR) => Object.keys(pos).map(k => {
     const b = BODIES.find(x => x.id === +k);
     if (!b || +k === 11 || +k === 12) return ''; // ASC/MCは絵文字の中心がずれるため別描画
-    const [x, y] = Q(pos[k], r);
-    return (hl === +k ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13.5" fill="rgba(20,18,30,0.88)" stroke="${color}" stroke-width="1.8"/>` : '') +
+    const dl = disp && disp[+k] !== undefined ? disp[+k] : pos[k];
+    const [x, y] = Q(dl, r);
+    let d = ((dl - pos[k]) % 360 + 360) % 360; if (d > 180) d -= 360;
+    let lead = '';
+    if (Math.abs(d) > 0.05) {
+      const [lx1, ly1] = Q(dl, (r + tickR) / 2), [lx2, ly2] = Q(pos[k], tickR);
+      lead = `<line x1="${lx1.toFixed(1)}" y1="${ly1.toFixed(1)}" x2="${lx2.toFixed(1)}" y2="${ly2.toFixed(1)}" stroke="${color}" stroke-width="1" stroke-opacity="0.55"/><circle cx="${lx2.toFixed(1)}" cy="${ly2.toFixed(1)}" r="1.8" fill="${color}"/>`;
+    }
+    return lead + (hl === +k ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13.5" fill="rgba(20,18,30,0.88)" stroke="${color}" stroke-width="1.8"/>` : '') +
       `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" fill="${color}" font-size="${hl === +k ? 15 : 11}" text-anchor="middle" dominant-baseline="middle">${b.emoji}</text>`;
   }).join('');
   const ascMc = (pos, r, color, hl) => [11, 12].map(id => {
@@ -352,8 +392,8 @@ function wheelSVG(posA, posB, h, nameA, nameB) {
     return (hl === id ? `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="15" ry="11" fill="rgba(20,18,30,0.88)" stroke="${color}" stroke-width="1.8"/>` : '') +
       `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" fill="${color}" font-size="8.5" font-weight="700" text-anchor="middle" dominant-baseline="middle">${id === 11 ? 'ASC' : 'MC'}</text>`;
   }).join('');
-  s += dots(posB, 116, '#a8c4e0', h.b.id);
-  s += dots(posA, 92, '#e8cf9f', h.a.id);
+  s += dots(posB, 116, '#a8c4e0', h.b.id, dispB, 128);
+  s += dots(posA, 92, '#e8cf9f', h.a.id, dispA, 104);
   s += ascMc(posB, 116, '#a8c4e0', h.b.id);
   s += ascMc(posA, 92, '#e8cf9f', h.a.id);
   s += `<text x="160" y="152" fill="#e8cf9f" font-size="13" text-anchor="middle">${h.a.emoji} ${h.asp.emoji} ${h.b.emoji}</text>`;
@@ -368,6 +408,9 @@ function wheelSVG3(posIn, posMid, posOut, hl, nameIn, nameMid, extra) {
   const P = (lon, r) => [cx - r * Math.cos(lon * Math.PI / 180), cy + r * Math.sin(lon * Math.PI / 180)];
   const rotBase = posIn[11] === undefined ? 0 : posIn[11];
   const Q = (lon, r) => P(lon - rotBase, r);
+  const dispOut = spreadPos(posOut, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 5.3);
+  const dispMid = spreadPos(posMid, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 6.2);
+  const dispIn = spreadPos(posIn, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 8.0);
   const SG = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
   let s = '<svg viewBox="0 0 320 320" style="width:100%; max-width:340px; display:block; margin:0 auto;">';
   for (const r of [152, 128, 107, 86, 64]) s += `<circle cx="160" cy="160" r="${r}" fill="none" stroke="#c5a880" stroke-opacity="${r === 152 || r === 128 ? 0.5 : 0.3}"/>`;
@@ -390,18 +433,25 @@ function wheelSVG3(posIn, posMid, posOut, hl, nameIn, nameMid, extra) {
   }
   (extra || []).forEach(e => {
     if (posOut[e.tb.id] === undefined || posMid[e.nb.id] === undefined) return;
-    const [ex1, ey1] = Q(posOut[e.tb.id], 111), [ex2, ey2] = Q(posMid[e.nb.id], 104);
+    const [ex1, ey1] = Q(dispOut[e.tb.id] !== undefined ? dispOut[e.tb.id] : posOut[e.tb.id], 111), [ex2, ey2] = Q(dispMid[e.nb.id] !== undefined ? dispMid[e.nb.id] : posMid[e.nb.id], 104);
     const ecol = e.asp.kind === 'hard' ? '#e07856' : '#8fd0a8';
     s += `<line x1="${ex1.toFixed(1)}" y1="${ey1.toFixed(1)}" x2="${ex2.toFixed(1)}" y2="${ey2.toFixed(1)}" stroke="${ecol}" stroke-width="1.2" stroke-opacity="0.5"/>`;
   });
-  const [tx, ty] = Q(posOut[hl.tId], 110), [nx2, ny2] = Q(posIn[hl.nId], 84);
+  const [tx, ty] = Q(dispOut[hl.tId] !== undefined ? dispOut[hl.tId] : posOut[hl.tId], 110), [nx2, ny2] = Q(dispIn[hl.nId] !== undefined ? dispIn[hl.nId] : posIn[hl.nId], 84);
   const col = hl.asp.kind === 'hard' ? '#e07856' : '#8fd0a8';
   s += `<line x1="${tx.toFixed(1)}" y1="${ty.toFixed(1)}" x2="${nx2.toFixed(1)}" y2="${ny2.toFixed(1)}" stroke="${col}" stroke-width="2" stroke-opacity="0.9"/>`;
-  const dots = (pos, r, color, hlId) => Object.keys(pos).map(k => {
+  const dots = (pos, r, color, hlId, disp, tickR) => Object.keys(pos).map(k => {
     const b = BODIES.find(x => x.id === +k);
     if (!b || +k === 11 || +k === 12) return '';
-    const [x, y] = Q(pos[k], r);
-    return (hlId === +k ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="12.5" fill="rgba(20,18,30,0.88)" stroke="${color}" stroke-width="1.8"/>` : '') +
+    const dl = disp && disp[+k] !== undefined ? disp[+k] : pos[k];
+    const [x, y] = Q(dl, r);
+    let d = ((dl - pos[k]) % 360 + 360) % 360; if (d > 180) d -= 360;
+    let lead = '';
+    if (Math.abs(d) > 0.05) {
+      const [lx1, ly1] = Q(dl, (r + tickR) / 2), [lx2, ly2] = Q(pos[k], tickR);
+      lead = `<line x1="${lx1.toFixed(1)}" y1="${ly1.toFixed(1)}" x2="${lx2.toFixed(1)}" y2="${ly2.toFixed(1)}" stroke="${color}" stroke-width="1" stroke-opacity="0.55"/><circle cx="${lx2.toFixed(1)}" cy="${ly2.toFixed(1)}" r="1.7" fill="${color}"/>`;
+    }
+    return lead + (hlId === +k ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="12.5" fill="rgba(20,18,30,0.88)" stroke="${color}" stroke-width="1.8"/>` : '') +
       `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" fill="${color}" font-size="${hlId === +k ? 14 : 10.5}" text-anchor="middle" dominant-baseline="middle">${b.emoji}</text>`;
   }).join('');
   const ascMc = (pos, r, color) => [11, 12].map(id => {
@@ -409,9 +459,9 @@ function wheelSVG3(posIn, posMid, posOut, hl, nameIn, nameMid, extra) {
     const [x, y] = Q(pos[id], r);
     return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" fill="${color}" font-size="8" font-weight="700" text-anchor="middle" dominant-baseline="middle">${id === 11 ? 'ASC' : 'MC'}</text>`;
   }).join('');
-  s += dots(posOut, 118, '#e08a7a', hl.tId);
-  s += dots(posMid, 97, '#a8c4e0', -1);
-  s += dots(posIn, 76, '#e8cf9f', hl.nId);
+  s += dots(posOut, 118, '#e08a7a', hl.tId, dispOut, 128);
+  s += dots(posMid, 97, '#a8c4e0', -1, dispMid, 107);
+  s += dots(posIn, 76, '#e8cf9f', hl.nId, dispIn, 86);
   s += ascMc(posMid, 97, '#a8c4e0');
   s += ascMc(posIn, 76, '#e8cf9f');
   const nbB = BODIES.find(b => b.id === hl.nId), tbB = BODIES.find(b => b.id === hl.tId);

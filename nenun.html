@@ -443,7 +443,7 @@
         }
         function dlEnhance() {
           for (const h2 of document.querySelectorAll('h2')) {
-            const m = (h2.textContent || '').match(/(\d{4})年\s*運命のサイクル/);
+            const m = (h2.textContent || '').match(/(\d{4})年\s*(?:運命のサイクル|その年のテーマ)/);
             if (!m || h2.dataset.dlBtn) continue;
             h2.dataset.dlBtn = '1';
             const year = +m[1];
