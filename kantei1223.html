@@ -92,6 +92,11 @@
 
   <div class="card">
     <h2 id="wheelTitle">◎ 二重円（内＝ネイタル／外＝トランジット）</h2>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+      <button class="stepBtn lineModeBtn" data-mode="TN" type="button">線：T × 出生1</button>
+      <button class="stepBtn lineModeBtn" data-mode="TP" type="button">線：T × 出生2</button>
+      <button class="stepBtn lineModeBtn" data-mode="NP" type="button">線：出生1 × 出生2</button>
+    </div>
     <div id="wheel"></div>
     <div id="aspDetail" style="margin-top:10px;"></div>
     <p class="note" id="wheelNote">ハウスはネイタルのプラシーダス。線はトランジット×ネイタルのアスペクト（金＝合、緑＝トライン、赤＝スクエア／オポジション）。</p>
@@ -288,7 +293,7 @@ function foldDist(x, m) { var d = Math.abs(((x - m) % 45 + 45) % 45); return Mat
 function circDist(a, b) { var d = Math.abs(((a - b) % 360 + 360) % 360); return d > 180 ? 360 - d : d; }
 function glyphOf(id) { var b = BODIES.find(function (x) { return x.id === id; }); return b ? b.g : ''; }
 
-var state = { natal: null, partner: null, natalInfo: null, partnerInfo: null, transit: null, tDate: new Date(), aspects: [], aspectsP: [], selected: null };
+var state = { natal: null, partner: null, natalInfo: null, partnerInfo: null, transit: null, tDate: new Date(), aspects: [], aspectsP: [], aspectsNP: [], lineMode: 'TN', selected: null };
 function spreadGlyphs(items, minSep) {
   minSep = minSep || 7.5;
   var sorted = items.slice().sort(function (a, b) { return a.lon - b.lon; });
@@ -327,7 +332,8 @@ function renderWheel() {
   var nmA = (state.natalInfo && state.natalInfo.name) || '出生1';
   var nmB = (state.partnerInfo && state.partnerInfo.name) || '出生2';
   if (wt) wt.textContent = triple ? '◎ 三重円（内＝' + nmA + '／中＝' + nmB + '／外＝トランジット）' : '◎ 二重円（内＝ネイタル／外＝トランジット）';
-  if (wn) wn.textContent = triple ? 'ハウスは内側（出生1）のプラシーダス。太線＝トランジット×出生1、細線＝トランジット×出生2のアスペクト。' : 'ハウスはネイタルのプラシーダス。線はトランジット×ネイタルのアスペクト（金＝合、緑＝トライン、赤＝スクエア／オポジション）。';
+  var mode = triple ? (state.lineMode || 'TN') : 'TN';
+  if (wn) wn.textContent = !triple ? 'ハウスはネイタルのプラシーダス。線はトランジット×ネイタルのアスペクト（金＝合、緑＝トライン、赤＝スクエア／オポジション）。' : mode === 'TP' ? 'ハウスは内側（出生1）のプラシーダス。線はトランジット×出生2のアスペクト。' : mode === 'NP' ? 'ハウスは内側（出生1）のプラシーダス。線は出生1×出生2（シナストリー）のアスペクト。' : 'ハウスは内側（出生1）のプラシーダス。線はトランジット×出生1のアスペクト。';
   var cx = 320, cy = 320;
   var rot = nPos[11] !== undefined ? nPos[11] : 0;
   var P = function (lon, r) { var a = (lon - rot) * Math.PI / 180; return [cx - r * Math.cos(a), cy + r * Math.sin(a)]; };
@@ -355,25 +361,17 @@ function renderWheel() {
       s += '<text x="' + np[0].toFixed(1) + '" y="' + np[1].toFixed(1) + '" fill="#7A6A4A" font-size="12" text-anchor="middle" dominant-baseline="middle">' + (i + 1) + '</text>';
     });
   }
-  state.aspects.forEach(function (a) {
-    var p1 = P(tPos[a.t.id], chordR), p2 = P(nPos[a.n.id], chordR);
+  var drawCfg = mode === 'TP' ? { list: state.aspectsP || [], sA: 'T', sB: 'P' } : mode === 'NP' ? { list: state.aspectsNP || [], sA: 'P', sB: 'N' } : { list: state.aspects, sA: 'T', sB: 'N' };
+  var posOf = { T: tPos, N: nPos, P: pPos };
+  drawCfg.list.forEach(function (a) {
+    var p1 = P(posOf[drawCfg.sA][a.t.id], chordR), p2 = P(posOf[drawCfg.sB][a.n.id], chordR);
     var op = 0.2 + 0.7 * (1 - a.orb / a.asp.orb);
     var sel = state.selected;
-    var match = sel && ((sel.side === 'T' && sel.id === a.t.id) || (sel.side === 'N' && sel.id === a.n.id));
+    var match = sel && ((sel.side === drawCfg.sA && sel.id === a.t.id) || (sel.side === drawCfg.sB && sel.id === a.n.id));
     var lw = match ? 2.8 : 1.3;
     var lo = sel ? (match ? 1 : 0.04) : op;
-    s += '<line data-t="' + a.t.id + '" data-n="' + a.n.id + '" x1="' + p1[0].toFixed(1) + '" y1="' + p1[1].toFixed(1) + '" x2="' + p2[0].toFixed(1) + '" y2="' + p2[1].toFixed(1) + '" stroke="' + a.asp.col + '" stroke-width="' + lw + '" stroke-opacity="' + lo + '"/>';
+    s += '<line x1="' + p1[0].toFixed(1) + '" y1="' + p1[1].toFixed(1) + '" x2="' + p2[0].toFixed(1) + '" y2="' + p2[1].toFixed(1) + '" stroke="' + a.asp.col + '" stroke-width="' + lw + '" stroke-opacity="' + lo + '"/>';
   });
-  if (triple) {
-    (state.aspectsP || []).forEach(function (a) {
-      var q1 = P(tPos[a.t.id], chordR), q2 = P(pPos[a.n.id], chordR);
-      var op = 0.4 * (0.2 + 0.7 * (1 - a.orb / a.asp.orb));
-      var sel2 = state.selected;
-      var match = sel2 && ((sel2.side === 'T' && sel2.id === a.t.id) || (sel2.side === 'P' && sel2.id === a.n.id));
-      var lo = sel2 ? (match ? 0.9 : 0.03) : op;
-      s += '<line x1="' + q1[0].toFixed(1) + '" y1="' + q1[1].toFixed(1) + '" x2="' + q2[0].toFixed(1) + '" y2="' + q2[1].toFixed(1) + '" stroke="' + a.asp.col + '" stroke-width="' + (match ? 2.2 : 1.0) + '" stroke-opacity="' + lo + '"/>';
-    });
-  }
   function dots(pos, r, color, ids, side, sep, font) {
     var items = [];
     ids.forEach(function (id) { if (pos[id] !== undefined && id !== 11 && id !== 12) items.push({ id: id, lon: pos[id] }); });
@@ -383,11 +381,11 @@ function renderWheel() {
     var involved = {};
     if (sel) {
       involved[sel.side + sel.id] = true;
-      [{ list: state.aspects, other: 'N' }, { list: state.aspectsP || [], other: 'P' }].forEach(function (L) {
-        L.list.forEach(function (a) {
-          if (sel.side === 'T' && a.t.id === sel.id) involved[L.other + a.n.id] = true;
-          if (sel.side === L.other && a.n.id === sel.id) involved['T' + a.t.id] = true;
-        });
+      var mode3 = state.partner ? (state.lineMode || 'TN') : 'TN';
+      var L3 = mode3 === 'TP' ? { list: state.aspectsP || [], sA: 'T', sB: 'P' } : mode3 === 'NP' ? { list: state.aspectsNP || [], sA: 'P', sB: 'N' } : { list: state.aspects, sA: 'T', sB: 'N' };
+      L3.list.forEach(function (a) {
+        if (sel.side === L3.sA && a.t.id === sel.id) involved[L3.sB + a.n.id] = true;
+        if (sel.side === L3.sB && a.n.id === sel.id) involved[L3.sA + a.t.id] = true;
       });
     }
     items.forEach(function (it) {
@@ -430,12 +428,19 @@ function renderAspDetail() {
   var sel = state.selected;
   if (!sel) { el.innerHTML = '<p class="note">惑星をタップすると、その惑星のアスペクトだけを絞って表示します。もう一度タップで解除。</p>'; return; }
   var b = BODIES.find(function (x) { return x.id === sel.id; });
-  var isP = sel.side === 'P';
-  var list = (isP ? state.aspectsP : state.aspects).filter(function (a) { return sel.side === 'T' ? a.t.id === sel.id : a.n.id === sel.id; });
-  var head = '<div style="font-size:14px; font-weight:700; color:' + (sel.side === 'T' ? '#59E3FF' : isP ? '#C39BDB' : '#FFE14D') + ';">' + (sel.side === 'T' ? 'トランジット ' : isP ? '相手ネイタル ' : 'ネイタル ') + b.g + ' ' + b.n + (sel.side === 'T' ? ' のアスペクト' : ' へのトランジット') + '</div>';
-  if (!list.length) { el.innerHTML = head + '<p class="note">許容オーブ内のアスペクトはありません。</p>'; return; }
+  var modeD = state.partner ? (state.lineMode || 'TN') : 'TN';
+  var SIDES = {
+    T: { label: 'トランジット', col: '#59E3FF', tag: 'T' },
+    N: { label: 'ネイタル', col: '#FFE14D', tag: 'N' },
+    P: { label: '相手ネイタル', col: '#C39BDB', tag: 'P' }
+  };
+  var cfgD = modeD === 'TP' ? { list: state.aspectsP || [], sA: 'T', sB: 'P' } : modeD === 'NP' ? { list: state.aspectsNP || [], sA: 'P', sB: 'N' } : { list: state.aspects, sA: 'T', sB: 'N' };
+  var selCfg = sel.side === cfgD.sA ? SIDES[cfgD.sA] : sel.side === cfgD.sB ? SIDES[cfgD.sB] : null;
+  var list = selCfg ? cfgD.list.filter(function (a) { return sel.side === cfgD.sA ? a.t.id === sel.id : a.n.id === sel.id; }) : [];
+  var head = '<div style="font-size:14px; font-weight:700; color:' + (selCfg ? selCfg.col : '#9a8d7a') + ';">' + (selCfg ? selCfg.label : 'この線表示の対象外') + ' ' + b.g + ' ' + b.n + ' のアスペクト</div>';
+  if (!list.length) { el.innerHTML = head + '<p class="note">' + (selCfg ? '許容オーブ内のアスペクトはありません。' : 'いま表示中の線には、この惑星は含まれません。') + '</p>'; return; }
   el.innerHTML = head + list.map(function (a) {
-    return '<div class="aspRow"><span><span style="color:#59E3FF;">T ' + a.t.g + ' ' + a.t.n + '</span> <span style="color:' + a.asp.col + ';">' + a.asp.g + '</span> <span style="color:' + (isP ? '#C39BDB' : '#FFE14D') + ';">' + (isP ? 'P ' : 'N ') + a.n.g + ' ' + a.n.n + '</span></span><span style="color:#9a8d7a;">' + a.orb.toFixed(2) + '° ' + a.applying + '</span></div>';
+    return '<div class="aspRow"><span><span style="color:' + SIDES[cfgD.sA].col + ';">' + SIDES[cfgD.sA].tag + ' ' + a.t.g + ' ' + a.t.n + '</span> <span style="color:' + a.asp.col + ';">' + a.asp.g + '</span> <span style="color:' + SIDES[cfgD.sB].col + ';">' + SIDES[cfgD.sB].tag + ' ' + a.n.g + ' ' + a.n.n + '</span></span><span style="color:#9a8d7a;">' + a.orb.toFixed(2) + '° ' + a.applying + '</span></div>';
   }).join('');
 }
 function renderTables() {
@@ -506,7 +511,9 @@ function renderAll() {
   var ll = tLatLon(); var later = computeTransit(new Date(state.tDate.getTime() + 3600000), ll[0], ll[1]);
   state.aspects = findAspects(state.transit.pos, state.natal.pos, later.pos);
   state.aspectsP = state.partner ? findAspects(state.transit.pos, state.partner.pos, later.pos) : [];
+  state.aspectsNP = state.partner ? findAspects(state.partner.pos, state.natal.pos, null) : [];
   renderPartnerExtras();
+  renderLineMode();
   document.getElementById('tLabel').textContent = '― ' + state.tDate.getFullYear() + '年' + (state.tDate.getMonth() + 1) + '月' + state.tDate.getDate() + '日 ' + String(state.tDate.getHours()).padStart(2, '0') + ':' + String(state.tDate.getMinutes()).padStart(2, '0');
   renderWheel(); renderTables(); renderAspects(); renderMidpoints(); renderAspDetail();
 }
@@ -563,7 +570,8 @@ function applyPartner(info) {
   renderAll();
 }
 function clearPartner() {
-  state.partner = null; state.partnerInfo = null; state.aspectsP = [];
+  state.partner = null; state.partnerInfo = null; state.aspectsP = []; state.aspectsNP = [];
+  if (state.lineMode === 'TP' || state.lineMode === 'NP') state.lineMode = 'TN';
   if (state.selected && state.selected.side === 'P') state.selected = null;
   try { localStorage.removeItem('kantei_partner_v1'); } catch (e) {}
   if (state.natal && state.transit) renderAll();
@@ -587,6 +595,15 @@ function swapSlots() {
     document.getElementById('aspDetail').innerHTML = '<p class="note">出生1が空です。相手が出生2に移りました。新しい出生1をセットすると表示されます。</p>';
     renderPartnerExtras();
   }
+}
+function renderLineMode() {
+  document.querySelectorAll('.lineModeBtn').forEach(function (btn) {
+    var m = btn.getAttribute('data-mode');
+    var active = (state.lineMode || 'TN') === m;
+    var usable = m === 'TN' || !!state.partner;
+    btn.style.background = active ? 'rgba(197,168,128,0.55)' : '';
+    btn.style.opacity = usable ? '' : '0.35';
+  });
 }
 function renderPartnerExtras() {
   var has = !!state.partner;
@@ -693,6 +710,15 @@ async function startApp() {
   });
   document.getElementById('pClearBtn').addEventListener('click', clearPartner);
   document.getElementById('swapBtn').addEventListener('click', swapSlots);
+  document.querySelectorAll('.lineModeBtn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var m = btn.getAttribute('data-mode');
+      if (m !== 'TN' && !state.partner) return;
+      state.lineMode = m;
+      if (state.natal && state.transit) { renderWheel(); renderAspDetail(); }
+      renderLineMode();
+    });
+  });
   document.getElementById('tDate').addEventListener('change', function () {
     var v = document.getElementById('tDate').value;
     if (v) setTransit(new Date(v));
