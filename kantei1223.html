@@ -327,7 +327,8 @@ function renderWheel() {
   var nPos = state.natal.pos, tPos = state.transit.pos;
   var pPos = state.partner ? state.partner.pos : null;
   var triple = !!pPos;
-  var houseIn = triple ? 116 : 150, houseNum = triple ? 130 : 163, chordR = triple ? 136 : 148;
+  var houseIn = triple ? 148 : 150, houseNum = triple ? 134 : 163;
+  var ringR = triple ? { T: 246, P: 210, N: 169 } : { T: 240, N: 204 };
   var wt = document.getElementById('wheelTitle'), wn = document.getElementById('wheelNote');
   var nmA = (state.natalInfo && state.natalInfo.name) || '出生1';
   var nmB = (state.partnerInfo && state.partnerInfo.name) || '出生2';
@@ -341,8 +342,14 @@ function renderWheel() {
   s += '<circle cx="320" cy="320" r="308" fill="#FBF7EC"/>';
   s += '<circle cx="320" cy="320" r="302" fill="none" stroke="#B09A6A" stroke-width="1.5"/>';
   s += '<circle cx="320" cy="320" r="262" fill="none" stroke="#B09A6A"/>';
-  s += '<circle cx="320" cy="320" r="222" fill="none" stroke="#8A6D1F" stroke-width="2.5" stroke-opacity="0.85"/>';
-  s += '<circle cx="320" cy="320" r="150" fill="none" stroke="#C9B489"/>';
+  if (triple) {
+    s += '<circle cx="320" cy="320" r="230" fill="none" stroke="#C9B489"/>';
+    s += '<circle cx="320" cy="320" r="190" fill="none" stroke="#C9B489"/>';
+    s += '<circle cx="320" cy="320" r="148" fill="none" stroke="#8A6D1F" stroke-width="1.6" stroke-opacity="0.85"/>';
+  } else {
+    s += '<circle cx="320" cy="320" r="222" fill="none" stroke="#8A6D1F" stroke-width="2.5" stroke-opacity="0.85"/>';
+    s += '<circle cx="320" cy="320" r="150" fill="none" stroke="#C9B489"/>';
+  }
   var ECOL = ['#B03A2E', '#8A6D1F', '#148F77', '#1A5276'];
   for (var i = 0; i < 12; i++) {
     var q1 = P(i * 30, 262), q2 = P(i * 30, 302);
@@ -361,10 +368,24 @@ function renderWheel() {
       s += '<text x="' + np[0].toFixed(1) + '" y="' + np[1].toFixed(1) + '" fill="#7A6A4A" font-size="12" text-anchor="middle" dominant-baseline="middle">' + (i + 1) + '</text>';
     });
   }
+  function dispMap(pos, ids, sep) {
+    var items = [];
+    ids.forEach(function (id) { if (pos[id] !== undefined && id !== 11 && id !== 12) items.push({ id: id, lon: pos[id] }); });
+    spreadGlyphs(items, sep);
+    var m = {};
+    items.forEach(function (it) { m[it.id] = it.disp; });
+    return m;
+  }
+  var TIDS0 = BODIES.filter(function (x) { return x.id <= 10 || x.id === 13; }).map(function (b) { return b.id; });
+  var BIDS0 = BODIES.map(function (b) { return b.id; });
+  var dispOf = { T: dispMap(tPos, TIDS0, triple ? 6.6 : 7.0), N: dispMap(nPos, BIDS0, triple ? 8.6 : 8.2) };
+  if (triple) dispOf.P = dispMap(pPos, BIDS0, 7.4);
   var drawCfg = mode === 'TP' ? { list: state.aspectsP || [], sA: 'T', sB: 'P' } : mode === 'NP' ? { list: state.aspectsNP || [], sA: 'P', sB: 'N' } : { list: state.aspects, sA: 'T', sB: 'N' };
   var posOf = { T: tPos, N: nPos, P: pPos };
   drawCfg.list.forEach(function (a) {
-    var p1 = P(posOf[drawCfg.sA][a.t.id], chordR), p2 = P(posOf[drawCfg.sB][a.n.id], chordR);
+    var lonA = dispOf[drawCfg.sA][a.t.id] !== undefined ? dispOf[drawCfg.sA][a.t.id] : posOf[drawCfg.sA][a.t.id];
+    var lonB = dispOf[drawCfg.sB][a.n.id] !== undefined ? dispOf[drawCfg.sB][a.n.id] : posOf[drawCfg.sB][a.n.id];
+    var p1 = P(lonA, ringR[drawCfg.sA]), p2 = P(lonB, ringR[drawCfg.sB]);
     var op = 0.2 + 0.7 * (1 - a.orb / a.asp.orb);
     var sel = state.selected;
     var match = sel && ((sel.side === drawCfg.sA && sel.id === a.t.id) || (sel.side === drawCfg.sB && sel.id === a.n.id));
@@ -405,12 +426,12 @@ function renderWheel() {
   var TIDS = BODIES.filter(function (x) { return x.id <= 10 || x.id === 13; }).map(function (b) { return b.id; });
   var BIDS = BODIES.map(function (b) { return b.id; });
   if (triple) {
-    s += dots(tPos, 246, '#C1272D', TIDS, 'T', 6.6, 24);
-    s += dots(pPos, 206, '#7D3C98', BIDS, 'P', 7.8, 24);
-    s += dots(nPos, 164, '#1F3BB3', BIDS, 'N', 9.0, 24);
+    s += dots(tPos, ringR.T, '#C1272D', TIDS, 'T', 6.6, 24);
+    s += dots(pPos, ringR.P, '#7D3C98', BIDS, 'P', 7.4, 24);
+    s += dots(nPos, ringR.N, '#1F3BB3', BIDS, 'N', 8.6, 24);
   } else {
-    s += dots(tPos, 240, '#C1272D', TIDS, 'T');
-    s += dots(nPos, 204, '#1F3BB3', BIDS, 'N');
+    s += dots(tPos, ringR.T, '#C1272D', TIDS, 'T');
+    s += dots(nPos, ringR.N, '#1F3BB3', BIDS, 'N');
   }
   s += '</svg>';
   box.innerHTML = s;
