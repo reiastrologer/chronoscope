@@ -168,10 +168,45 @@ document.getElementById('pBtn').addEventListener('click', async function () {
       var col = asp === 0 ? '#D9A514' : asp === 120 ? '#2E9E5B' : '#D95F43';
       s += '<line x1="' + p1[0].toFixed(1) + '" y1="' + p1[1].toFixed(1) + '" x2="' + p2[0].toFixed(1) + '" y2="' + p2[1].toFixed(1) + '" stroke="' + col + '" stroke-width="1.6" opacity="0.55"/>';
     }
+    function spreadPos(pos, ids, minSep) {
+      var pts = ids.filter(function (id) { return pos[id] !== undefined; }).map(function (id) { return { id: id, lon: ((pos[id] % 360) + 360) % 360 }; }).sort(function (a, b) { return a.lon - b.lon; });
+      var out = {};
+      if (!pts.length) return out;
+      if (pts.length === 1) { out[pts[0].id] = pts[0].lon; return out; }
+      var gi = 0, gmax = -1;
+      for (var i = 0; i < pts.length; i++) {
+        var gap = ((pts[(i + 1) % pts.length].lon - pts[i].lon) % 360 + 360) % 360;
+        if (gap > gmax) { gmax = gap; gi = (i + 1) % pts.length; }
+      }
+      var seq = [], add = 0, prevRaw = null;
+      for (var j = 0; j < pts.length; j++) {
+        var p = pts[(gi + j) % pts.length];
+        if (prevRaw !== null && p.lon < prevRaw) add += 360;
+        seq.push({ id: p.id, lon: p.lon + add });
+        prevRaw = p.lon;
+      }
+      var disp = seq.map(function (p) { return p.lon; });
+      for (var it = 0; it < 80; it++) {
+        var moved = false;
+        for (var k = 1; k < disp.length; k++) {
+          if (disp[k] - disp[k - 1] < minSep) { var push = (minSep - (disp[k] - disp[k - 1])) / 2; disp[k - 1] -= push; disp[k] += push; moved = true; }
+        }
+        if (!moved) break;
+      }
+      seq.forEach(function (p, idx) { out[p.id] = disp[idx]; });
+      return out;
+    }
+    var dispP = spreadPos(pos, IDS, 7.6);
     IDS.forEach(function (id) {
-      var gp = P(pos[id], 238);
+      var dl = dispP[id] !== undefined ? dispP[id] : pos[id];
+      var dd = ((dl - pos[id]) % 360 + 360) % 360; if (dd > 180) dd -= 360;
+      if (Math.abs(dd) > 0.05) {
+        var l1 = P(dl, 252), l2 = P(pos[id], 266);
+        s += '<line x1="' + l1[0].toFixed(1) + '" y1="' + l1[1].toFixed(1) + '" x2="' + l2[0].toFixed(1) + '" y2="' + l2[1].toFixed(1) + '" stroke="#1F3BB3" stroke-width="1.4" opacity="0.55"/><circle cx="' + l2[0].toFixed(1) + '" cy="' + l2[1].toFixed(1) + '" r="3" fill="#1F3BB3"/>';
+      }
+      var gp = P(dl, 238);
       s += '<text x="' + gp[0].toFixed(1) + '" y="' + (gp[1] + 11).toFixed(1) + '" text-anchor="middle" font-size="31" font-weight="bold" fill="#1F3BB3">' + GLYPH[id] + '</text>';
-      if (retro[id]) { var rp = P(pos[id], 216); s += '<text x="' + (rp[0] + 14).toFixed(1) + '" y="' + (rp[1] + 4).toFixed(1) + '" font-size="13" fill="#B03A2E">R</text>'; }
+      if (retro[id]) { var rp = P(dl, 216); s += '<text x="' + (rp[0] + 14).toFixed(1) + '" y="' + (rp[1] + 4).toFixed(1) + '" font-size="13" fill="#B03A2E">R</text>'; }
     });
     if (houses) {
       var ap = P(houses.asc, 352); s += '<text x="' + ap[0].toFixed(1) + '" y="' + (ap[1] + 6).toFixed(1) + '" text-anchor="middle" font-size="19" font-weight="bold" fill="#4a3b28">ASC</text>';

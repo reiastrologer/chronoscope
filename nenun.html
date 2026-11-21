@@ -161,6 +161,35 @@
           natalCache = { key, pos };
           return pos;
         }
+        function spreadPos(pos, ids, minSep) {
+          const pts = ids.filter(id => pos[id] !== undefined).map(id => ({ id, lon: ((pos[id] % 360) + 360) % 360 })).sort((a, b) => a.lon - b.lon);
+          const out = {};
+          if (!pts.length) return out;
+          if (pts.length === 1) { out[pts[0].id] = pts[0].lon; return out; }
+          let gi = 0, gmax = -1;
+          for (let i = 0; i < pts.length; i++) {
+            const gap = ((pts[(i + 1) % pts.length].lon - pts[i].lon) % 360 + 360) % 360;
+            if (gap > gmax) { gmax = gap; gi = (i + 1) % pts.length; }
+          }
+          const seq = [];
+          let add = 0, prevRaw = null;
+          for (let i = 0; i < pts.length; i++) {
+            const p = pts[(gi + i) % pts.length];
+            if (prevRaw !== null && p.lon < prevRaw) add += 360;
+            seq.push({ id: p.id, lon: p.lon + add });
+            prevRaw = p.lon;
+          }
+          const disp = seq.map(p => p.lon);
+          for (let iter = 0; iter < 80; iter++) {
+            let moved = false;
+            for (let i = 1; i < disp.length; i++) {
+              if (disp[i] - disp[i - 1] < minSep) { const push = (minSep - (disp[i] - disp[i - 1])) / 2; disp[i - 1] -= push; disp[i] += push; moved = true; }
+            }
+            if (!moved) break;
+          }
+          seq.forEach((p, i) => { out[p.id] = disp[i]; });
+          return out;
+        }
         function wheelSVG(natal, transit, tId, aspGlyph, nId) {
           const P = (lon, r) => [160 - r * Math.cos(lon * Math.PI / 180), 160 + r * Math.sin(lon * Math.PI / 180)]; // 通常のチャートと同じ反時計回り
           const SG = ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
@@ -174,16 +203,25 @@
             const [gx, gy] = P(i * 30 + 15, 140);
             s += `<text x="${gx.toFixed(1)}" y="${gy.toFixed(1)}" fill="#c5a880" font-size="13" text-anchor="middle" dominant-baseline="middle">${SG[i]}</text>`;
           }
-          const [ax, ay] = P(natal[nId], 92), [bx, by] = P(transit[tId], 116);
+          const dispN = spreadPos(natal, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 7.0);
+          const dispT = spreadPos(transit, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 5.6);
+          const [ax, ay] = P(dispN[nId] !== undefined ? dispN[nId] : natal[nId], 92), [bx, by] = P(dispT[tId] !== undefined ? dispT[tId] : transit[tId], 116);
           const col = (aspGlyph === '□' || aspGlyph === '☍') ? '#e07856' : '#8fd0a8';
           s += `<line x1="${ax.toFixed(1)}" y1="${ay.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${by.toFixed(1)}" stroke="${col}" stroke-width="2" stroke-opacity="0.9"/>`;
-          const dots = (pos, r, color, hl) => Object.keys(pos).map(k => {
-            const [x, y] = P(pos[k], r);
-            return (hl === +k ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13.5" fill="rgba(20,18,30,0.88)" stroke="${color}" stroke-width="1.8"/>` : '') +
+          const dots = (pos, r, color, hl, disp, tickR) => Object.keys(pos).map(k => {
+            const dl = disp && disp[+k] !== undefined ? disp[+k] : pos[k];
+            const [x, y] = P(dl, r);
+            let d = ((dl - pos[k]) % 360 + 360) % 360; if (d > 180) d -= 360;
+            let lead = '';
+            if (Math.abs(d) > 0.05) {
+              const [lx1, ly1] = P(dl, (r + tickR) / 2), [lx2, ly2] = P(pos[k], tickR);
+              lead = `<line x1="${lx1.toFixed(1)}" y1="${ly1.toFixed(1)}" x2="${lx2.toFixed(1)}" y2="${ly2.toFixed(1)}" stroke="${color}" stroke-width="1" stroke-opacity="0.55"/><circle cx="${lx2.toFixed(1)}" cy="${ly2.toFixed(1)}" r="1.8" fill="${color}"/>`;
+            }
+            return lead + (hl === +k ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13.5" fill="rgba(20,18,30,0.88)" stroke="${color}" stroke-width="1.8"/>` : '') +
               `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" fill="${color}" font-size="${hl === +k ? 15 : 11}" text-anchor="middle" dominant-baseline="middle">${ID_GLYPH[k]}</text>`;
           }).join('');
-          s += dots(transit, 116, '#a8c4e0', tId);
-          s += dots(natal, 92, '#e8cf9f', nId);
+          s += dots(transit, 116, '#a8c4e0', tId, dispT, 128);
+          s += dots(natal, 92, '#e8cf9f', nId, dispN, 104);
           s += `<text x="160" y="152" fill="#e8cf9f" font-size="13" text-anchor="middle">${ID_GLYPH[tId]} ${aspGlyph} ${ID_GLYPH[nId]}</text>`;
           s += `<text x="160" y="170" fill="#8a8178" font-size="10" text-anchor="middle">内側（金）＝あなたの星 ／ 外側（青）＝その日の空</text>`;
           return s + '</svg>';
@@ -232,6 +270,196 @@
         let mwTimer = null;
         new MutationObserver(() => { clearTimeout(mwTimer); mwTimer = setTimeout(enhance, 400); }).observe(document.body, { childList: true, subtree: true });
         setTimeout(enhance, 1500);
+      } catch (e) { /* 後付け機能が失敗してもアプリ本体には影響させない */ }
+    </script>
+    <!-- 45度ダイヤル（年運：プログレス太陽 × ネイタル・ハーフサム） -->
+    <div id="dlModal" style="display:none; position:fixed; inset:0; background:rgba(5,5,12,0.88); z-index:61; align-items:center; justify-content:center; padding:18px;">
+      <div style="background:#14121e; border:1px solid #c5a880; border-radius:16px; padding:18px; max-width:420px; width:100%; text-align:center; max-height:92vh; overflow-y:auto;">
+        <div id="dlTitle" style="font-weight:700; color:#e8cf9f; margin-bottom:10px; font-size:15px;"></div>
+        <div id="dlBody"></div>
+        <div id="dlCap" style="color:#d8c9a8; font-size:13px; line-height:1.8; margin-top:10px; text-align:left;"></div>
+        <button type="button" id="dlClose" style="margin-top:12px; background:rgba(197,168,128,0.15); color:#c5a880; border:1px solid rgba(197,168,128,0.5); border-radius:999px; padding:9px 26px; font-size:14px; cursor:pointer;">閉じる</button>
+      </div>
+    </div>
+    <script type="module">
+      // 年運に45°ダイヤルを後付けする（アプリ本体には触らない）
+      try {
+        const DL_GLYPH = ['☉','☽','☿','♀','♂','♃','♄','♅','♆','♇','☊','A','M'];
+        const DL_NAME = ['太陽','月','水星','金星','火星','木星','土星','天王星','海王星','冥王星','ドラゴンヘッド','ASC','MC'];
+        const DL_PAIRS = [[0,3],[0,5],[0,8],[0,9],[0,10],[0,11],[0,12],[1,3],[1,7],[1,8],[2,3],[2,5],[2,9],[2,10],[3,4],[3,5],[3,7],[3,8],[3,9],[3,12],[4,5],[4,6],[4,7],[4,8],[4,9],[5,6],[5,7],[5,8],[5,9],[5,10],[5,12],[6,7],[6,8],[6,9],[7,8],[7,9],[7,11],[8,9],[8,10],[9,12]];
+        const DL_PREFS = {"北海道": [141.35, 43.06], "青森県": [140.74, 40.82], "岩手県": [141.15, 39.7], "宮城県": [140.87, 38.27], "秋田県": [140.1, 39.72], "山形県": [140.34, 38.26], "福島県": [140.47, 37.75], "茨城県": [140.45, 36.34], "栃木県": [139.88, 36.57], "群馬県": [139.06, 36.39], "埼玉県": [139.65, 35.86], "千葉県": [140.12, 35.61], "東京": [139.69, 35.69], "神奈川県": [139.64, 35.45], "新潟県": [139.02, 37.9], "富山県": [137.21, 36.7], "石川県": [136.63, 36.6], "福井県": [136.22, 36.07], "山梨県": [138.57, 35.66], "長野県": [138.18, 36.65], "岐阜県": [136.72, 35.39], "静岡県": [138.38, 34.98], "愛知県": [136.91, 35.18], "三重県": [136.51, 34.73], "滋賀県": [135.87, 35.0], "京都府": [135.76, 35.01], "大阪府": [135.5, 34.69], "兵庫県": [135.18, 34.69], "奈良県": [135.83, 34.69], "和歌山県": [135.17, 34.23], "鳥取県": [134.24, 35.5], "島根県": [133.05, 35.47], "岡山県": [133.92, 34.66], "広島県": [132.46, 34.4], "山口県": [131.47, 34.18], "徳島県": [134.56, 34.07], "香川県": [134.04, 34.34], "愛媛県": [132.77, 33.84], "高知県": [133.53, 33.56], "福岡県": [130.4, 33.61], "佐賀県": [130.3, 33.25], "長崎": [129.87, 32.75], "熊本県": [130.74, 32.79], "大分県": [131.6, 33.24], "宮崎県": [131.42, 31.91], "鹿児島県": [130.56, 31.56], "沖縄県": [127.68, 26.21]};
+        const DL_SWISS = [0,1,2,3,4,5,6,7,8,9,11];
+        let dlM = null, dlJul = null;
+        async function dlInit() {
+          if (dlM) return;
+          const mod = await import('./assets/swisseph-BtfJwKK5.js');
+          const factory = typeof mod.default === 'function' ? mod.default : mod.SwissEphModule;
+          const wasmBinary = await (await fetch('./assets/swisseph-BmP0Bw24.wasm')).arrayBuffer();
+          dlM = await factory({ instantiateWasm: (imports, success) => { WebAssembly.instantiate(wasmBinary, imports).then(r => success(r.instance, r.module)); return {}; } });
+          dlJul = dlM.cwrap('swe_julday_wrap', 'number', ['number','number','number','number','number']);
+        }
+        function dlPos(jd, planet) {
+          const out = dlM._malloc(48), err = dlM._malloc(256);
+          const rc = dlM.ccall('swe_calc_ut_wrap', 'number', ['number','number','number','number','number'], [jd, planet, 260, out, err]);
+          const lon = rc < 0 ? NaN : dlM.getValue(out, 'double');
+          dlM._free(out); dlM._free(err);
+          return lon;
+        }
+        function dlHouses(jd, lat, lon) {
+          const cusps = dlM._malloc(104), ascmc = dlM._malloc(80);
+          dlM.ccall('swe_houses_wrap', 'number', ['number','number','number','number','number','number'], [jd, lat, lon, 80, cusps, ascmc]);
+          const asc = dlM.getValue(ascmc, 'double'), mc = dlM.getValue(ascmc + 8, 'double');
+          dlM._free(cusps); dlM._free(ascmc);
+          return { asc, mc };
+        }
+        function dlSelText(re) {
+          for (const s of document.querySelectorAll('select')) {
+            const o = s.selectedOptions && s.selectedOptions[0];
+            if (o && re.test(o.textContent.trim())) return o.textContent.trim();
+          }
+          return null;
+        }
+        function dlBirth() {
+          const y = dlSelText(/^\d{4}年$/), mo = dlSelText(/^\d{1,2}月$/), d = dlSelText(/^\d{1,2}日$/);
+          if (!y || !mo || !d) return null;
+          let hh = 12, mm = 0;
+          const t = document.querySelector('input[type="time"]');
+          if (t && t.value) { const p = t.value.split(':'); hh = +p[0] || 0; mm = +p[1] || 0; }
+          let tz = 9;
+          const tzs = dlSelText(/UTC/);
+          if (tzs) { const m2 = tzs.match(/UTC\s*([+-])\s*(\d+(?:\.\d+)?)/); if (m2) tz = (m2[1] === '-' ? -1 : 1) * parseFloat(m2[2]); }
+          let place = null;
+          for (const s of document.querySelectorAll('select')) {
+            const o = s.selectedOptions && s.selectedOptions[0];
+            if (o && DL_PREFS[o.textContent.trim()]) { place = DL_PREFS[o.textContent.trim()]; break; }
+          }
+          if (!place) place = DL_PREFS['東京'];
+          return { y: parseInt(y), m: parseInt(mo), d: parseInt(d), hourUT: hh + mm / 60 - tz, lat: place[1], lon: place[0] };
+        }
+        function dlMid(a, b) { const dd = ((b - a + 540) % 360) - 180; return (a + dd / 2 + 360) % 360; }
+        function dlDist(a, b) { const dd = Math.abs(a - b) % 45; return Math.min(dd, 45 - dd); }
+        function dlDelta(from, to) { let dd = ((to - from) % 45 + 45) % 45; if (dd > 22.5) dd -= 45; return dd; }
+        function dlDialSVG(natal, pSun) {
+          const C = 170, P = (fold, r) => { const a = fold * 8 * Math.PI / 180; return [C - r * Math.cos(a), C + r * Math.sin(a)]; };
+          const pf = ((pSun % 45) + 45) % 45;
+          const axes = DL_PAIRS.map(([p1, p2]) => {
+            const lon = dlMid(natal[p1], natal[p2]);
+            const fold = ((lon % 45) + 45) % 45;
+            return { p1, p2, fold, dist: dlDist(fold, pf) };
+          });
+          const byDist = [...axes].sort((a, b) => a.dist - b.dist);
+          const near = byDist.slice(0, 6).sort((a, b) => a.fold - b.fold);
+          const rows = [[], []];
+          near.forEach((ax, i) => rows[i % 2].push(ax));
+          const dispOf = {};
+          rows.forEach((lst, row) => {
+            const disp = lst.map(ax => ax.fold);
+            for (let it = 0; it < 80; it++) {
+              let moved = false;
+              for (let i = 1; i < disp.length; i++) if (disp[i] - disp[i - 1] < 2.6) { const push = (2.6 - (disp[i] - disp[i - 1])) / 2; disp[i - 1] -= push; disp[i] += push; moved = true; }
+              if (!moved) break;
+            }
+            lst.forEach((ax, i) => { dispOf[ax.p1 + '/' + ax.p2] = { d: disp[i], row }; });
+          });
+          let s = '<svg viewBox="0 0 340 340" style="width:100%; max-width:340px; display:block; margin:0 auto;">';
+          const band = [];
+          for (let i = 0; i <= 20; i++) band.push(P(pf - 1 + i * 0.1, 150));
+          for (let i = 0; i <= 20; i++) band.push(P(pf + 1 - i * 0.1, 56));
+          s += `<polygon points="${band.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ')}" fill="rgba(224,120,86,0.10)"/>`;
+          s += '<circle cx="170" cy="170" r="156" fill="none" stroke="#c5a880" stroke-opacity="0.6"/>';
+          s += '<circle cx="170" cy="170" r="126" fill="none" stroke="#c5a880" stroke-opacity="0.3"/>';
+          s += '<circle cx="170" cy="170" r="56" fill="none" stroke="#c5a880" stroke-opacity="0.25"/>';
+          for (let dgr = 0; dgr < 45; dgr++) {
+            const [x1, y1] = P(dgr, 156), [x2, y2] = P(dgr, dgr % 5 === 0 ? 142 : 149);
+            s += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#c5a880" stroke-opacity="0.55"/>`;
+            if (dgr % 5 === 0) { const [tx, ty] = P(dgr, 133); s += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" fill="#a89673" font-size="9" text-anchor="middle" dominant-baseline="middle">${dgr}</text>`; }
+          }
+          for (const ax of axes) {
+            const hot = ax.dist <= 1.0;
+            const col = hot ? '#ffb066' : '#9a8d74';
+            const [x1, y1] = P(ax.fold, hot ? 128 : 124), [x2, y2] = P(ax.fold, 112);
+            s += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${hot ? 2.6 : 1.4}"/>`;
+          }
+          for (const ax of near) {
+            const info = dispOf[ax.p1 + '/' + ax.p2];
+            const hot = ax.dist <= 1.0;
+            const col = hot ? '#ffb066' : '#e8cf9f';
+            const lr = info.row === 0 ? 94 : 68;
+            const [lx, ly] = P(info.d, lr), [tx, ty] = P(ax.fold, 110);
+            s += `<line x1="${tx.toFixed(1)}" y1="${ty.toFixed(1)}" x2="${lx.toFixed(1)}" y2="${ly.toFixed(1)}" stroke="${col}" stroke-width="0.8" stroke-opacity="0.7"/>`;
+            s += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" fill="${col}" font-size="11" text-anchor="middle" dominant-baseline="middle">${DL_GLYPH[ax.p1]}/${DL_GLYPH[ax.p2]}</text>`;
+          }
+          const [sx, sy] = P(pf, 118);
+          s += `<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="13" fill="#e07856" stroke="#ffd2b4" stroke-width="2"/>`;
+          s += `<text x="${sx.toFixed(1)}" y="${sy.toFixed(1)}" fill="#181420" font-size="15" font-weight="700" text-anchor="middle" dominant-baseline="middle">☉</text>`;
+          s += '<text x="170" y="163" fill="#f0c8aa" font-size="12.5" text-anchor="middle">プログレス太陽</text>';
+          const sg = Math.floor(pSun / 30), dg = pSun % 30;
+          const SGN = ['牡羊座','牡牛座','双子座','蟹座','獅子座','乙女座','天秤座','蠍座','射手座','山羊座','水瓶座','魚座'];
+          s += `<text x="170" y="182" fill="#c8b4a0" font-size="11" text-anchor="middle">${SGN[sg]} ${dg.toFixed(1)}°</text>`;
+          return { svg: s + '</svg>', axes, byDist };
+        }
+        async function dlOpen(year, btn) {
+          const b = dlBirth();
+          if (!b) return;
+          btn.textContent = '計算しています…';
+          try {
+            await dlInit();
+            const jdN = dlJul(b.y, b.m, b.d, b.hourUT, 1);
+            const natal = {};
+            for (let i = 0; i <= 10; i++) natal[i] = dlPos(jdN, DL_SWISS[i]);
+            const hs = dlHouses(jdN, b.lat, b.lon);
+            natal[11] = hs.asc; natal[12] = hs.mc;
+            const now = new Date();
+            const isCur = year === now.getFullYear();
+            const tm = isCur ? { y: now.getFullYear(), m: now.getMonth() + 1, d: now.getDate() } : { y: year, m: 7, d: 2 };
+            const jdT = dlJul(tm.y, tm.m, tm.d, 3.0, 1); // 12:00 JST
+            const jdP = jdN + (jdT - jdN) / 365.2422;
+            const pSun = dlPos(jdP, 0);
+            let rate = dlPos(jdP + 1, 0) - pSun; if (rate < 0) rate += 360;
+            const { svg, byDist } = dlDialSVG(natal, pSun);
+            const jan1 = dlJul(year, 1, 1, 3.0, 1);
+            const jdP1 = jdN + (jan1 - jdN) / 365.2422;
+            const pf1 = ((dlPos(jdP1, 0) % 45) + 45) % 45;
+            const peakNames = [];
+            for (const [p1, p2] of DL_PAIRS) {
+              const lon = dlMid(natal[p1], natal[p2]);
+              const fold = ((lon % 45) + 45) % 45;
+              const yrs = dlDelta(pf1, fold) / rate;
+              if (yrs >= 0 && yrs <= 1) peakNames.push(DL_NAME[p1] + ' × ' + DL_NAME[p2]);
+            }
+            const best = byDist[0];
+            const yrsB = dlDelta(((pSun % 45) + 45) % 45, best.fold) / rate;
+            const when = Math.abs(yrsB) < 0.05 ? 'ちょうど今ごろ' : (yrsB > 0 ? `約${yrsB.toFixed(1)}年後` : `約${Math.abs(yrsB).toFixed(1)}年前`);
+            document.getElementById('dlTitle').textContent = `${year}年 45°ダイヤル（${tm.m}月${tm.d}日時点）`;
+            document.getElementById('dlBody').innerHTML = svg;
+            document.getElementById('dlCap').innerHTML =
+              `いちばん近い軸： <b style="color:#ffb066;">${DL_NAME[best.p1]} × ${DL_NAME[best.p2]}</b>（オーブ ${best.dist.toFixed(2)}°・ピークは${when}）<br>` +
+              (peakNames.length ? `この年にピークを迎える軸： ${peakNames.join('、')}<br>` : '') +
+              `<span style="color:#8a8178; font-size:12px;">360°の円では見えないハーフサムの接触も、45°に折りたたむと太陽のすぐそばに集まって見えます。帯はオーブ1°の範囲です。</span>`;
+            document.getElementById('dlModal').style.display = 'flex';
+          } finally {
+            btn.textContent = '🕐 その年を45°ダイヤルで見る';
+          }
+        }
+        function dlEnhance() {
+          for (const h2 of document.querySelectorAll('h2')) {
+            const m = (h2.textContent || '').match(/(\d{4})年\s*運命のサイクル/);
+            if (!m || h2.dataset.dlBtn) continue;
+            h2.dataset.dlBtn = '1';
+            const year = +m[1];
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = '🕐 その年を45°ダイヤルで見る';
+            btn.style.cssText = 'display:block; margin:10px auto 4px; background:rgba(197,168,128,0.15); color:#e8cf9f; border:1px solid rgba(197,168,128,0.6); border-radius:999px; padding:10px 22px; font-size:14px; font-weight:700; cursor:pointer;';
+            btn.addEventListener('click', () => { dlOpen(year, btn).catch(() => {}); });
+            h2.insertAdjacentElement('afterend', btn);
+          }
+        }
+        document.getElementById('dlClose').addEventListener('click', () => { document.getElementById('dlModal').style.display = 'none'; });
+        document.getElementById('dlModal').addEventListener('click', (e) => { if (e.target.id === 'dlModal') e.target.style.display = 'none'; });
+        let dlTimer = null;
+        new MutationObserver(() => { clearTimeout(dlTimer); dlTimer = setTimeout(dlEnhance, 500); }).observe(document.body, { childList: true, subtree: true });
+        setTimeout(dlEnhance, 1500);
       } catch (e) { /* 後付け機能が失敗してもアプリ本体には影響させない */ }
     </script>
     <footer style="max-width: 880px; margin: 0 auto; padding: 28px 20px 40px; text-align: center; font-size: 12px; line-height: 1.9; color: #8a8178; border-top: 1px solid rgba(197,168,128,0.25);">
