@@ -566,6 +566,30 @@ function dayNet(hits) {
   return net;
 }
 function dayScore(net) { return Math.max(5, Math.min(99, Math.round(50 + (net - 40) * 0.35))); }
+// ===== 気持ちの流れ（相手があなたに向ける星）: 今日の星 × 受け取る側のネイタル、オーブ5° =====
+function feelHits(tPos, natalPos) {
+  const hits = [];
+  let net = 0;
+  for (const tb of BODIES.slice(0, 10)) {
+    if (![0, 2, 3, 4, 5].includes(tb.id)) continue;
+    for (const nb of BODIES.slice(0, 10)) {
+      if (natalPos[nb.id] === undefined) continue;
+      const diff = angDiff(tPos[tb.id], natalPos[nb.id]);
+      for (const asp of ASPECTS) {
+        const orb = Math.abs(diff - asp.angle);
+        if (orb > 5) continue;
+        let good, w;
+        if (asp.angle === 120) { good = true; w = 1.5 * (1 - orb / 6); }
+        else if (asp.angle === 0) { good = (tb.id === 5 || nb.id !== 6); w = (good ? 2 : -1) * (1 - orb / 6); }
+        else { good = false; w = -1 * (1 - orb / 6); }
+        net += w;
+        hits.push({ tb, nb, asp, orb, good, w: Math.abs(w) });
+      }
+    }
+  }
+  hits.sort((a, b) => a.orb - b.orb);
+  return { hits, net };
+}
 const monthSel = document.getElementById('periodMonth');
 monthSel.innerHTML = Array.from({length: 12}, (_, i) => `<option value="${i + 1}" ${i === 10 ? 'selected' : ''}>${i + 1}月</option>`).join('');
 document.getElementById('periodMode').addEventListener('change', (e) => {
@@ -614,7 +638,8 @@ document.getElementById('periodBtn').addEventListener('click', async (e) => {
         let bridgeTotal = bridges.reduce((s, b2) => s + b2.bonus, 0);
         bridgeTotal = Math.max(-8, Math.min(10, bridgeTotal));
         net += bridgeTotal;
-        days.push({ y: year, m, d, score: dayScore(net), hitsA, hitsB, bridges, tPos });
+        const feelA = feelHits(tPos, C.posA), feelB = feelHits(tPos, C.posB);
+        days.push({ y: year, m, d, score: dayScore(net), hitsA, hitsB, bridges, tPos, feelA, feelB });
       }
     }
     const avg = Math.round(days.reduce((s, x) => s + x.score, 0) / days.length);
@@ -681,6 +706,24 @@ document.getElementById('periodBtn').addEventListener('click', async (e) => {
       .sort((a, b2) => (a.m - b2.m) || (a.d - b2.d));
     const cardsHtml = allCards.length ? allCards.map(c => c.html).join('') :
       '<p style="font-size:13px; color:#8a8178;">この期間は、二人の星が触れ合う配置はありませんでした。</p>';
+    // 気持ちの流れ（両方向）: 気持ちが強く動く日をハイライト形式で拾う
+    const nmA = esc(C.A.name || 'あなた'), nmB = esc(C.B.name || '相手');
+    const feelList = (key, sender, receiver) => {
+      const cand = days.filter(x => x[key].net >= 2.0).sort((a, b2) => b2[key].net - a[key].net).slice(0, 3)
+        .sort((a, b2) => (a.m - b2.m) || (a.d - b2.d));
+      if (!cand.length) return `<div style="font-size:13px; color:#c5bba9; line-height:1.9; margin-top:10px;">${sender}さん → ${receiver}さん：この期間は、はっきり強く動く日はありませんでした。</div>`;
+      const rows = cand.map(x => {
+        const f = x[key];
+        const top = f.hits.filter(h => h.good).sort((a, b2) => a.orb - b2.orb)[0] || f.hits[0];
+        const hardSum = f.hits.filter(h => !h.good).reduce((sm, h) => sm + h.w, 0);
+        const tail = hardSum >= 1.2 ? '気持ちは強いのに、すれ違いも混ざりやすい日。' : '気持ちが素直に届きやすい日。';
+        return `<div style="font-size:13px; color:#faf6f0; line-height:1.9; padding:5px 0; border-top:1px solid rgba(197,168,128,0.18);"><b>${x.m}月${x.d}日</b> ― ${sender}さんの今日の${top.tb.name}が、${receiver}さんの「${TOUCH[top.nb.id]}」に届く日。${tail}</div>`;
+      }).join('');
+      return `<div style="margin-top:10px;"><div style="font-size:13.5px; font-weight:700; color:#e8cf9f;">${sender}さん → ${receiver}さん</div>${rows}</div>`;
+    };
+    const feelHtml = `<h3 class="sec">💗 気持ちの流れ</h3>` +
+      `<p style="font-size:12px; color:#8a8178; margin:2px 0 6px;">※相手のチャートを土台に、今日の星が受け取る側の星に触れる日を「相手があなたに向ける星」として、両方向で拾っています。</p>` +
+      feelList('feelA', nmB, nmA) + feelList('feelB', nmA, nmB);
     let html = '';
     if (mode === 'month') {
       const sorted = [...days].sort((a, b2) => b2.score - a.score);
@@ -692,7 +735,7 @@ document.getElementById('periodBtn').addEventListener('click', async (e) => {
         `<p class="counts">💞 おすすめの日: ${byDate(sorted.slice(0, 3)).map(fmt).join(' ／ ')}<br>⚡ すれ違い注意: ${byDate(sorted.slice(-3)).map(fmt).join(' ／ ')}</p>` +
         `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※おすすめの日は「その日の二人の総合点」、ハイライトは「この期間で一番くっきり出る配置」で選んでいます。選び方が違うため、日付が重なることも、ずれることもあります。</p>` +
         `<h3 class="sec">✨ この月のハイライト</h3>` +
-        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ハイライトは「片方の今日の星が、もう片方の生まれ持った星に触れる日」を選んでいます。説明文をタップすると、その日の円（チャート）が開きます。</p>` + cardsHtml;
+        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ハイライトは「片方の今日の星が、もう片方の生まれ持った星に触れる日」を選んでいます。説明文をタップすると、その日の円（チャート）が開きます。</p>` + cardsHtml + feelHtml;
     } else {
       const rows = [];
       for (let m = 1; m <= 12; m++) {
@@ -707,7 +750,7 @@ document.getElementById('periodBtn').addEventListener('click', async (e) => {
         rows.map(r => `<div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><span style="width:38px; font-size:13px;">${r.m}月</span><div style="flex:1; background:rgba(255,255,255,0.05); border-radius:4px;"><div style="width:${r.ma}%; background:linear-gradient(90deg,#9a7d55,#c5a880); height:14px; border-radius:4px;"></div></div><span style="width:30px; font-size:13px;">${r.ma}</span></div>`).join('') +
         `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ベスト月・注意月は「月ごとの平均点」、ハイライトは「この期間で一番くっきり出る配置」で選んでいます。選び方が違うため、月と日付がずれることもあります。</p>` +
         `<h3 class="sec">✨ この年のハイライト</h3>` +
-        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ハイライトは「片方の今日の星が、もう片方の生まれ持った星に触れる日」を選んでいます。説明文をタップすると、その日の円（チャート）が開きます。</p>` + cardsHtml;
+        `<p style="font-size:12px; color:#8a8178; margin:2px 0 10px;">※ハイライトは「片方の今日の星が、もう片方の生まれ持った星に触れる日」を選んでいます。説明文をタップすると、その日の円（チャート）が開きます。</p>` + cardsHtml + feelHtml;
     }
     out.innerHTML = html;
     requestAnimationFrame(() => { var __hdO = document.querySelector('.topTab'); __hdO = __hdO ? __hdO.closest('[style*="sticky"]') : null; var yyO = out.getBoundingClientRect().top + window.scrollY - (__hdO ? __hdO.offsetHeight : 0) - 12; window.scrollTo({ top: yyO, behavior: 'auto' }); });
