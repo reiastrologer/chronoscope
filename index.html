@@ -78,5 +78,19 @@
 </script>
   <a id="toMenuBtn" href="./index.html" style="position:fixed; left:14px; bottom:14px; z-index:55; background:rgba(20,18,30,0.92); color:#e8cf9f; border:1px solid rgba(197,168,128,0.7); border-radius:999px; padding:10px 18px; font-size:13.5px; font-weight:700; text-decoration:none; box-shadow:0 4px 14px rgba(0,0,0,0.45);">⬆ メニューに戻る</a>
 <script>document.getElementById('toMenuBtn').addEventListener('click', function (e) { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); });</script>
+<script>
+  // トップのタブは専用ページへ移動する（アプリ本体には触らない後付け）
+  (function () {
+    var MAP = { '性格チェック': 'seikaku.html', '個人の運勢': 'unsei.html', '相性診断': 'aisho.html', '相手の気持ち': 'kimochi.html', 'クロノスくんのおまじない': 'omajinai.html', 'おまじない': 'omajinai.html', 'バズ週間チェッカー（配信者向け）': 'buzz.html', 'バズ週間チェッカー': 'buzz.html', 'バズ週間': 'buzz.html', '恋愛': 'love.html', '金運': 'money.html', '仕事': 'work.html', '連絡': 'renraku.html', '今日のタロット': 'tarot.html', '空のカレンダー': 'sky.html', 'ワード占い': 'word.html', '星図ポスター': 'poster.html', '年運': 'nenun.html' };
+    function norm(t) { return (t || '').replace(/[\s　]/g, '').replace(/[^ぁ-んァ-ヶ一-龠a-zA-Z0-9（）]/g, ''); }
+    document.addEventListener('click', function (e) {
+      var el = e.target && e.target.closest ? e.target.closest('button, a') : null;
+      if (!el || el.id === 'toMenuBtn') return;
+      if (el.closest && el.closest('form')) return;
+      var dest = MAP[norm(el.textContent)];
+      if (dest) { e.preventDefault(); e.stopPropagation(); location.href = './' + dest; }
+    }, true);
+  })();
+</script>
 </body>
 </html>
