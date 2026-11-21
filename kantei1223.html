@@ -64,6 +64,25 @@
   </div>
 
   <div class="card">
+    <h2>👥 相手（出生2）</h2>
+    <div class="row">
+      <div><label>お名前（任意）</label><input id="pName" type="text" placeholder="相手のお名前"></div>
+      <div><label>出生地</label><select id="pPlace"></select></div>
+    </div>
+    <div class="row3" style="margin-top:10px;">
+      <div><label>生年月日</label><input id="pDate" type="date" value="2000-01-01"></div>
+      <div><label>出生時刻</label><input id="pTime" type="time" value="12:00"></div>
+      <div><label>時刻不明</label><label style="font-size:14px; color:#faf6f0; padding-top:8px;"><input id="pUnknown" type="checkbox" style="width:auto;"> 不明（正午計算）</label></div>
+    </div>
+    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn" id="pSetBtn" type="button">相手をセット</button>
+      <button class="btn" id="swapBtn" type="button" style="background:rgba(197,168,128,0.28);">⇄ 出生1⇄2 入れ替え</button>
+      <button class="btn" id="pClearBtn" type="button" style="background:transparent; border:1px solid rgba(197,168,128,0.45);">相手を外す</button>
+    </div>
+    <p class="note">相手をセットすると三重円（内＝出生1／中＝出生2／外＝トランジット）になります。入れ替えは、出生を打ち直さずに土台の人を瞬時に切り替えます。</p>
+  </div>
+
+  <div class="card">
     <h2>🕐 トランジット <span id="tLabel" style="color:#faf6f0;"></span></h2>
     <input id="tDate" type="datetime-local">
     <div style="margin-top:10px; text-align:center;">
@@ -72,10 +91,10 @@
   </div>
 
   <div class="card">
-    <h2>◎ 二重円（内＝ネイタル／外＝トランジット）</h2>
+    <h2 id="wheelTitle">◎ 二重円（内＝ネイタル／外＝トランジット）</h2>
     <div id="wheel"></div>
     <div id="aspDetail" style="margin-top:10px;"></div>
-    <p class="note">ハウスはネイタルのプラシーダス。線はトランジット×ネイタルのアスペクト（金＝合、緑＝トライン、赤＝スクエア／オポジション）。</p>
+    <p class="note" id="wheelNote">ハウスはネイタルのプラシーダス。線はトランジット×ネイタルのアスペクト（金＝合、緑＝トライン、赤＝スクエア／オポジション）。</p>
   </div>
 
   <div class="row" style="margin-top:14px; gap:14px;">
@@ -87,6 +106,13 @@
     <h2>🔗 アスペクト（トランジット × ネイタル）</h2>
     <div id="aspList"></div>
     <p class="note">オーブ：合6°／スクエア・トライン・オポジション5°（太陽・月が絡む場合は+1°）。A＝接近中、S＝離反中。</p>
+  </div>
+
+  <div class="card" id="partnerCard" style="display:none;"><h2>相手の位置</h2><div id="partnerTable"></div></div>
+
+  <div class="card" id="aspCardP" style="display:none;">
+    <h2>🔗 アスペクト（トランジット × 相手）</h2>
+    <div id="aspListP"></div>
   </div>
 
   <div class="card">
@@ -184,7 +210,7 @@ function computeChart(dateStr, timeStr, unknown, lat, lon) {
   }
   return { jd: jd, pos: pos, retro: retro, cusps: cusps, sect: sect };
 }
-function tLatLon() { return state.natalInfo ? [state.natalInfo.lat, state.natalInfo.lon] : [35.69, 139.69]; }
+function tLatLon() { var i = state.natalInfo || state.partnerInfo; return i ? [i.lat, i.lon] : [35.69, 139.69]; }
 function computeTransit(dt, lat, lon) {
   var jd = jdFromJST(dt.getFullYear(), dt.getMonth() + 1, dt.getDate(), dt.getHours(), dt.getMinutes());
   var pos = {}, retro = {};
@@ -262,19 +288,46 @@ function foldDist(x, m) { var d = Math.abs(((x - m) % 45 + 45) % 45); return Mat
 function circDist(a, b) { var d = Math.abs(((a - b) % 360 + 360) % 360); return d > 180 ? 360 - d : d; }
 function glyphOf(id) { var b = BODIES.find(function (x) { return x.id === id; }); return b ? b.g : ''; }
 
-var state = { natal: null, transit: null, tDate: new Date(), aspects: [], selected: null };
-function spreadGlyphs(items) {
+var state = { natal: null, partner: null, natalInfo: null, partnerInfo: null, transit: null, tDate: new Date(), aspects: [], aspectsP: [], selected: null };
+function spreadGlyphs(items, minSep) {
+  minSep = minSep || 7.5;
   var sorted = items.slice().sort(function (a, b) { return a.lon - b.lon; });
-  var placed = [];
-  sorted.forEach(function (it) {
-    it.disp = it.lon; placed.push(it.lon);
-  });
+  if (sorted.length <= 1) { sorted.forEach(function (it) { it.disp = it.lon; }); return items; }
+  var gi = 0, gmax = -1;
+  for (var i = 0; i < sorted.length; i++) {
+    var gap = ((sorted[(i + 1) % sorted.length].lon - sorted[i].lon) % 360 + 360) % 360;
+    if (gap > gmax) { gmax = gap; gi = (i + 1) % sorted.length; }
+  }
+  var seq = [], add = 0, prevRaw = null;
+  for (var j = 0; j < sorted.length; j++) {
+    var p = sorted[(gi + j) % sorted.length];
+    if (prevRaw !== null && p.lon < prevRaw) add += 360;
+    seq.push({ it: p, lon: p.lon + add });
+    prevRaw = p.lon;
+  }
+  var disp = seq.map(function (e) { return e.lon; });
+  for (var it2 = 0; it2 < 120; it2++) {
+    var moved = false;
+    for (var k = 1; k < disp.length; k++) {
+      if (disp[k] - disp[k - 1] < minSep) { var push = (minSep - (disp[k] - disp[k - 1])) / 2; disp[k - 1] -= push; disp[k] += push; moved = true; }
+    }
+    if (!moved) break;
+  }
+  seq.forEach(function (e, idx) { e.it.disp = disp[idx]; });
   return items;
 }
 function renderWheel() {
   var box = document.getElementById('wheel');
   if (!state.natal || !state.transit) { box.innerHTML = ''; return; }
   var nPos = state.natal.pos, tPos = state.transit.pos;
+  var pPos = state.partner ? state.partner.pos : null;
+  var triple = !!pPos;
+  var houseIn = triple ? 116 : 150, houseNum = triple ? 130 : 163, chordR = triple ? 136 : 148;
+  var wt = document.getElementById('wheelTitle'), wn = document.getElementById('wheelNote');
+  var nmA = (state.natalInfo && state.natalInfo.name) || '出生1';
+  var nmB = (state.partnerInfo && state.partnerInfo.name) || '出生2';
+  if (wt) wt.textContent = triple ? '◎ 三重円（内＝' + nmA + '／中＝' + nmB + '／外＝トランジット）' : '◎ 二重円（内＝ネイタル／外＝トランジット）';
+  if (wn) wn.textContent = triple ? 'ハウスは内側（出生1）のプラシーダス。太線＝トランジット×出生1、細線＝トランジット×出生2のアスペクト。' : 'ハウスはネイタルのプラシーダス。線はトランジット×ネイタルのアスペクト（金＝合、緑＝トライン、赤＝スクエア／オポジション）。';
   var cx = 320, cy = 320;
   var rot = nPos[11] !== undefined ? nPos[11] : 0;
   var P = function (lon, r) { var a = (lon - rot) * Math.PI / 180; return [cx - r * Math.cos(a), cy + r * Math.sin(a)]; };
@@ -294,16 +347,16 @@ function renderWheel() {
   if (state.natal.cusps) {
     state.natal.cusps.forEach(function (cusp, i) {
       var strong = i === 0 || i === 9;
-      var h1 = P(cusp, 150), h2 = P(cusp, 262);
+      var h1 = P(cusp, houseIn), h2 = P(cusp, 262);
       s += '<line x1="' + h1[0].toFixed(1) + '" y1="' + h1[1].toFixed(1) + '" x2="' + h2[0].toFixed(1) + '" y2="' + h2[1].toFixed(1) + '" stroke="#8A7A5A" stroke-opacity="' + (strong ? 0.95 : 0.5) + '" stroke-width="' + (strong ? 1.8 : 1) + '"/>';
       var nxt = state.natal.cusps[(i + 1) % 12];
       var span = ((nxt - cusp) % 360 + 360) % 360;
-      var np = P(cusp + span / 2, 163);
+      var np = P(cusp + span / 2, houseNum);
       s += '<text x="' + np[0].toFixed(1) + '" y="' + np[1].toFixed(1) + '" fill="#7A6A4A" font-size="12" text-anchor="middle" dominant-baseline="middle">' + (i + 1) + '</text>';
     });
   }
   state.aspects.forEach(function (a) {
-    var p1 = P(tPos[a.t.id], 148), p2 = P(nPos[a.n.id], 148);
+    var p1 = P(tPos[a.t.id], chordR), p2 = P(nPos[a.n.id], chordR);
     var op = 0.2 + 0.7 * (1 - a.orb / a.asp.orb);
     var sel = state.selected;
     var match = sel && ((sel.side === 'T' && sel.id === a.t.id) || (sel.side === 'N' && sel.id === a.n.id));
@@ -311,18 +364,30 @@ function renderWheel() {
     var lo = sel ? (match ? 1 : 0.04) : op;
     s += '<line data-t="' + a.t.id + '" data-n="' + a.n.id + '" x1="' + p1[0].toFixed(1) + '" y1="' + p1[1].toFixed(1) + '" x2="' + p2[0].toFixed(1) + '" y2="' + p2[1].toFixed(1) + '" stroke="' + a.asp.col + '" stroke-width="' + lw + '" stroke-opacity="' + lo + '"/>';
   });
-  function dots(pos, r, color, ids, side) {
+  if (triple) {
+    (state.aspectsP || []).forEach(function (a) {
+      var q1 = P(tPos[a.t.id], chordR), q2 = P(pPos[a.n.id], chordR);
+      var op = 0.4 * (0.2 + 0.7 * (1 - a.orb / a.asp.orb));
+      var sel2 = state.selected;
+      var match = sel2 && ((sel2.side === 'T' && sel2.id === a.t.id) || (sel2.side === 'P' && sel2.id === a.n.id));
+      var lo = sel2 ? (match ? 0.9 : 0.03) : op;
+      s += '<line x1="' + q1[0].toFixed(1) + '" y1="' + q1[1].toFixed(1) + '" x2="' + q2[0].toFixed(1) + '" y2="' + q2[1].toFixed(1) + '" stroke="' + a.asp.col + '" stroke-width="' + (match ? 2.2 : 1.0) + '" stroke-opacity="' + lo + '"/>';
+    });
+  }
+  function dots(pos, r, color, ids, side, sep, font) {
     var items = [];
     ids.forEach(function (id) { if (pos[id] !== undefined && id !== 11 && id !== 12) items.push({ id: id, lon: pos[id] }); });
-    spreadGlyphs(items);
+    spreadGlyphs(items, sep || (r >= 240 ? 7.0 : 8.2));
     var out = '';
     var sel = state.selected;
     var involved = {};
     if (sel) {
       involved[sel.side + sel.id] = true;
-      state.aspects.forEach(function (a) {
-        if (sel.side === 'T' && a.t.id === sel.id) involved['N' + a.n.id] = true;
-        if (sel.side === 'N' && a.n.id === sel.id) involved['T' + a.t.id] = true;
+      [{ list: state.aspects, other: 'N' }, { list: state.aspectsP || [], other: 'P' }].forEach(function (L) {
+        L.list.forEach(function (a) {
+          if (sel.side === 'T' && a.t.id === sel.id) involved[L.other + a.n.id] = true;
+          if (sel.side === L.other && a.n.id === sel.id) involved['T' + a.t.id] = true;
+        });
       });
     }
     items.forEach(function (it) {
@@ -330,7 +395,7 @@ function renderWheel() {
       out += '<line x1="' + tk1[0].toFixed(1) + '" y1="' + tk1[1].toFixed(1) + '" x2="' + tk2[0].toFixed(1) + '" y2="' + tk2[1].toFixed(1) + '" stroke="' + color + '" stroke-opacity="0.7"/>';
       var gp = P(it.disp, r);
       var dim = sel && !involved[side + it.id] ? ' opacity="0.25"' : '';
-      out += '<g class="plHit" data-side="' + side + '" data-id="' + it.id + '" style="cursor:pointer;"' + dim + '><circle cx="' + gp[0].toFixed(1) + '" cy="' + gp[1].toFixed(1) + '" r="21" fill="rgba(0,0,0,0)"/><text x="' + gp[0].toFixed(1) + '" y="' + gp[1].toFixed(1) + '" fill="' + color + '" font-size="26" font-weight="700" stroke="rgba(0,0,0,0.6)" stroke-width="0.6" paint-order="stroke" text-anchor="middle" dominant-baseline="middle">' + glyphOf(it.id) + '</text></g>';
+      out += '<g class="plHit" data-side="' + side + '" data-id="' + it.id + '" style="cursor:pointer;"' + dim + '><circle cx="' + gp[0].toFixed(1) + '" cy="' + gp[1].toFixed(1) + '" r="21" fill="rgba(0,0,0,0)"/><text x="' + gp[0].toFixed(1) + '" y="' + gp[1].toFixed(1) + '" fill="' + color + '" font-size="' + (font || 26) + '" font-weight="700" stroke="rgba(0,0,0,0.6)" stroke-width="0.6" paint-order="stroke" text-anchor="middle" dominant-baseline="middle">' + glyphOf(it.id) + '</text></g>';
     });
     [11, 12].forEach(function (id) {
       if (pos[id] === undefined || ids.indexOf(id) < 0) return;
@@ -339,8 +404,16 @@ function renderWheel() {
     });
     return out;
   }
-  s += dots(tPos, 240, '#C1272D', BODIES.filter(function (x) { return x.id <= 10 || x.id === 13; }).map(function (b) { return b.id; }), 'T');
-  s += dots(nPos, 204, '#1F3BB3', BODIES.map(function (b) { return b.id; }), 'N');
+  var TIDS = BODIES.filter(function (x) { return x.id <= 10 || x.id === 13; }).map(function (b) { return b.id; });
+  var BIDS = BODIES.map(function (b) { return b.id; });
+  if (triple) {
+    s += dots(tPos, 246, '#C1272D', TIDS, 'T', 6.6, 24);
+    s += dots(pPos, 206, '#7D3C98', BIDS, 'P', 7.8, 24);
+    s += dots(nPos, 164, '#1F3BB3', BIDS, 'N', 9.0, 24);
+  } else {
+    s += dots(tPos, 240, '#C1272D', TIDS, 'T');
+    s += dots(nPos, 204, '#1F3BB3', BIDS, 'N');
+  }
   s += '</svg>';
   box.innerHTML = s;
   box.querySelectorAll('.plHit').forEach(function (g) {
@@ -357,11 +430,12 @@ function renderAspDetail() {
   var sel = state.selected;
   if (!sel) { el.innerHTML = '<p class="note">惑星をタップすると、その惑星のアスペクトだけを絞って表示します。もう一度タップで解除。</p>'; return; }
   var b = BODIES.find(function (x) { return x.id === sel.id; });
-  var list = state.aspects.filter(function (a) { return sel.side === 'T' ? a.t.id === sel.id : a.n.id === sel.id; });
-  var head = '<div style="font-size:14px; font-weight:700; color:' + (sel.side === 'T' ? '#59E3FF' : '#FFE14D') + ';">' + (sel.side === 'T' ? 'トランジット ' : 'ネイタル ') + b.g + ' ' + b.n + (sel.side === 'T' ? ' のアスペクト' : ' へのトランジット') + '</div>';
+  var isP = sel.side === 'P';
+  var list = (isP ? state.aspectsP : state.aspects).filter(function (a) { return sel.side === 'T' ? a.t.id === sel.id : a.n.id === sel.id; });
+  var head = '<div style="font-size:14px; font-weight:700; color:' + (sel.side === 'T' ? '#59E3FF' : isP ? '#C39BDB' : '#FFE14D') + ';">' + (sel.side === 'T' ? 'トランジット ' : isP ? '相手ネイタル ' : 'ネイタル ') + b.g + ' ' + b.n + (sel.side === 'T' ? ' のアスペクト' : ' へのトランジット') + '</div>';
   if (!list.length) { el.innerHTML = head + '<p class="note">許容オーブ内のアスペクトはありません。</p>'; return; }
   el.innerHTML = head + list.map(function (a) {
-    return '<div class="aspRow"><span><span style="color:#59E3FF;">T ' + a.t.g + ' ' + a.t.n + '</span> <span style="color:' + a.asp.col + ';">' + a.asp.g + '</span> <span style="color:#FFE14D;">N ' + a.n.g + ' ' + a.n.n + '</span></span><span style="color:#9a8d7a;">' + a.orb.toFixed(2) + '° ' + a.applying + '</span></div>';
+    return '<div class="aspRow"><span><span style="color:#59E3FF;">T ' + a.t.g + ' ' + a.t.n + '</span> <span style="color:' + a.asp.col + ';">' + a.asp.g + '</span> <span style="color:' + (isP ? '#C39BDB' : '#FFE14D') + ';">' + (isP ? 'P ' : 'N ') + a.n.g + ' ' + a.n.n + '</span></span><span style="color:#9a8d7a;">' + a.orb.toFixed(2) + '° ' + a.applying + '</span></div>';
   }).join('');
 }
 function renderTables() {
@@ -378,6 +452,7 @@ function renderTables() {
   }
   document.getElementById('natalTable').innerHTML = tbl(state.natal, true);
   document.getElementById('transitTable').innerHTML = tbl(state.transit, false);
+  if (state.partner) document.getElementById('partnerTable').innerHTML = tbl(state.partner, true);
 }
 function renderAspects() {
   var el = document.getElementById('aspList');
@@ -430,6 +505,8 @@ function renderAll() {
   if (!state.natal || !state.transit) return;
   var ll = tLatLon(); var later = computeTransit(new Date(state.tDate.getTime() + 3600000), ll[0], ll[1]);
   state.aspects = findAspects(state.transit.pos, state.natal.pos, later.pos);
+  state.aspectsP = state.partner ? findAspects(state.transit.pos, state.partner.pos, later.pos) : [];
+  renderPartnerExtras();
   document.getElementById('tLabel').textContent = '― ' + state.tDate.getFullYear() + '年' + (state.tDate.getMonth() + 1) + '月' + state.tDate.getDate() + '日 ' + String(state.tDate.getHours()).padStart(2, '0') + ':' + String(state.tDate.getMinutes()).padStart(2, '0');
   renderWheel(); renderTables(); renderAspects(); renderMidpoints(); renderAspDetail();
 }
@@ -461,6 +538,67 @@ function applyNatal(info) {
   state.natal = computeChart(info.date, info.time, info.unknown, info.lat, info.lon);
   if (!state.transit) state.transit = computeTransit(state.tDate, info.lat, info.lon);
   renderAll();
+}
+function readForm(p) {
+  var place = PREFS[Number(document.getElementById(p + 'Place').value)];
+  return {
+    name: document.getElementById(p + 'Name').value,
+    date: document.getElementById(p + 'Date').value,
+    time: document.getElementById(p + 'Time').value,
+    unknown: document.getElementById(p + 'Unknown').checked,
+    placeIdx: Number(document.getElementById(p + 'Place').value),
+    lat: place[2], lon: place[1]
+  };
+}
+function writeForm(p, info) {
+  document.getElementById(p + 'Name').value = info ? (info.name || '') : '';
+  document.getElementById(p + 'Date').value = info ? (info.date || '1977-12-23') : '1977-12-23';
+  document.getElementById(p + 'Time').value = info ? (info.time || '12:00') : '12:00';
+  document.getElementById(p + 'Unknown').checked = info ? !!info.unknown : false;
+  document.getElementById(p + 'Place').value = String(info && info.placeIdx !== undefined ? info.placeIdx : 12);
+}
+function applyPartner(info) {
+  state.partnerInfo = info;
+  state.partner = computeChart(info.date, info.time, info.unknown, info.lat, info.lon);
+  renderAll();
+}
+function clearPartner() {
+  state.partner = null; state.partnerInfo = null; state.aspectsP = [];
+  if (state.selected && state.selected.side === 'P') state.selected = null;
+  try { localStorage.removeItem('kantei_partner_v1'); } catch (e) {}
+  if (state.natal && state.transit) renderAll();
+}
+function swapSlots() {
+  var aInfo = state.natalInfo, bInfo = state.partnerInfo;
+  var aChart = state.natal, bChart = state.partner;
+  writeForm('k', bInfo); writeForm('p', aInfo);
+  state.natalInfo = bInfo; state.partnerInfo = aInfo;
+  state.natal = bChart; state.partner = aChart;
+  state.selected = null;
+  try {
+    if (bInfo) localStorage.setItem('kantei_natal_v1', JSON.stringify(bInfo)); else localStorage.removeItem('kantei_natal_v1');
+    if (aInfo) localStorage.setItem('kantei_partner_v1', JSON.stringify(aInfo)); else localStorage.removeItem('kantei_partner_v1');
+  } catch (e) {}
+  var pl = document.getElementById('progList'); if (pl) pl.innerHTML = '';
+  if (!state.transit) { var ll = tLatLon(); state.transit = computeTransit(state.tDate, ll[0], ll[1]); }
+  if (state.natal && state.transit) { renderAll(); }
+  else {
+    document.getElementById('wheel').innerHTML = '';
+    document.getElementById('aspDetail').innerHTML = '<p class="note">出生1が空です。相手が出生2に移りました。新しい出生1をセットすると表示されます。</p>';
+    renderPartnerExtras();
+  }
+}
+function renderPartnerExtras() {
+  var has = !!state.partner;
+  var pc = document.getElementById('partnerCard'), ac = document.getElementById('aspCardP');
+  if (pc) pc.style.display = has ? '' : 'none';
+  if (ac) ac.style.display = has ? '' : 'none';
+  if (!has) return;
+  var el = document.getElementById('aspListP');
+  if (!state.aspectsP.length) { el.innerHTML = '<p class="note">許容オーブ内のアスペクトはありません。</p>'; return; }
+  el.innerHTML = state.aspectsP.map(function (a) {
+    return '<div class="aspRow"><span><span style="color:#59E3FF;">T ' + a.t.g + ' ' + a.t.n + '</span> <span style="color:' + a.asp.col + ';">' + a.asp.g + '</span> <span style="color:#C39BDB;">P ' + a.n.g + ' ' + a.n.n + '</span></span><span style="color:#9a8d7a;">' + a.orb.toFixed(2) + '° ' + a.applying + '</span></div>';
+  }).join('');
 }
 function computeProgressedSun() {
   var el = document.getElementById('progList');
@@ -534,14 +672,27 @@ async function startApp() {
     document.getElementById('kUnknown').checked = !!saved.unknown;
     sel.value = String(saved.placeIdx !== undefined ? saved.placeIdx : 12);
   }
+  var selP = document.getElementById('pPlace');
+  selP.innerHTML = sel.innerHTML;
+  var savedP = null;
+  try { savedP = JSON.parse(localStorage.getItem('kantei_partner_v1') || 'null'); } catch (e) {}
+  if (savedP) writeForm('p', savedP);
   document.getElementById('tDate').value = toLocalInput(state.tDate);
   await initEngine();
   applyNatal(readNatalForm());
+  if (savedP) applyPartner(readForm('p'));
   document.getElementById('kSetBtn').addEventListener('click', function () {
     var info = readNatalForm();
     try { localStorage.setItem('kantei_natal_v1', JSON.stringify(info)); } catch (e) {}
     applyNatal(info);
   });
+  document.getElementById('pSetBtn').addEventListener('click', function () {
+    var info = readForm('p');
+    try { localStorage.setItem('kantei_partner_v1', JSON.stringify(info)); } catch (e) {}
+    applyPartner(info);
+  });
+  document.getElementById('pClearBtn').addEventListener('click', clearPartner);
+  document.getElementById('swapBtn').addEventListener('click', swapSlots);
   document.getElementById('tDate').addEventListener('change', function () {
     var v = document.getElementById('tDate').value;
     if (v) setTransit(new Date(v));
