@@ -91,6 +91,18 @@
   </div>
 
   <div class="card">
+    <h2>🎯 アスペクト・ジャンプ</h2>
+    <p class="note" style="margin-top:0;">希望のアスペクトが成立する日へ移動します（オーブ5°以内・前後5年）。条件を増やすと、全部が同時に成立する日を探します。</p>
+    <div id="ajConds"></div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
+      <button class="stepBtn" id="ajAdd" type="button">＋ 条件を追加</button>
+      <button class="stepBtn" id="ajPrev" type="button">◀ 前の成立日</button>
+      <button class="stepBtn" id="ajNext" type="button">次の成立日 ▶</button>
+    </div>
+    <p class="note" id="ajMsg" style="margin-top:8px;"></p>
+  </div>
+
+  <div class="card">
     <h2 id="wheelTitle">◎ 二重円（内＝ネイタル／外＝トランジット）</h2>
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
       <button class="stepBtn lineModeBtn" data-mode="TN" type="button">線：T × 出生1</button>
@@ -132,6 +144,10 @@
     <div style="font-size:13px; font-weight:700; color:#e8cf9f;">プログレス太陽がネイタルハーフサムに触れる日</div>
     <div style="margin:8px 0;"><select id="progMethod" style="width:auto;"><option value="day" selected>1日＝1年法（セカンダリー）</option><option value="degree">1度＝1年法</option></select> <button class="stepBtn" id="progBtn" type="button">☉ 接触日を計算する</button></div>
     <div id="progList" style="margin:6px 0 12px;"></div>
+    <div style="font-size:13px; font-weight:700; color:#e8cf9f;">年運式：プログレス太陽 × ハーフサム40選</div>
+    <p class="note">年運と同じ方式（40選の軸のみ・オーブ1°・1日＝1年法）で、効きはじめ〜ピーク〜効きおわりを表示します。</p>
+    <div style="margin:8px 0;"><input id="nuYear" type="number" style="width:110px;" min="1900" max="2100"> 年 <button class="stepBtn" id="nuBtn" type="button">☉ 40選で見る</button></div>
+    <div id="nuList" style="margin:6px 0 12px;"></div>
     <details><summary>ミッドポイント全一覧</summary><div id="mpAll" style="margin-top:8px;"></div></details>
   </div>
 
@@ -698,6 +714,191 @@ function computeProgressedSun() {
     el.innerHTML = html;
   }, 30);
 }
+
+// ===== アスペクト・ジャンプ（希望のアスペクトが成立する日へ移動） =====
+var AJ_ORB = 5, AJ_RANGE_YEARS = 5;
+var ajConds = [{ tp: 3, tgt: 'N', np: 5, asp: 120 }];
+function ajPlanetOptions(sel) {
+  return BODIES.filter(function (b) { return b.id <= 10; }).map(function (b) {
+    return '<option value="' + b.id + '"' + (b.id === sel ? ' selected' : '') + '>' + b.g + ' ' + b.n + '</option>';
+  }).join('');
+}
+function ajRender() {
+  var box = document.getElementById('ajConds');
+  if (!box) return;
+  box.innerHTML = ajConds.map(function (c, i) {
+    var tgtOpts = [['N', '出生1'], ['P', '出生2'], ['T', '空']].map(function (t) {
+      return '<option value="' + t[0] + '"' + (c.tgt === t[0] ? ' selected' : '') + '>' + t[1] + '</option>';
+    }).join('');
+    var aspOpts = ASPS.map(function (a) {
+      return '<option value="' + a.a + '"' + (c.asp === a.a ? ' selected' : '') + '>' + a.g + ' ' + a.n + '</option>';
+    }).join('');
+    return '<div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:8px;">'
+      + '<span style="font-size:13px; color:#59E3FF; font-weight:700;">T</span>'
+      + '<select data-aj="' + i + ':tp" style="width:auto;">' + ajPlanetOptions(c.tp) + '</select>'
+      + '<span style="font-size:13px;">が</span>'
+      + '<select data-aj="' + i + ':tgt" style="width:auto;">' + tgtOpts + '</select>'
+      + '<span style="font-size:13px;">の</span>'
+      + '<select data-aj="' + i + ':np" style="width:auto;">' + ajPlanetOptions(c.np) + '</select>'
+      + '<span style="font-size:13px;">と</span>'
+      + '<select data-aj="' + i + ':asp" style="width:auto;">' + aspOpts + '</select>'
+      + (ajConds.length > 1 ? '<button type="button" class="stepBtn" data-ajdel="' + i + '">✕</button>' : '')
+      + '</div>';
+  }).join('');
+  box.querySelectorAll('select[data-aj]').forEach(function (s) {
+    s.addEventListener('change', function () {
+      var p = s.getAttribute('data-aj').split(':');
+      ajConds[Number(p[0])][p[1]] = p[1] === 'tgt' ? s.value : Number(s.value);
+    });
+  });
+  box.querySelectorAll('button[data-ajdel]').forEach(function (b) {
+    b.addEventListener('click', function () { ajConds.splice(Number(b.getAttribute('data-ajdel')), 1); ajRender(); });
+  });
+}
+function ajTargetPos(tgt, np, tPos) {
+  if (tgt === 'N') return state.natal ? state.natal.pos[np] : undefined;
+  if (tgt === 'P') return state.partner ? state.partner.pos[np] : undefined;
+  return tPos[np];
+}
+function ajMaxOrb(ms) {
+  var jd = ms / 86400000 + 2440587.5;
+  var tPos = {};
+  for (var id = 0; id <= 10; id++) tPos[id] = calcPos(jd, swissId(id), 260);
+  var worst = -1, details = [];
+  for (var i = 0; i < ajConds.length; i++) {
+    var c = ajConds[i];
+    var a = tPos[c.tp], b = ajTargetPos(c.tgt, c.np, tPos);
+    if (a === undefined || b === undefined || isNaN(a) || isNaN(b)) return null;
+    var dd = ((a - b) % 360 + 360) % 360; if (dd > 180) dd = 360 - dd;
+    var orb = Math.abs(dd - c.asp);
+    details.push({ c: c, orb: orb });
+    if (orb > worst) worst = orb;
+  }
+  return { worst: worst, details: details };
+}
+function ajDescribe(res) {
+  return res.details.map(function (d) {
+    var tb = BODIES.find(function (x) { return x.id === d.c.tp; });
+    var nb = BODIES.find(function (x) { return x.id === d.c.np; });
+    var asp = ASPS.find(function (x) { return x.a === d.c.asp; });
+    var tl = d.c.tgt === 'N' ? '出生1' : d.c.tgt === 'P' ? '出生2' : '空';
+    return 'T' + tb.g + ' ' + asp.g + ' ' + tl + ' ' + nb.g + '（' + d.orb.toFixed(1) + '°）';
+  }).join('、');
+}
+function ajFind(dir) {
+  var msg = document.getElementById('ajMsg');
+  if (!state.natal) { msg.textContent = '先にネイタルをセットしてください。'; return; }
+  for (var i = 0; i < ajConds.length; i++) {
+    if (ajConds[i].tgt === 'P' && !state.partner) { msg.textContent = '出生2がセットされていません。'; return; }
+    if (ajConds[i].tgt === 'T' && ajConds[i].tp === ajConds[i].np) { msg.textContent = '空×空で同じ惑星同士は選べません。'; return; }
+  }
+  msg.textContent = '探しています…';
+  setTimeout(function () {
+    var STEP = 6 * 3600000, LIMIT = AJ_RANGE_YEARS * 365.2422 * 86400000;
+    var t0 = state.tDate.getTime();
+    var found = null, inWin = false, winBest = null, winBestVal = 1e9;
+    var cur = ajMaxOrb(t0);
+    var startInside = !!(cur && cur.worst <= AJ_ORB);
+    for (var ms = t0 + dir * STEP; Math.abs(ms - t0) <= LIMIT; ms += dir * STEP) {
+      var r = ajMaxOrb(ms);
+      if (!r) break;
+      if (r.worst <= AJ_ORB) {
+        if (!inWin) { inWin = true; winBest = ms; winBestVal = r.worst; }
+        else if (r.worst < winBestVal) { winBest = ms; winBestVal = r.worst; }
+      } else if (inWin) {
+        if (startInside) { startInside = false; inWin = false; winBest = null; winBestVal = 1e9; }
+        else { found = winBest; break; }
+      }
+    }
+    if (!found && inWin && !startInside) found = winBest;
+    if (!found) { msg.textContent = '前後' + AJ_RANGE_YEARS + '年以内では見つかりませんでした。'; return; }
+    var bestMs = found, bestRes = ajMaxOrb(found), bestVal = bestRes ? bestRes.worst : 1e9;
+    for (var d = -STEP; d <= STEP; d += 600000) {
+      var r2 = ajMaxOrb(found + d);
+      if (r2 && r2.worst < bestVal) { bestVal = r2.worst; bestMs = found + d; }
+    }
+    var dt = new Date(bestMs);
+    setTransit(dt);
+    var res = ajMaxOrb(bestMs);
+    msg.innerHTML = '→ <b>' + dt.getFullYear() + '年' + (dt.getMonth() + 1) + '月' + dt.getDate() + '日 ' + String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0') + '</b> にジャンプ：' + (res ? ajDescribe(res) : '');
+  }, 30);
+}
+function initAspectJump() {
+  ajRender();
+  document.getElementById('ajAdd').addEventListener('click', function () {
+    if (ajConds.length >= 4) return;
+    ajConds.push({ tp: 4, tgt: 'N', np: 3, asp: 0 });
+    ajRender();
+  });
+  document.getElementById('ajPrev').addEventListener('click', function () { ajFind(-1); });
+  document.getElementById('ajNext').addEventListener('click', function () { ajFind(1); });
+}
+// ===== 年運式：プログレス太陽 × ハーフサム40選 =====
+var HS40 = [[0,3],[0,5],[0,8],[0,9],[0,10],[0,11],[0,12],[1,3],[1,7],[1,8],[2,3],[2,5],[2,9],[2,10],[3,4],[3,5],[3,7],[3,8],[3,9],[3,12],[4,5],[4,6],[4,7],[4,8],[4,9],[5,6],[5,7],[5,8],[5,9],[5,10],[5,12],[6,7],[6,8],[6,9],[7,8],[7,9],[7,11],[8,9],[8,10],[9,12]];
+function computeNenunStyle() {
+  var el = document.getElementById('nuList');
+  if (!state.natal || !state.natalInfo) { el.innerHTML = '<p class="note">先にネイタルをセットしてください。</p>'; return; }
+  var year = Number(document.getElementById('nuYear').value) || new Date().getFullYear();
+  el.innerHTML = '<p class="note">計算中…</p>';
+  setTimeout(function () {
+    var info = state.natalInfo, nat = state.natal;
+    var birth = new Date(info.date + 'T' + (info.unknown ? '12:00' : (info.time || '12:00')) + ':00');
+    var DAY = 365.2422 * 86400000;
+    function dateOfAge(a) { return new Date(birth.getTime() + a * DAY); }
+    function ageOfDate(d) { return (d.getTime() - birth.getTime()) / DAY; }
+    var yStart = new Date(year, 0, 1), yEnd = new Date(year, 11, 31, 23, 59);
+    var aFrom = Math.max(0, ageOfDate(yStart) - 2.6), aTo = ageOfDate(yEnd) + 2.6;
+    var ORB = 1.0, STEP = 0.01;
+    function sunAt(a) { return calcPos(nat.jd + a, 0, 260); }
+    var rows = [], skipped = 0;
+    HS40.forEach(function (pr) {
+      var pa = nat.pos[pr[0]], pb = nat.pos[pr[1]];
+      if (pa === undefined || pb === undefined) { skipped++; return; }
+      var m = midLon(pa, pb);
+      function dist(a) { return foldDist(sunAt(a), m); }
+      var prevA = aFrom, prevD = dist(aFrom), cur = null;
+      if (prevD <= ORB) cur = { start: aFrom, peakA: aFrom, peakD: prevD };
+      for (var a = aFrom + STEP; a <= aTo + 1e-9; a += STEP) {
+        var d = dist(a);
+        if (!cur && prevD > ORB && d <= ORB) {
+          var lo = prevA, hi = a;
+          for (var k = 0; k < 24; k++) { var md = (lo + hi) / 2; if (dist(md) <= ORB) hi = md; else lo = md; }
+          cur = { start: hi, peakA: a, peakD: d };
+        } else if (cur && d <= ORB && d < cur.peakD) { cur.peakA = a; cur.peakD = d; }
+        else if (cur && prevD <= ORB && d > ORB) {
+          var lo2 = prevA, hi2 = a;
+          for (var k2 = 0; k2 < 24; k2++) { var md2 = (lo2 + hi2) / 2; if (dist(md2) <= ORB) lo2 = md2; else hi2 = md2; }
+          cur.end = lo2;
+          var sD = dateOfAge(cur.start), eD = dateOfAge(cur.end);
+          if (eD >= yStart && sD <= yEnd) {
+            var lo3 = cur.peakA - STEP, hi3 = cur.peakA + STEP;
+            for (var k3 = 0; k3 < 24; k3++) { var m1 = lo3 + (hi3 - lo3) / 3, m2 = hi3 - (hi3 - lo3) / 3; if (dist(m1) < dist(m2)) hi3 = m2; else lo3 = m1; }
+            cur.peakA = (lo3 + hi3) / 2; cur.peakD = dist(cur.peakA);
+            rows.push({ pr: pr, start: cur.start, peak: cur.peakA, peakD: cur.peakD, end: cur.end });
+          }
+          cur = null;
+        }
+        prevA = a; prevD = d;
+      }
+      if (cur) {
+        cur.end = aTo;
+        var sD2 = dateOfAge(cur.start), eD2 = dateOfAge(cur.end);
+        if (eD2 >= yStart && sD2 <= yEnd) rows.push({ pr: pr, start: cur.start, peak: cur.peakA, peakD: cur.peakD, end: cur.end });
+      }
+    });
+    rows.sort(function (x, y) { return x.peak - y.peak; });
+    function fmtD(d) { return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日'; }
+    if (!rows.length) { el.innerHTML = '<p class="note">' + year + '年に重なる軸はありませんでした。</p>'; return; }
+    var html = rows.map(function (r) {
+      var pD = dateOfAge(r.peak), sD = dateOfAge(r.start), eD = dateOfAge(r.end);
+      var badge = (pD >= yStart && pD <= yEnd) ? '🎯最大活性' : (sD >= yStart && sD <= yEnd) ? '🌱効きはじめ' : '🌙継続中';
+      return '<div class="aspRow"><span>☉(P) ＝ ' + glyphOf(r.pr[0]) + '／' + glyphOf(r.pr[1]) + ' <span style="color:#ffd88a;">' + badge + '</span></span><span style="color:#9a8d7a;">' + fmtD(sD) + ' 〜 ' + fmtD(eD) + '（ピーク ' + fmtD(pD) + '）</span></div>';
+    }).join('');
+    if (skipped) html += '<p class="note">出生時刻が不明のため、ASC・MCが絡む軸（' + skipped + '件）は除いています。</p>';
+    el.innerHTML = html;
+  }, 30);
+}
+
 async function startApp() {
   var sel = document.getElementById('kPlace');
   sel.innerHTML = PREFS.map(function (p, i) { return '<option value="' + i + '"' + (p[0] === '東京都' ? ' selected' : '') + '>' + p[0] + '</option>'; }).join('');
@@ -757,6 +958,9 @@ async function startApp() {
   document.getElementById('tNow').addEventListener('click', function () { setTransit(new Date()); });
   document.getElementById('mpOrb').addEventListener('change', function () { if (state.natal && state.transit) renderMidpoints(); });
   document.getElementById('progBtn').addEventListener('click', computeProgressedSun);
+  initAspectJump();
+  var nyEl = document.getElementById('nuYear'); if (nyEl && !nyEl.value) nyEl.value = new Date().getFullYear();
+  document.getElementById('nuBtn').addEventListener('click', computeNenunStyle);
 }
 </script>
 
