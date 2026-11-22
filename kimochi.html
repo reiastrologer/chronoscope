@@ -31,7 +31,7 @@ try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __
 
 <div style="max-width: 880px; margin: 10px auto 0; padding: 0 16px; text-align: center;">
 <h1 style="font-family: 'Noto Serif JP', serif; font-size: 22px; color: #e8cf9f; margin-bottom: 6px;">💗 相手の気持ち</h1>
-<p style="font-size: 14px; color: #9a8d7a; line-height: 1.8;">相手の星と、今日のタロット3枚を合わせて読む「相手の気持ち」占いです。相手の金星・月・火星があなたの星にどう触れているか（＝相手があなたに向ける気持ちの星）と、今日の気持ちの流れを統合して読みます。</p>
+<p style="font-size: 14px; color: #9a8d7a; line-height: 1.8;">相手の星と、今日のタロット3枚を合わせて読む「相手の気持ち」占いです。今日の星があなたの星にどう触れているか（＝相手があなたに向ける星）を、タロットと合わせて読みます。</p>
 <p style="font-size: 12.5px; color: #8a8178; line-height: 1.8;">※二人の間の「時期ごとの流れ」は、<a href="./aisho.html" style="color: #e8cf9f;">💞 相性診断（現在の相性）</a>で見てね。ここは「相手があなたをどう思っているか」専用です。</p>
 </div>
 <div style="max-width: 880px; margin: 14px auto 0; padding: 0 16px;">
@@ -41,13 +41,22 @@ try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __
 <label class="fld">月<select id="kAM"></select></label>
 <label class="fld">日<select id="kAD"></select></label>
 </div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
+<label class="fld">出生時刻（時）<select id="kATH"></select></label>
+<label class="fld">出生時刻（分）<select id="kATM"></select></label>
+</div>
+<p style="font-size: 12.5px; color: #8a8178; margin-top: 6px; line-height: 1.8;">あなたの出生時間を入れると、月の位置が合って、読みが変わります。分からなければ「不明」のままで大丈夫です。</p>
 <div style="font-size: 13px; font-weight: 700; color: #e8cf9f; margin: 12px 0 6px;">相手</div>
 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
 <label class="fld">生まれた年<select id="kBY"></select></label>
 <label class="fld">月<select id="kBM"></select></label>
 <label class="fld">日<select id="kBD"></select></label>
 </div>
-<p style="font-size: 12.5px; color: #8a8178; margin-top: 8px; line-height: 1.8;">※出生時刻は不要です（正午で計算します）。相性診断で入力した二人が、そのまま入ります。入力はあなたのブラウザの中だけに保存され、送信されません。</p>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
+<label class="fld">出生時刻（時）<select id="kBTH"></select></label>
+<label class="fld">出生時刻（分）<select id="kBTM"></select></label>
+</div>
+<p style="font-size: 12.5px; color: #8a8178; margin-top: 8px; line-height: 1.8;">※相手の出生時間は、円の中の月の位置が正確になるだけで、読み自体は変わりません。出生時刻は、分かる範囲で大丈夫です（不明の場合は正午で計算します）。相性診断で入力した二人が、そのまま入ります。入力はあなたのブラウザの中だけに保存され、送信されません。</p>
 <div style="font-size: 13px; font-weight: 700; color: #e8cf9f; margin: 12px 0 6px;">相手はどんな人？</div>
 <select id="kMode" style="width: 100%; background: #171410; color: #faf6f0; border: 1px solid #4a4238; border-radius: 10px; padding: 11px 12px; font-size: 15px; font-family: 'Noto Sans JP', sans-serif;">
 <option value="crush">気になる人・片思い</option>
@@ -58,6 +67,12 @@ try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __
 <option value="family">家族（親・兄弟）</option>
 <option value="work">職場の人・上司</option>
 <option value="online">オンラインの繋がり（まだ会ったことない人）</option>
+</select>
+<div style="font-size: 13px; font-weight: 700; color: #e8cf9f; margin: 12px 0 6px;">今の距離は？</div>
+<select id="kSit" style="width: 100%; background: #171410; color: #faf6f0; border: 1px solid #4a4238; border-radius: 10px; padding: 11px 12px; font-size: 15px; font-family: 'Noto Sans JP', sans-serif;">
+<option value="meet">ふだん顔を合わせる（職場の同僚など）</option>
+<option value="contact">連絡は取れている</option>
+<option value="none" selected>連絡が取れていない（会ってもいない）</option>
 </select>
 <button id="kBtn" type="button" style="width: 100%; margin-top: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color: #e8cf9f; border: 1px solid #c5a880; border-radius: 999px; padding: 13px 26px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans JP', sans-serif;">💗 相手の気持ちを見る</button>
 <div id="kResult" style="margin-top: 18px; padding-bottom: 40px;"></div>
@@ -240,6 +255,129 @@ var ELAB = {
   '5h': '日常だと、期待が大きくなって、約束や計画が膨らみすぎる形で出やすいね。'
 };
 
+var ELAB_SIT = {
+  contact: {
+    '0g': '日常だと、あなたの話をちゃんと聞こうとしたり、自分のことを話してくれたり、そういうところに出てくるよ。',
+    '0h': '日常だと、態度がちょっと堅くなったり、逆に張り合うような言い方になったりして出てくることがあるね。',
+    '2g': '日常だと、何気ないメッセージが増えたり、会話が弾んだり、そういうところに出てくるよ。',
+    '2h': '日常だと、返信のタイミングや言葉の選び方に、その揺れが出やすいね。',
+    '3g': '日常だと、褒め言葉が増えたり、一緒に楽しめることを探してくれたり、そういうところに出てくるよ。',
+    '3h': '日常だと、好意があるのに誘いを断ったり、逆の態度を取ったりして出てくることがあるね。',
+    '4g': '日常だと、相手からの連絡や誘いが増えたり、頼ってくれたり、そういうところに出てくるよ。',
+    '4h': '日常だと、ちょっとしたことで言い合いになったり、強めの態度になったりして出やすいね。',
+    '5g': '日常だと、ごちそうしてくれたり、大きな計画を話してくれたり、そういうところに出てくるよ。',
+    '5h': '日常だと、期待が大きくなって、約束や計画が膨らみすぎる形で出やすいね。'
+  },
+  meet: {
+    '0g': '職場だと、あなたの話をちゃんと聞こうとしたり、休憩中に話しかけてきたり、そういうところに出てくるよ。',
+    '0h': '職場だと、態度がちょっと堅くなったり、意見がぶつかったりして出てくることがあるね。',
+    '2g': '職場だと、業務連絡のついでに雑談が増えたり、帰り際に一言多かったり、そういうところに出てくるよ。',
+    '2h': '職場だと、連絡の行き違いや、言葉の受け取り違いで出やすいね。',
+    '3g': '職場だと、褒め言葉が増えたり、近くにいる時間が長かったり、そういうところに出てくるよ。',
+    '3h': '職場だと、好意があるのにそっけなかったり、逆の態度になったりして出てくることがあるね。',
+    '4g': '職場だと、仕事を手伝ってくれたり、頼ってくれたり、そういうところに出てくるよ。',
+    '4h': '職場だと、ちょっとしたことで言い合いになったり、強めの言い方になったりして出やすいね。',
+    '5g': '職場だと、みんなの前でもあなたを立ててくれたり、いい話を回してくれたり、そういうところに出てくるよ。',
+    '5h': '職場だと、期待が大きくなって、頼まれごとや評価の話が膨らみすぎる形で出やすいね。'
+  },
+  none: {
+    '0g': '連絡がない今は表に出てこないけど、ふとした瞬間にあなたを思い出す形で続いてる気持ちだよ。',
+    '0h': '連絡がないのは、気持ちがゼロだからとは限らないよ。向こうも意地やプライドで動けなくなってることがあるんだよね。',
+    '2g': '向こうも連絡するきっかけを探してる頃だよ。短い一言なら、今日は届きやすいと思うな。',
+    '2h': '言葉にしたいのに出せない、そういう詰まり方をしてる頃だよ。沈黙＝拒絶じゃないからね。',
+    '3g': '会えていない今は態度には出ないけど、あなたのことを思い出して、温かい気持ちになってる時間があるはずだよ。',
+    '3h': '好意と意地が混ざって、連絡できないままになってることがあるよ。嫌いで止まってるんじゃないと思うな。',
+    '4g': '向こうの中で、近づきたい気持ちが動いてるよ。久しぶりの連絡が来たら、それがサインだね。',
+    '4h': '近づきたい気持ちと意地がぶつかって、動けなくなってる頃だよ。熱が冷めたわけじゃないと思うな。',
+    '5g': '離れていても、あなたの幸せを願ったり、いい思い出として大切にしていたり、そういう形で続いてるよ。',
+    '5h': '期待が大きかったぶん、現実との差にモヤモヤして止まってることがあるよ。気持ちの整理に時間がかかってる頃だね。'
+  }
+};
+var ACT_LEAD_MEET = {
+  0: '職場であなたの元気な姿を見て、明るい気持ちになってるみたいだよ。休憩中や帰り際の何気ない会話が、今日は効くと思うな。',
+  2: '仕事の連絡のついでに、あなたと話したくなってるみたいだよ。業務連絡＋一言の雑談が、気持ちのサインだね。',
+  3: 'あなたのことを、職場で目で追ってる頃だよ。褒め言葉や、何気ない気遣いで好意が出やすいと思うな。',
+  4: 'あなたの仕事ぶりに頼もしさを感じて、手伝ったり声をかけたりしたくなってるみたいだよ。',
+  5: 'あなたの将来性や人柄を、職場でも高く買ってるみたいだよ。いい話を回してくれることがあるかもね。'
+};
+var ACT_LEAD_NONE = {
+  0: '連絡は止まっていても、ふとした瞬間にあなたのことを思い出してるみたいだよ。気持ちは消えてないと思うな。',
+  2: 'あなたの様子が気になって、連絡するかどうか迷ってる頃だよ。向こうも、きっかけを探してると思うな。',
+  3: '会えていない今も、あなたのことを懐かしく、温かく思い出してるみたいだよ。好意の火は消えてないと思うな。',
+  4: 'あなたのことが頭から離れなくて、連絡したい気持ちと意地がぶつかってる頃だよ。熱は残ってると思うな。',
+  5: '離れていても、あなたの幸せを願う気持ちが大きくなってるみたいだよ。応援する気持ちは本物だと思うな。'
+};
+var ACT_HARD_SOLO_MEET = '職場では気持ちがうまく出せなくて、そっけなかったり、イライラが見えたりしやすい日だよ。嫌いなんじゃなくて、意識してるからこその不器用さだね。今日は深追いしない方がいいかも。';
+var ACT_HARD_AFTER_MEET = 'ただ、意識してるぶん、職場での態度が急に変わることもあるみたい。気にしすぎないでね。';
+var ACT_HARD_SOLO_NONE = '今は連絡できないまま、気持ちが詰まってる頃だよ。気持ちがないんじゃなくて、近づきたいのに動けないもどかしさだね。今日は追わない方がいいかも。';
+var ACT_HARD_AFTER_NONE = 'ただ、連絡がないのは、向こうの意地や迷いのせいでもあるみたい。沈黙を拒絶と決めつけなくて、大丈夫だよ。';
+var CLOSER_SIT = {
+  contact: {
+    warm: '全体を通すと、相手の気持ちはあなたに向かって開いてるよ。素直な一歩が届きやすい流れだから、無理に引っ張らなくても、自然な近づき方がいちばん効くと思うな。',
+    mid: '全体を通すと、相手の気持ちは静かに育ってる最中だね。焦って確かめようとするより、安心できるやり取りを重ねていく方が、気持ちは近づくよ。',
+    cool: '全体を通すと、今は相手の気持ちが表に出にくい時期だよ。気持ちがないんじゃなくて、出てくるまでに時間がかかるタイプの流れだね。追いかけすぎず、自分のペースも大切にしてね。'
+  },
+  meet: {
+    warm: '全体を通すと、相手の気持ちはあなたに向かって開いてるよ。職場での何気ない一言や気遣いが効く流れだから、無理に近づかなくても、自然な距離感がいちばんいいと思うな。',
+    mid: '全体を通すと、相手の気持ちは静かに育ってる最中だね。焦って確かめるより、職場での穏やかなやり取りを重ねていく方が、気持ちは近づくよ。',
+    cool: '全体を通すと、今は相手の気持ちが表に出にくい時期だよ。気持ちがないんじゃなくて、職場では出せないだけかもしれないね。追いかけすぎず、自分のペースも大切にしてね。'
+  },
+  none: {
+    warm: '全体を通すと、相手の気持ちはあなたに向かって開いてるよ。連絡が止まっていても、火は消えてないと思うな。短い一言なら、届きやすい流れだよ。',
+    mid: '全体を通すと、相手の気持ちは静かに続いてる最中だね。連絡がない＝気持ちがない、じゃないよ。焦らず、自分の時間を大切にしながら待てる時期だと思うな。',
+    cool: '全体を通すと、今は相手の気持ちが表に出にくい時期だよ。沈黙が長くても、それだけで答えは決まらないからね。追いかけすぎず、自分のペースを取り戻してね。'
+  }
+};
+function adviceFor(sit, total) {
+  if (total >= 2.5) {
+    if (sit === 'meet') return '今日はあなたから動いてみよう！職場での何気ない一言からで、いいよ。';
+    if (sit === 'none') return '今日はあなたから動いてみよう！「元気？」の短い一言で、十分だよ。';
+    return '今日はあなたから動いてみよう！軽い誘いや一言が、流れに乗りやすい日だよ。';
+  }
+  if (total >= 0.8) {
+    if (sit === 'meet') return '急がず、職場での穏やかなやり取りを重ねてみて。本音は少しずつ見えてくるよ。';
+    if (sit === 'none') return '今日は様子見で大丈夫。送りたくなったら、短く軽く、それで十分だよ。';
+    return '急がず、相手のペースに寄り添ってみて。本音は少しずつ見えてくるよ。';
+  }
+  if (total >= -1.2) {
+    if (sit === 'meet') return '今日は待つ日。受身は悪くないよ、待てるのも力だからね。';
+    if (sit === 'none') return '今日は待つ日。受身は悪くないし、待つことも大事だよ。沈黙が味方になることもあるからね。';
+    return '今日は待つ日。受身は悪くない、待つことも大事だよ。';
+  }
+  if (sit === 'meet') return '今は追わずに、自分の仕事と時間を大切に。職場の距離感は、また変わっていくよ。';
+  if (sit === 'none') return '今は追わずに、自分の時間を取り戻す日。連絡がなくても、あなたの価値は変わらないよ。';
+  return '今は追わずに、自分の時間を大切に。距離が縮む時期は、また来るよ。';
+}
+var SIGN_MOD = ['まっすぐで勢いのある', '穏やかで心地いい', '軽やかで面白い', '優しくて守りたくなる', '堂々と明るい', '丁寧で気が利く', '上品でバランスのいい', '深くて色気のある', '自由で伸びやかな', '落ち着いて頼れる', '個性的で新鮮な', '柔らかくて儚い'];
+var PLANET_NOUN = { 0: '笑顔と存在感', 1: '素顔と甘え方', 2: '話し方と言葉のセンス', 3: '可愛らしさとセンス', 4: '頑張りと勢い', 5: '優しさとおおらかさ', 6: '真面目さと責任感', 7: '意外な一面', 8: '雰囲気と夢見るところ', 9: '芯の強さと存在感' };
+function traitSentence(c, nA) {
+  var lon = ((nA[c.ap] % 360) + 360) % 360;
+  var sign = Math.floor(lon / 30);
+  var base = 'あなたの' + SIGN_MOD[sign] + PLANET_NOUN[c.ap];
+  if (c.good) return '相手は今日、その' + base + 'に惹かれてるよ。';
+  return '今日はその' + base + 'が、相手に強く届きすぎることがあるかも。';
+}
+function natalProfile(nA) {
+  var hard = 0, soft = 0, fireHard = 0;
+  for (var i = 0; i <= 9; i++) {
+    for (var j = i + 1; j <= 9; j++) {
+      if (nA[i] == null || nA[j] == null) continue;
+      var f = findAsp(nA[i], nA[j], 5);
+      if (!f) continue;
+      if (f.asp === 90 || f.asp === 180) { hard++; if (i === 2 || i === 4 || j === 2 || j === 4) fireHard++; }
+      else soft++;
+    }
+  }
+  return { hard: hard, soft: soft, fireHard: fireHard };
+}
+function temperamentText(nA) {
+  var p = natalProfile(nA);
+  if (p.fireHard >= 2) return 'ちなみに、あなたの星は水星や火星にハードな角度が多めで、考えや気持ちに火がつきやすいタイプ。今日のイライラは、相手のせいだけじゃなくて、あなたの星のクセも混ざってるかも。深呼吸ひとつで、見え方が変わる日だよ。';
+  if (p.soft >= p.hard + 3) return 'ちなみに、あなたの星はソフトな角度が多めで、相手の気持ちを受け止めるのが上手なタイプ。今日はその優しさが、ちゃんと相手に届く日だよ。自信、持ってね。';
+  if (p.hard >= p.soft + 3) return 'ちなみに、あなたの星はハードな角度が多めで、気持ちが張りやすいタイプ。今日のモヤモヤは、あなたのクセも少し混ざってるかも。相手のせいだけにしなくて、大丈夫だよ。';
+  return '';
+}
+
 var CLOSER = {
   warm: '全体を通すと、相手の気持ちはあなたに向かって開いてるよ。素直な一歩が届きやすい流れだから、無理に引っ張らなくても、自然な近づき方がいちばん効くと思うな。',
   mid: '全体を通すと、相手の気持ちは静かに育ってる最中だね。焦って確かめようとするより、安心できるやり取りを重ねていく方が、気持ちは近づくよ。',
@@ -254,16 +392,30 @@ function mkSelects(pfx) {
   return { y: yS, m: mS, d: dS };
 }
 var SA = mkSelects('kA'), SB = mkSelects('kB');
+var SAT = mkTime('kA'), SBT = mkTime('kB');
 var kModeEl = document.getElementById('kMode');
 try { var mv0 = localStorage.getItem('kimochi_mode_v1'); if (mv0) kModeEl.value = mv0; } catch (e) {}
 kModeEl.addEventListener('change', function () { try { localStorage.setItem('kimochi_mode_v1', kModeEl.value); } catch (e) {} });
+var kSitEl = document.getElementById('kSit');
+try { var sv0 = localStorage.getItem('kimochi_sit_v1'); if (sv0) kSitEl.value = sv0; } catch (e) {}
+kSitEl.addEventListener('change', function () { try { localStorage.setItem('kimochi_sit_v1', kSitEl.value); } catch (e) {} });
 var FAMMAP = { crush: 'std', lover: 'lover', partner: 'partner', ex: 'ex', friend: 'friend', family: 'family', work: 'work', online: 'online' };
 function pad(n) { return (n < 10 ? '0' : '') + n; }
 function setFromDate(sel, ds) { var p = (ds || '').split('-'); if (p.length === 3) { sel.y.value = +p[0]; sel.m.value = +p[1]; sel.d.value = +p[2]; } }
 function getDate(sel) { return sel.y.value + '-' + pad(+sel.m.value) + '-' + pad(+sel.d.value); }
+function mkTime(pfx) {
+  var hS = document.getElementById(pfx + 'TH'), mS = document.getElementById(pfx + 'TM');
+  var o0 = document.createElement('option'); o0.value = ''; o0.textContent = '不明'; hS.appendChild(o0);
+  for (var i = 0; i <= 23; i++) { var o = document.createElement('option'); o.value = i; o.textContent = i + '時'; hS.appendChild(o); }
+  var p0 = document.createElement('option'); p0.value = ''; p0.textContent = '不明'; mS.appendChild(p0);
+  for (var j = 0; j <= 55; j += 5) { var o2 = document.createElement('option'); o2.value = j; o2.textContent = j + '分'; mS.appendChild(o2); }
+  return { h: hS, m: mS };
+}
+function getTime(t) { if (!t || t.h.value === '') return null; return (+t.h.value) + ':' + (t.m.value === '' ? 0 : +t.m.value); }
+function setTime(t, s) { if (!t || !s) return; var p = String(s).split(':'); if (p.length !== 2) return; t.h.value = +p[0]; t.m.value = Math.round(+p[1] / 5) * 5 % 60; }
 try {
   var raw = localStorage.getItem(AKEY);
-  if (raw) { var dd = JSON.parse(raw); if (dd.A) setFromDate(SA, dd.A.date); if (dd.B) setFromDate(SB, dd.B.date); }
+  if (raw) { var dd = JSON.parse(raw); if (dd.A) { setFromDate(SA, dd.A.date); setTime(SAT, dd.A.time); } if (dd.B) { setFromDate(SB, dd.B.date); setTime(SBT, dd.B.time); } }
   else { var sh = JSON.parse(localStorage.getItem(SHARED) || 'null'); if (sh && sh.y) { SA.y.value = sh.y; SA.m.value = sh.m; SA.d.value = sh.d; } }
 } catch (e) {}
 var PM = null, PJD = null;
@@ -282,9 +434,16 @@ function pPos(jd, planet) {
   PM._free(out); PM._free(err);
   return lon;
 }
-function natalOf(ds) {
+function natalOf(ds, tm) {
   var p = ds.split('-');
-  var jd = PJD(+p[0], +p[1], +p[2], 3.0, 1);
+  var jd;
+  if (tm) {
+    var tp = String(tm).split(':');
+    var ut = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2], +tp[0] - 9, +tp[1] || 0));
+    jd = PJD(ut.getUTCFullYear(), ut.getUTCMonth() + 1, ut.getUTCDate(), ut.getUTCHours() + ut.getUTCMinutes() / 60, 1);
+  } else {
+    jd = PJD(+p[0], +p[1], +p[2], 3.0, 1);
+  }
   var pos = {};
   for (var i = 0; i <= 9; i++) pos[i] = pPos(jd, i);
   return pos;
@@ -509,16 +668,18 @@ document.getElementById('kBtn').addEventListener('click', async function () {
   try {
     await pInit();
     var dA = getDate(SA), dB = getDate(SB);
+    var tA = getTime(SAT), tB = getTime(SBT);
     try {
       var cur = {};
       try { cur = JSON.parse(localStorage.getItem(AKEY) || '{}'); } catch (e) {}
       cur.A = cur.A || {}; cur.B = cur.B || {};
       cur.A.date = dA; cur.B.date = dB;
+      cur.A.time = tA; cur.B.time = tB;
       bName = (cur.B && cur.B.name) ? String(cur.B.name) : '';
       localStorage.setItem(AKEY, JSON.stringify(cur));
     } catch (e) {}
     var bName = '';
-    var nA = natalOf(dA), nB = natalOf(dB);
+    var nA = natalOf(dA, tA), nB = natalOf(dB, tB);
     var syn = contactsToday(nA);
     var trAll = syn.all;
     var now = new Date();
@@ -535,6 +696,7 @@ document.getElementById('kBtn').addEventListener('click', async function () {
     }
     var tSum = cards[0].w + cards[1].w + cards[2].w;
     var mode = kModeEl.value; var fam = FAMMAP[mode] || 'std';
+    var sit = kSitEl.value;
     var appr = buildAppr(syn, bName);
     var aw = appr.tw;
     var headline, advice;
@@ -544,11 +706,8 @@ document.getElementById('kBtn').addEventListener('click', async function () {
     else if (tSum >= 1 && aw < 1) headline = '星の流れは静かでも、カードははっきり好意を拾っています。気持ちはあるけれど、表に出にくい時期のようです。';
     else headline = '相手の気持ちは、穏やかに続いているようです。大きな波はないけれど、安定した好意が見えます。';
     var total = aw + tSum;
-    if (total >= 2.5) advice = 'あなたから軽く一歩踏み出すと、流れに乗りやすい日です。';
-    else if (total >= 0.8) advice = '急がず、相手のペースに寄り添うと、本音が見えてきます。';
-    else if (total >= -1.2) advice = '今日は様子見で十分です。気持ちは日々動くものだから。';
-    else advice = '今は追わずに、自分の時間を大切に。距離が縮む時期は、また来ます。';
-    var posNames = ['相手の表向きの気持ち', '相手の本音', 'あなたへの態度・これから'];
+    advice = adviceFor(sit, total);
+        var posNames = ['相手の表向きの気持ち', '相手の本音', 'あなたへの態度・これから'];
     var html = '';
     var PS = 'font-size:14px; color:#efe8da; line-height:1.95; margin:0 0 10px;';
     html += '<div style="border:1.5px solid #ffd88a; border-radius:14px; padding:18px 16px; background:rgba(255,216,138,0.07);">'
@@ -556,8 +715,9 @@ document.getElementById('kBtn').addEventListener('click', async function () {
       + '<div style="font-size:15.5px; color:#faf6f0; line-height:1.9; margin:8px 0 10px;">' + headline + '</div>';
     html += '<div style="font-size:11.5px; color:#9a8d7a; margin:0 0 8px;">読み方：「相手があなたに向ける星」</div>';
     var leadTxt;
-    if (appr.bestG) { leadTxt = appr.subj + '、' + ((fam === 'std') ? ACT_LEAD : LEADS[fam])[appr.bestG.tp]; if (appr.bestH) leadTxt += HARDS[fam].after; }
-    else if (appr.bestH) { leadTxt = appr.subj + '、' + HARDS[fam].solo; }
+    var leadMap = (fam === 'std') ? (sit === 'meet' ? ACT_LEAD_MEET : sit === 'none' ? ACT_LEAD_NONE : ACT_LEAD) : LEADS[fam];
+    if (appr.bestG) { leadTxt = appr.subj + '、' + leadMap[appr.bestG.tp]; if (appr.bestH) leadTxt += (fam === 'std') ? (sit === 'meet' ? ACT_HARD_AFTER_MEET : sit === 'none' ? ACT_HARD_AFTER_NONE : ACT_HARD_AFTER) : HARDS[fam].after; if (fam !== 'std' && sit === 'none') leadTxt += '連絡が止まっている今は、気持ちがあっても表に出にくい時期だよ。'; }
+    else if (appr.bestH) { leadTxt = appr.subj + '、' + ((fam === 'std') ? (sit === 'meet' ? ACT_HARD_SOLO_MEET : sit === 'none' ? ACT_HARD_SOLO_NONE : ACT_HARD_SOLO) : HARDS[fam].solo); }
     else { leadTxt = '今日は、あなたに届く星の配置がはっきりしないみたい。気持ちは静かに続いてる日だよ。今日はタロットが手がかりだね。'; }
     if (appr.bestG || appr.bestH) {
       if (tSum >= 2) leadTxt += appr.bestG ? '今日はタロットも後押ししてるから、その気持ち、素直に受け取ってみてね。' : 'でもタロットは悪くない流れだから、このイライラは一時的だと思うな。';
@@ -567,16 +727,19 @@ document.getElementById('kBtn').addEventListener('click', async function () {
     if (appr.lit.length) {
       var topL = appr.lit[0];
       var dtxt = topL.txt;
+      dtxt += traitSentence(topL, nA);
       if (topL.orb <= 1) dtxt += '今日はいちばん出やすい気持ちだよ。';
-      dtxt += ELAB[topL.tp + (topL.good ? 'g' : 'h')] || '';
+      dtxt += (ELAB_SIT[sit] && ELAB_SIT[sit][topL.tp + (topL.good ? 'g' : 'h')]) || '';
       html += '<p style="' + PS + '">' + dtxt + '</p>';
     }
     var blg = null;
     appr.lit.forEach(function (L) { if (L.good && !blg) blg = L; });
     if (blg) html += '<p style="' + PS + '">' + noticeText(fam, appr.subj, NOTICE[blg.ap]) + '</p>';
     var cw = appr.lit.length ? appr.tw : tSum * 0.5;
-    html += '<p style="font-size:14px; color:#faf6f0; line-height:1.95; margin:0 0 10px;">' + (cw >= 1 ? CLOSER.warm : cw >= 0.25 ? CLOSER.mid : CLOSER.cool) + '</p>';
+    html += '<p style="font-size:14px; color:#faf6f0; line-height:1.95; margin:0 0 10px;">' + (cw >= 1 ? (CLOSER_SIT[sit] || CLOSER).warm : cw >= 0.25 ? (CLOSER_SIT[sit] || CLOSER).mid : (CLOSER_SIT[sit] || CLOSER).cool) + '</p>';
     html += '<div style="font-size:13.5px; color:#e8cf9f;">' + advice + '</div>';
+    var tempTxt = temperamentText(nA);
+    if (tempTxt) html += '<p style="font-size:12.5px; color:#c5bba9; line-height:1.9; margin:10px 0 0;">' + tempTxt + '</p>';
     html += '</div>';
     html += '<div style="font-size:13px; font-weight:700; color:#e8cf9f; margin-top:16px;">🃏 タロット3枚</div>';
     html += '<div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:8px;">';
@@ -613,7 +776,7 @@ document.getElementById('kBtn').addEventListener('click', async function () {
       html += '<div style="font-size:12.5px; color:#c5bba9; line-height:1.8; padding:3px 0;">今日は、オーブ5°以内であなたの星に触れている星はありません。</div>';
     }
     html += '</details>';
-    html += '<p style="font-size:12px; color:#8a8178; line-height:1.8; margin-top:14px;">読み方：相手のチャート（内側の円）を土台に、今日の空の星（現行）があなたの星のどこに触れるかを「相手があなたに向ける星」として読み、タロット3枚と合わせています。タロットは「今日の二人の組み合わせ」で引くので、その日は何度見ても同じ結果です。気持ちは変わるもの。目安として楽しんでね。出生時刻は使わないので、正午で計算しています。</p>';
+    html += '<p style="font-size:12px; color:#8a8178; line-height:1.8; margin-top:14px;">読み方：相手のチャート（内側の円）を土台に、今日の空の星（現行）があなたの星のどこに触れるかを「相手があなたに向ける星」として読み、タロット3枚と合わせています。タロットは「今日の二人の組み合わせ」で引くので、その日は何度見ても同じ結果です。気持ちは変わるもの。目安として楽しんでね。出生時刻が不明の場合は、正午で計算しています。</p>';
     box.innerHTML = html;
     var __hd = document.querySelector('.topTab'); __hd = __hd ? __hd.closest('[style*="sticky"]') : null; var yy = box.getBoundingClientRect().top + window.scrollY - (__hd ? __hd.offsetHeight : 0) - 12; window.scrollTo({ top: yy, behavior: 'smooth' });
   } catch (err) {
