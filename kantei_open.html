@@ -27,16 +27,28 @@
   th { color: #9a8d7a; font-weight: 500; text-align: left; padding: 3px 6px; border-bottom: 1px solid #38332c; font-size: 12px; }
   td { padding: 3px 6px; border-bottom: 1px solid rgba(255,255,255,0.04); }
   .aspRow { display: flex; justify-content: space-between; padding: 5px 2px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
+  #gate { position: fixed; inset: 0; background: #0d0c0a; z-index: 100; display: flex; align-items: center; justify-content: center; }
+  #gate .box { text-align: center; padding: 24px; width: min(92vw, 360px); }
   details summary { cursor: pointer; color: #e8cf9f; font-size: 13.5px; font-weight: 700; }
+
+  @media (min-width: 1200px) {
+    .wrap { max-width: 1560px; display: grid; grid-template-columns: 420px minmax(0, 1fr); column-gap: 14px; align-items: start; }
+    .wrap > h1, .wrap > .sub { grid-column: 1 / -1; }
+    .layIn { grid-column: 1; }
+    .layWheel { grid-column: 2; grid-row: 3 / span 5; }
+    .layWide { grid-column: 1 / -1; }
+    #partnerCard, #aspCardP { grid-column: 1 / -1; }
+    #wheel svg { max-width: 780px !important; }
+  }
   .note { font-size: 11.5px; color: #8a8178; line-height: 1.8; }
 </style>
 </head>
 <body>
 <div class="wrap" id="app">
   <h1>🔭 鑑定用ホロスコープ</h1>
-  <p class="sub">ネイタル×トランジットの二重円／アスペクト。計算はすべてこの端末の中で行われ、入力はブラウザ内にだけ保存されます。</p>
+  <p class="sub">ネイタル×トランジットの二重円／アスペクト／ハーフサム。計算はすべてこの端末の中で行われ、入力はブラウザ内にだけ保存されます。</p>
 
-  <div class="card">
+  <div class="card layIn">
     <h2>👤 ネイタル</h2>
     <div class="row">
       <div><label>お名前（任意）</label><input id="kName" type="text" placeholder="クライアント名"></div>
@@ -50,7 +62,7 @@
     <div style="margin-top:12px;"><button class="btn" id="kSetBtn" type="button">ネイタルをセット</button></div>
   </div>
 
-  <div class="card">
+  <div class="card layIn">
     <h2>👥 相手（出生2）</h2>
     <div class="row">
       <div><label>お名前（任意）</label><input id="pName" type="text" placeholder="相手のお名前"></div>
@@ -69,7 +81,7 @@
     <p class="note">相手をセットすると三重円（内＝出生1／中＝出生2／外＝トランジット）になります。入れ替えは、出生を打ち直さずに土台の人を瞬時に切り替えます。</p>
   </div>
 
-  <div class="card">
+  <div class="card layIn">
     <h2>🕐 トランジット <span id="tLabel" style="color:#faf6f0;"></span></h2>
     <input id="tDate" type="datetime-local">
     <div style="margin-top:10px; text-align:center;">
@@ -77,7 +89,26 @@
     </div>
   </div>
 
-  <div class="card">
+  <div class="card layIn">
+    <h2>🎯 アスペクト・ジャンプ</h2>
+    <p class="note" style="margin-top:0;">希望のアスペクトが成立する日へ移動します（オーブ5°以内・前後5年）。条件を増やすと、全部が同時に成立する日を探します。</p>
+    <div id="ajConds"></div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
+      <button class="stepBtn" id="ajAdd" type="button">＋ 条件を追加</button>
+      <button class="stepBtn" id="ajPrev" type="button">◀ 前の成立日</button>
+      <button class="stepBtn" id="ajNext" type="button">次の成立日 ▶</button>
+    </div>
+    <p class="note" id="ajMsg" style="margin-top:8px;"></p>
+  </div>
+
+  <div class="card layIn">
+    <h2>🎰 ギレンの法則</h2>
+    <p class="note" style="margin-top:0;">くじ運・勝負運の時期を見る法則（ジャック・ジョン・ギレン）。コンジャンクションはジャストの時刻で探します。対象は出生1です。</p>
+    <div><button class="btn" id="gillenBtn" type="button">ギレンの法則で見る</button></div>
+    <div id="gillenList" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="card layWheel">
     <h2 id="wheelTitle">◎ 二重円（内＝ネイタル／外＝トランジット）</h2>
     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
       <button class="stepBtn lineModeBtn" data-mode="TN" type="button">線：T × 出生1</button>
@@ -89,12 +120,12 @@
     <p class="note" id="wheelNote">ハウスはネイタルのプラシーダス。線はトランジット×ネイタルのアスペクト（金＝合、緑＝トライン、赤＝スクエア／オポジション）。</p>
   </div>
 
-  <div class="row" style="margin-top:14px; gap:14px;">
+  <div class="row layWide" style="margin-top:14px; gap:14px;">
     <div class="card" style="margin-top:0;"><h2>ネイタル位置</h2><div id="natalTable"></div></div>
     <div class="card" style="margin-top:0;"><h2>トランジット位置</h2><div id="transitTable"></div></div>
   </div>
 
-  <div class="card">
+  <div class="card layWide">
     <h2>🔗 アスペクト（トランジット × ネイタル）</h2>
     <div id="aspList"></div>
     <p class="note">オーブ：合6°／スクエア・トライン・オポジション5°（太陽・月が絡む場合は+1°）。A＝接近中、S＝離反中。</p>
@@ -107,8 +138,26 @@
     <div id="aspListP"></div>
   </div>
 
-  
-  <p class="note" style="margin-top:18px;">このページは検索避け（noindex）を入れ、どこからもリンクしていません。時刻は日本時間（JST）で計算しています。</p>
+  <div class="card layWide">
+    <h2>🧭 ハーフサム（ミッドポイント）</h2>
+    <div style="margin-bottom:8px;"><label>許容オーブ（45°ダイヤル）</label>
+      <select id="mpOrb" style="width:auto;"><option value="0.5">0.5°</option><option value="1" selected>1.0°</option><option value="1.5">1.5°</option></select>
+    </div>
+    <div style="font-size:13px; font-weight:700; color:#e8cf9f;">ネイタルの図（惑星 ＝ A／B）</div>
+    <div id="mpPics" style="margin:6px 0 12px;"></div>
+    <div style="font-size:13px; font-weight:700; color:#e8cf9f;">いまのトランジットが触れている軸（トリガーは木星以遠・自家中毒を除く）</div>
+    <div id="mpHits" style="margin:6px 0 12px;"></div>
+    <div style="font-size:13px; font-weight:700; color:#e8cf9f;">プログレス太陽がネイタルハーフサムに触れる日（40選）</div>
+    <div style="margin:8px 0;"><select id="progMethod" style="width:auto;"><option value="day" selected>1日＝1年法（セカンダリー）</option><option value="degree">1度＝1年法</option></select> <button class="stepBtn" id="progBtn" type="button">☉ 接触日を計算する</button></div>
+    <div id="progList" style="margin:6px 0 12px;"></div>
+    <div style="font-size:13px; font-weight:700; color:#e8cf9f;">年運式：プログレス太陽 × ハーフサム40選</div>
+    <p class="note">年運と同じ方式（40選の軸のみ・オーブ1°・1日＝1年法）で、効きはじめ〜ピーク〜効きおわりを表示します。</p>
+    <div style="margin:8px 0;"><input id="nuYear" type="number" style="width:110px;" min="1900" max="2100"> 年 <button class="stepBtn" id="nuBtn" type="button">☉ 40選で見る</button></div>
+    <div id="nuList" style="margin:6px 0 12px;"></div>
+    <details><summary>ミッドポイント全一覧</summary><div id="mpAll" style="margin-top:8px;"></div></details>
+  </div>
+
+  <p class="note layWide" style="margin-top:18px;">このページは検索避け（noindex）を入れ、どこからもリンクしていません。アドレスは共有しないでください。時刻は日本時間（JST）で計算しています。<br>※利用について：鑑定に使うこと、鑑定料をいただくことは自由です。ただし、このツール自体の再配布・販売・転載はご遠慮ください。<br>※計算には Swiss Ephemeris を使用しています（AGPLライセンス）。</p>
 </div>
 
 <script>
@@ -257,8 +306,15 @@ function findAspects(tPos, nPos, tPosLater) {
   out.sort(function (x, y) { return x.orb - y.orb; });
   return out;
 }
+function midLon(a, b) {
+  var d = ((b - a) % 360 + 360) % 360;
+  if (d <= 180) return (a + d / 2) % 360;
+  return (b + (360 - d) / 2) % 360;
+}
+function foldDist(x, m) { var d = Math.abs(((x - m) % 45 + 45) % 45); return Math.min(d, 45 - d); }
 function circDist(a, b) { var d = Math.abs(((a - b) % 360 + 360) % 360); return d > 180 ? 360 - d : d; }
 function glyphOf(id) { var b = BODIES.find(function (x) { return x.id === id; }); return b ? b.g : ''; }
+function bn(b) { return b.g === b.n ? b.n : b.g + ' ' + b.n; }
 
 var state = { natal: null, partner: null, natalInfo: null, partnerInfo: null, transit: null, tDate: new Date(), aspects: [], aspectsP: [], aspectsNP: [], lineMode: 'TN', selected: null };
 function spreadGlyphs(items, minSep) {
@@ -425,10 +481,10 @@ function renderAspDetail() {
   var cfgD = modeD === 'TP' ? { list: state.aspectsP || [], sA: 'T', sB: 'P' } : modeD === 'NP' ? { list: state.aspectsNP || [], sA: 'P', sB: 'N' } : { list: state.aspects, sA: 'T', sB: 'N' };
   var selCfg = sel.side === cfgD.sA ? SIDES[cfgD.sA] : sel.side === cfgD.sB ? SIDES[cfgD.sB] : null;
   var list = selCfg ? cfgD.list.filter(function (a) { return sel.side === cfgD.sA ? a.t.id === sel.id : a.n.id === sel.id; }) : [];
-  var head = '<div style="font-size:14px; font-weight:700; color:' + (selCfg ? selCfg.col : '#9a8d7a') + ';">' + (selCfg ? selCfg.label : 'この線表示の対象外') + ' ' + b.g + ' ' + b.n + ' のアスペクト</div>';
+  var head = '<div style="font-size:14px; font-weight:700; color:' + (selCfg ? selCfg.col : '#9a8d7a') + ';">' + (selCfg ? selCfg.label : 'この線表示の対象外') + ' ' + bn(b) + ' のアスペクト</div>';
   if (!list.length) { el.innerHTML = head + '<p class="note">' + (selCfg ? '許容オーブ内のアスペクトはありません。' : 'いま表示中の線には、この惑星は含まれません。') + '</p>'; return; }
   el.innerHTML = head + list.map(function (a) {
-    return '<div class="aspRow"><span><span style="color:' + SIDES[cfgD.sA].col + ';">' + SIDES[cfgD.sA].tag + ' ' + a.t.g + ' ' + a.t.n + '</span> <span style="color:' + a.asp.col + ';">' + a.asp.g + '</span> <span style="color:' + SIDES[cfgD.sB].col + ';">' + SIDES[cfgD.sB].tag + ' ' + a.n.g + ' ' + a.n.n + '</span></span><span style="color:#9a8d7a;">' + a.orb.toFixed(2) + '° ' + a.applying + '</span></div>';
+    return '<div class="aspRow"><span><span style="color:' + SIDES[cfgD.sA].col + ';">' + SIDES[cfgD.sA].tag + ' ' + bn(a.t) + '</span> <span style="color:' + a.asp.col + ';">' + a.asp.g + '</span> <span style="color:' + SIDES[cfgD.sB].col + ';">' + SIDES[cfgD.sB].tag + ' ' + bn(a.n) + '</span></span><span style="color:#9a8d7a;">' + a.orb.toFixed(2) + '° ' + a.applying + '</span></div>';
   }).join('');
 }
 function renderTables() {
@@ -436,8 +492,8 @@ function renderTables() {
     var h = '<table><tr><th>天体</th><th>位置</th>' + (isNatal ? '<th>ハウス</th>' : '') + '<th></th></tr>';
     BODIES.forEach(function (b) {
       if (chart.pos[b.id] === undefined) return;
-      var nm = b.n + (b.id === 13 && chart.sect ? (chart.sect === 'day' ? '（昼の式）' : '（夜の式）') : '');
-      h += '<tr><td>' + b.g + ' ' + nm + '</td><td>' + fmtPos(chart.pos[b.id]) + '</td>';
+      var nm = bn(b) + (b.id === 13 && chart.sect ? (chart.sect === 'day' ? '（昼の式）' : '（夜の式）') : '');
+      h += '<tr><td>' + nm + '</td><td>' + fmtPos(chart.pos[b.id]) + '</td>';
       if (isNatal) h += '<td>' + (b.id <= 10 || b.id === 13 ? houseOf(chart.pos[b.id], chart.cusps) : '') + '</td>';
       h += '<td>' + (chart.retro[b.id] ? '<span style="color:#ff9d85;">R</span>' : '') + '</td></tr>';
     });
@@ -451,8 +507,48 @@ function renderAspects() {
   var el = document.getElementById('aspList');
   if (!state.aspects.length) { el.innerHTML = '<p class="note">許容オーブ内のアスペクトはありません。</p>'; return; }
   el.innerHTML = state.aspects.map(function (a) {
-    return '<div class="aspRow"><span><span style="color:#59E3FF;">T ' + a.t.g + ' ' + a.t.n + '</span> <span style="color:' + a.asp.col + ';">' + a.asp.g + '</span> <span style="color:#FFE14D;">N ' + a.n.g + ' ' + a.n.n + '</span></span><span style="color:#9a8d7a;">' + a.orb.toFixed(2) + '° ' + a.applying + '</span></div>';
+    return '<div class="aspRow"><span><span style="color:#59E3FF;">T ' + bn(a.t) + '</span> <span style="color:' + a.asp.col + ';">' + a.asp.g + '</span> <span style="color:#FFE14D;">N ' + bn(a.n) + '</span></span><span style="color:#9a8d7a;">' + a.orb.toFixed(2) + '° ' + a.applying + '</span></div>';
   }).join('');
+}
+function midpointPairs() {
+  var ids = BODIES.map(function (b) { return b.id; }).filter(function (id) { return id !== 13 && state.natal.pos[id] !== undefined; });
+  var pairs = [];
+  for (var i = 0; i < ids.length; i++) for (var j = i + 1; j < ids.length; j++) {
+    pairs.push({ a: ids[i], b: ids[j], lon: midLon(state.natal.pos[ids[i]], state.natal.pos[ids[j]]) });
+  }
+  return { ids: ids, pairs: pairs };
+}
+function renderMidpoints() {
+  var orbSel = parseFloat(document.getElementById('mpOrb').value);
+  var mp = midpointPairs();
+  var pics = [];
+  mp.ids.forEach(function (x) {
+    mp.pairs.forEach(function (pr) {
+      if (pr.a === x || pr.b === x) return;
+      var d = foldDist(state.natal.pos[x], pr.lon);
+      if (d <= orbSel) pics.push({ x: x, pr: pr, orb: d });
+    });
+  });
+  pics.sort(function (a, b) { return a.orb - b.orb; });
+  document.getElementById('mpPics').innerHTML = pics.length ? pics.map(function (p) {
+    return '<div class="aspRow"><span>' + glyphOf(p.pr.a) + '×' + glyphOf(p.pr.b) + ' ＝ ' + glyphOf(p.x) + '</span><span style="color:#9a8d7a;">' + p.orb.toFixed(2) + '°</span></div>';
+  }).join('') : '<p class="note">該当なし</p>';
+  var hits = [];
+  BODIES.filter(function (x) { return x.id >= 5 && x.id <= 9; }).forEach(function (tb) {
+    if (state.transit.pos[tb.id] === undefined) return;
+    mp.pairs.forEach(function (pr) {
+      var d = Math.min(circDist(state.transit.pos[tb.id], pr.lon), circDist(state.transit.pos[tb.id], (pr.lon + 180) % 360));
+      if (d <= orbSel && tb.id !== pr.a && tb.id !== pr.b) hits.push({ t: tb, pr: pr, orb: d });
+    });
+  });
+  hits.sort(function (a, b) { return a.orb - b.orb; });
+  document.getElementById('mpHits').innerHTML = hits.length ? hits.map(function (p) {
+    return '<div class="aspRow"><span>' + glyphOf(p.pr.a) + '×' + glyphOf(p.pr.b) + ' ＝ <span style="color:#59E3FF;">T ' + p.t.g + '</span></span><span style="color:#9a8d7a;">' + p.orb.toFixed(2) + '°</span></div>';
+  }).join('') : '<p class="note">該当なし</p>';
+  var sorted = mp.pairs.slice().sort(function (a, b) { return a.lon - b.lon; });
+  document.getElementById('mpAll').innerHTML = '<table>' + sorted.map(function (pr) {
+    return '<tr><td>' + glyphOf(pr.a) + '×' + glyphOf(pr.b) + '</td><td>' + fmtPos(pr.lon) + '</td></tr>';
+  }).join('') + '</table>';
 }
 function renderAll() {
   if (!state.natal || !state.transit) return;
@@ -463,7 +559,7 @@ function renderAll() {
   renderPartnerExtras();
   renderLineMode();
   document.getElementById('tLabel').textContent = '― ' + state.tDate.getFullYear() + '年' + (state.tDate.getMonth() + 1) + '月' + state.tDate.getDate() + '日 ' + String(state.tDate.getHours()).padStart(2, '0') + ':' + String(state.tDate.getMinutes()).padStart(2, '0');
-  renderWheel(); renderTables(); renderAspects(); renderAspDetail();
+  renderWheel(); renderTables(); renderAspects(); renderMidpoints(); renderAspDetail();
 }
 function toLocalInput(dt) {
   function pad(v) { return String(v).padStart(2, '0'); }
@@ -489,6 +585,7 @@ function readNatalForm() {
 }
 function applyNatal(info) {
   state.natalInfo = info;
+  var pl = document.getElementById('progList'); if (pl) pl.innerHTML = '';
   state.natal = computeChart(info.date, info.time, info.unknown, info.lat, info.lon);
   if (!state.transit) state.transit = computeTransit(state.tDate, info.lat, info.lon);
   renderAll();
@@ -534,6 +631,7 @@ function swapSlots() {
     if (bInfo) localStorage.setItem('kantei_natal_v1', JSON.stringify(bInfo)); else localStorage.removeItem('kantei_natal_v1');
     if (aInfo) localStorage.setItem('kantei_partner_v1', JSON.stringify(aInfo)); else localStorage.removeItem('kantei_partner_v1');
   } catch (e) {}
+  var pl = document.getElementById('progList'); if (pl) pl.innerHTML = '';
   if (!state.transit) { var ll = tLatLon(); state.transit = computeTransit(state.tDate, ll[0], ll[1]); }
   if (state.natal && state.transit) { renderAll(); }
   else {
@@ -560,9 +658,331 @@ function renderPartnerExtras() {
   var el = document.getElementById('aspListP');
   if (!state.aspectsP.length) { el.innerHTML = '<p class="note">許容オーブ内のアスペクトはありません。</p>'; return; }
   el.innerHTML = state.aspectsP.map(function (a) {
-    return '<div class="aspRow"><span><span style="color:#59E3FF;">T ' + a.t.g + ' ' + a.t.n + '</span> <span style="color:' + a.asp.col + ';">' + a.asp.g + '</span> <span style="color:#C39BDB;">P ' + a.n.g + ' ' + a.n.n + '</span></span><span style="color:#9a8d7a;">' + a.orb.toFixed(2) + '° ' + a.applying + '</span></div>';
+    return '<div class="aspRow"><span><span style="color:#59E3FF;">T ' + bn(a.t) + '</span> <span style="color:' + a.asp.col + ';">' + a.asp.g + '</span> <span style="color:#C39BDB;">P ' + bn(a.n) + '</span></span><span style="color:#9a8d7a;">' + a.orb.toFixed(2) + '° ' + a.applying + '</span></div>';
   }).join('');
 }
+function computeProgressedSun() {
+  var el = document.getElementById('progList');
+  el.innerHTML = '<p class="note">計算中…</p>';
+  setTimeout(function () {
+    var info = state.natalInfo, nat = state.natal;
+    var mp = { pairs: HS40.map(function (pr) {
+      if (nat.pos[pr[0]] === undefined || nat.pos[pr[1]] === undefined) return null;
+      return { a: pr[0], b: pr[1], lon: midLon(nat.pos[pr[0]], nat.pos[pr[1]]) };
+    }).filter(function (p) { return p; }) };
+    var birth = new Date(info.date + 'T' + (info.unknown ? '12:00' : (info.time || '12:00')) + ':00');
+    var nowAge = (Date.now() - birth.getTime()) / (365.2422 * 86400000);
+    var method = document.getElementById('progMethod').value;
+    var hits = [];
+    if (method === 'degree') {
+      var ns = nat.pos[0];
+      mp.pairs.forEach(function (pr) {
+        var base = ((pr.lon - ns) % 45 + 45) % 45;
+        for (var age = base; age <= 90; age += 45) {
+          hits.push({ pr: pr, age: age, date: new Date(birth.getTime() + age * 365.2422 * 86400000) });
+        }
+      });
+    } else {
+      var STEP = 0.05;
+      var ages = [], suns = [];
+      for (var a = 0; a <= 90 + 1e-9; a += STEP) { ages.push(a); suns.push(calcPos(nat.jd + a, 0, 260)); }
+      var sunsU = [suns[0]];
+      for (var i = 1; i < suns.length; i++) {
+        var dd = ((suns[i] - sunsU[i - 1]) % 360 + 540) % 360 - 180;
+        sunsU.push(sunsU[i - 1] + dd);
+      }
+      function sunAt(age) {
+        var idx = age / STEP, i0 = Math.floor(idx), i1 = Math.min(i0 + 1, sunsU.length - 1);
+        return sunsU[i0] + (sunsU[i1] - sunsU[i0]) * (idx - i0);
+      }
+      function gg(sunLon, m) { return ((sunLon - m + 22.5) % 45 + 45) % 45 - 22.5; }
+      mp.pairs.forEach(function (pr) {
+        for (var i = 0; i < ages.length - 1; i++) {
+          var g1 = gg(sunsU[i], pr.lon), g2 = gg(sunsU[i + 1], pr.lon);
+          if (Math.abs(g1) > 3 || Math.abs(g2) > 3) continue;
+          if (!((g1 < 0 && g2 > 0) || (g1 > 0 && g2 < 0))) continue;
+          var lo = ages[i], hi = ages[i + 1];
+          for (var k = 0; k < 20; k++) {
+            var mid = (lo + hi) / 2, gm = gg(sunAt(mid), pr.lon);
+            if ((g1 < 0 && gm < 0) || (g1 > 0 && gm > 0)) lo = mid; else hi = mid;
+          }
+          var age = (lo + hi) / 2;
+          hits.push({ pr: pr, age: age, date: new Date(birth.getTime() + age * 365.2422 * 86400000) });
+        }
+      });
+    }
+    hits.sort(function (x, y) { return x.age - y.age; });
+    function fmtD(d) { return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日'; }
+    var row = function (h) { return '<div class="aspRow"><span>' + fmtD(h.date) + 'ごろ</span><span>' + glyphOf(h.pr.a) + '×' + glyphOf(h.pr.b) + ' ＝ ☉(P)</span></div>'; };
+    var future = hits.filter(function (h) { return h.age >= nowAge; });
+    var past = hits.filter(function (h) { return h.age < nowAge; });
+    var noteTxt = method === 'degree' ? '1度＝1年法（太陽が1年でちょうど1°進む換算）' : '1日＝1年法（セカンダリー・プログレス）';
+    var html = '<p class="note">' + noteTxt + '。出生から90歳までで ' + hits.length + ' 件。日付は換算による目安です。</p>';
+    html += future.slice(0, 30).map(row).join('');
+    if (future.length > 30) html += '<p class="note">…ほか ' + (future.length - 30) + ' 件（90歳まで）</p>';
+    if (past.length) html += '<details><summary>過去の接触日（' + past.length + '件）</summary>' + past.map(row).join('') + '</details>';
+    el.innerHTML = html;
+  }, 30);
+}
+
+// ===== アスペクト・ジャンプ（希望のアスペクトが成立する日へ移動） =====
+var AJ_ORB = 5, AJ_RANGE_YEARS = 5;
+var ajConds = [{ tp: 3, tgt: 'N', np: 5, asp: 120 }];
+function ajPlanetOptions(sel) {
+  return BODIES.filter(function (b) { return b.id <= 10; }).map(function (b) {
+    return '<option value="' + b.id + '"' + (b.id === sel ? ' selected' : '') + '>' + bn(b) + '</option>';
+  }).join('');
+}
+function ajRender() {
+  var box = document.getElementById('ajConds');
+  if (!box) return;
+  box.innerHTML = ajConds.map(function (c, i) {
+    var tgtOpts = [['N', '出生1'], ['P', '出生2'], ['T', '空']].map(function (t) {
+      return '<option value="' + t[0] + '"' + (c.tgt === t[0] ? ' selected' : '') + '>' + t[1] + '</option>';
+    }).join('');
+    var aspOpts = ASPS.map(function (a) {
+      return '<option value="' + a.a + '"' + (c.asp === a.a ? ' selected' : '') + '>' + a.g + ' ' + a.n + '</option>';
+    }).join('');
+    return '<div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-bottom:8px;">'
+      + '<span style="font-size:13px; color:#59E3FF; font-weight:700;">T</span>'
+      + '<select data-aj="' + i + ':tp" style="width:auto;">' + ajPlanetOptions(c.tp) + '</select>'
+      + '<span style="font-size:13px;">が</span>'
+      + '<select data-aj="' + i + ':tgt" style="width:auto;">' + tgtOpts + '</select>'
+      + '<span style="font-size:13px;">の</span>'
+      + '<select data-aj="' + i + ':np" style="width:auto;">' + ajPlanetOptions(c.np) + '</select>'
+      + '<span style="font-size:13px;">と</span>'
+      + '<select data-aj="' + i + ':asp" style="width:auto;">' + aspOpts + '</select>'
+      + (ajConds.length > 1 ? '<button type="button" class="stepBtn" data-ajdel="' + i + '">✕</button>' : '')
+      + '</div>';
+  }).join('');
+  box.querySelectorAll('select[data-aj]').forEach(function (s) {
+    s.addEventListener('change', function () {
+      var p = s.getAttribute('data-aj').split(':');
+      ajConds[Number(p[0])][p[1]] = p[1] === 'tgt' ? s.value : Number(s.value);
+    });
+  });
+  box.querySelectorAll('button[data-ajdel]').forEach(function (b) {
+    b.addEventListener('click', function () { ajConds.splice(Number(b.getAttribute('data-ajdel')), 1); ajRender(); });
+  });
+}
+function ajTargetPos(tgt, np, tPos) {
+  if (tgt === 'N') return state.natal ? state.natal.pos[np] : undefined;
+  if (tgt === 'P') return state.partner ? state.partner.pos[np] : undefined;
+  return tPos[np];
+}
+function ajMaxOrb(ms) {
+  var jd = ms / 86400000 + 2440587.5;
+  var tPos = {};
+  for (var id = 0; id <= 10; id++) tPos[id] = calcPos(jd, swissId(id), 260);
+  var worst = -1, details = [];
+  for (var i = 0; i < ajConds.length; i++) {
+    var c = ajConds[i];
+    var a = tPos[c.tp], b = ajTargetPos(c.tgt, c.np, tPos);
+    if (a === undefined || b === undefined || isNaN(a) || isNaN(b)) return null;
+    var dd = ((a - b) % 360 + 360) % 360; if (dd > 180) dd = 360 - dd;
+    var orb = Math.abs(dd - c.asp);
+    details.push({ c: c, orb: orb });
+    if (orb > worst) worst = orb;
+  }
+  return { worst: worst, details: details };
+}
+function ajDescribe(res) {
+  return res.details.map(function (d) {
+    var tb = BODIES.find(function (x) { return x.id === d.c.tp; });
+    var nb = BODIES.find(function (x) { return x.id === d.c.np; });
+    var asp = ASPS.find(function (x) { return x.a === d.c.asp; });
+    var tl = d.c.tgt === 'N' ? '出生1' : d.c.tgt === 'P' ? '出生2' : '空';
+    return 'T' + tb.g + ' ' + asp.g + ' ' + tl + ' ' + nb.g + '（' + d.orb.toFixed(1) + '°）';
+  }).join('、');
+}
+function ajFind(dir) {
+  var msg = document.getElementById('ajMsg');
+  if (!state.natal) { msg.textContent = '先にネイタルをセットしてください。'; return; }
+  for (var i = 0; i < ajConds.length; i++) {
+    if (ajConds[i].tgt === 'P' && !state.partner) { msg.textContent = '出生2がセットされていません。'; return; }
+    if (ajConds[i].tgt === 'T' && ajConds[i].tp === ajConds[i].np) { msg.textContent = '空×空で同じ惑星同士は選べません。'; return; }
+  }
+  msg.textContent = '探しています…';
+  setTimeout(function () {
+    var STEP = 6 * 3600000, LIMIT = AJ_RANGE_YEARS * 365.2422 * 86400000;
+    var t0 = state.tDate.getTime();
+    var found = null, inWin = false, winBest = null, winBestVal = 1e9;
+    var cur = ajMaxOrb(t0);
+    var startInside = !!(cur && cur.worst <= AJ_ORB);
+    for (var ms = t0 + dir * STEP; Math.abs(ms - t0) <= LIMIT; ms += dir * STEP) {
+      var r = ajMaxOrb(ms);
+      if (!r) break;
+      if (r.worst <= AJ_ORB) {
+        if (!inWin) { inWin = true; winBest = ms; winBestVal = r.worst; }
+        else if (r.worst < winBestVal) { winBest = ms; winBestVal = r.worst; }
+      } else if (inWin) {
+        if (startInside) { startInside = false; inWin = false; winBest = null; winBestVal = 1e9; }
+        else { found = winBest; break; }
+      }
+    }
+    if (!found && inWin && !startInside) found = winBest;
+    if (!found) { msg.textContent = '前後' + AJ_RANGE_YEARS + '年以内では見つかりませんでした。'; return; }
+    var bestMs = found, bestRes = ajMaxOrb(found), bestVal = bestRes ? bestRes.worst : 1e9;
+    for (var d = -STEP; d <= STEP; d += 600000) {
+      var r2 = ajMaxOrb(found + d);
+      if (r2 && r2.worst < bestVal) { bestVal = r2.worst; bestMs = found + d; }
+    }
+    var dt = new Date(bestMs);
+    setTransit(dt);
+    var res = ajMaxOrb(bestMs);
+    msg.innerHTML = '→ <b>' + dt.getFullYear() + '年' + (dt.getMonth() + 1) + '月' + dt.getDate() + '日 ' + String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0') + '</b> にジャンプ：' + (res ? ajDescribe(res) : '');
+  }, 30);
+}
+function initAspectJump() {
+  ajRender();
+  document.getElementById('ajAdd').addEventListener('click', function () {
+    if (ajConds.length >= 4) return;
+    ajConds.push({ tp: 4, tgt: 'N', np: 3, asp: 0 });
+    ajRender();
+  });
+  document.getElementById('ajPrev').addEventListener('click', function () { ajFind(-1); });
+  document.getElementById('ajNext').addEventListener('click', function () { ajFind(1); });
+}
+// ===== 年運式：プログレス太陽 × ハーフサム40選 =====
+var HS40 = [[0,3],[0,5],[0,8],[0,9],[0,10],[0,11],[0,12],[1,3],[1,7],[1,8],[2,3],[2,5],[2,9],[2,10],[3,4],[3,5],[3,7],[3,8],[3,9],[3,12],[4,5],[4,6],[4,7],[4,8],[4,9],[5,6],[5,7],[5,8],[5,9],[5,10],[5,12],[6,7],[6,8],[6,9],[7,8],[7,9],[7,11],[8,9],[8,10],[9,12]];
+function computeNenunStyle() {
+  var el = document.getElementById('nuList');
+  if (!state.natal || !state.natalInfo) { el.innerHTML = '<p class="note">先にネイタルをセットしてください。</p>'; return; }
+  var year = Number(document.getElementById('nuYear').value) || new Date().getFullYear();
+  el.innerHTML = '<p class="note">計算中…</p>';
+  setTimeout(function () {
+    var info = state.natalInfo, nat = state.natal;
+    var birth = new Date(info.date + 'T' + (info.unknown ? '12:00' : (info.time || '12:00')) + ':00');
+    var DAY = 365.2422 * 86400000;
+    function dateOfAge(a) { return new Date(birth.getTime() + a * DAY); }
+    function ageOfDate(d) { return (d.getTime() - birth.getTime()) / DAY; }
+    var yStart = new Date(year, 0, 1), yEnd = new Date(year, 11, 31, 23, 59);
+    var aFrom = Math.max(0, ageOfDate(yStart) - 2.6), aTo = ageOfDate(yEnd) + 2.6;
+    var ORB = 1.0, STEP = 0.01;
+    function sunAt(a) { return calcPos(nat.jd + a, 0, 260); }
+    var rows = [], skipped = 0;
+    HS40.forEach(function (pr) {
+      var pa = nat.pos[pr[0]], pb = nat.pos[pr[1]];
+      if (pa === undefined || pb === undefined) { skipped++; return; }
+      var m = midLon(pa, pb);
+      function dist(a) { return foldDist(sunAt(a), m); }
+      var prevA = aFrom, prevD = dist(aFrom), cur = null;
+      if (prevD <= ORB) cur = { start: aFrom, peakA: aFrom, peakD: prevD };
+      for (var a = aFrom + STEP; a <= aTo + 1e-9; a += STEP) {
+        var d = dist(a);
+        if (!cur && prevD > ORB && d <= ORB) {
+          var lo = prevA, hi = a;
+          for (var k = 0; k < 24; k++) { var md = (lo + hi) / 2; if (dist(md) <= ORB) hi = md; else lo = md; }
+          cur = { start: hi, peakA: a, peakD: d };
+        } else if (cur && d <= ORB && d < cur.peakD) { cur.peakA = a; cur.peakD = d; }
+        else if (cur && prevD <= ORB && d > ORB) {
+          var lo2 = prevA, hi2 = a;
+          for (var k2 = 0; k2 < 24; k2++) { var md2 = (lo2 + hi2) / 2; if (dist(md2) <= ORB) lo2 = md2; else hi2 = md2; }
+          cur.end = lo2;
+          var sD = dateOfAge(cur.start), eD = dateOfAge(cur.end);
+          if (eD >= yStart && sD <= yEnd) {
+            var lo3 = cur.peakA - STEP, hi3 = cur.peakA + STEP;
+            for (var k3 = 0; k3 < 24; k3++) { var m1 = lo3 + (hi3 - lo3) / 3, m2 = hi3 - (hi3 - lo3) / 3; if (dist(m1) < dist(m2)) hi3 = m2; else lo3 = m1; }
+            cur.peakA = (lo3 + hi3) / 2; cur.peakD = dist(cur.peakA);
+            rows.push({ pr: pr, start: cur.start, peak: cur.peakA, peakD: cur.peakD, end: cur.end });
+          }
+          cur = null;
+        }
+        prevA = a; prevD = d;
+      }
+      if (cur) {
+        cur.end = aTo;
+        var sD2 = dateOfAge(cur.start), eD2 = dateOfAge(cur.end);
+        if (eD2 >= yStart && sD2 <= yEnd) rows.push({ pr: pr, start: cur.start, peak: cur.peakA, peakD: cur.peakD, end: cur.end });
+      }
+    });
+    rows.sort(function (x, y) { return x.peak - y.peak; });
+    function fmtD(d) { return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日'; }
+    if (!rows.length) { el.innerHTML = '<p class="note">' + year + '年に重なる軸はありませんでした。</p>'; return; }
+    var html = rows.map(function (r) {
+      var pD = dateOfAge(r.peak), sD = dateOfAge(r.start), eD = dateOfAge(r.end);
+      var badge = (pD >= yStart && pD <= yEnd) ? '🎯最大活性' : (sD >= yStart && sD <= yEnd) ? '🌱効きはじめ' : '🌙継続中';
+      return '<div class="aspRow"><span>' + glyphOf(r.pr[0]) + '×' + glyphOf(r.pr[1]) + ' ＝ ☉(P) <span style="color:#ffd88a;">' + badge + '</span></span><span style="color:#9a8d7a;">' + fmtD(sD) + ' 〜 ' + fmtD(eD) + '（ピーク ' + fmtD(pD) + '）</span></div>';
+    }).join('');
+    if (skipped) html += '<p class="note">出生時刻が不明のため、ASC・MCが絡む軸（' + skipped + '件）は除いています。</p>';
+    el.innerHTML = html;
+  }, 30);
+}
+
+
+// ===== ギレンの法則 =====
+function gillenPos(ms) {
+  var jd = ms / 86400000 + 2440587.5;
+  var moon = calcPos(jd, 1, 260), jup = calcPos(jd, 5, 260), sun = calcPos(jd, 0, 260);
+  var ll = tLatLon();
+  var h = calcHouses(jd, ll[0], ll[1]);
+  var sh = parseInt(houseOf(sun, h.cusps), 10);
+  var pof = (sh >= 7) ? ((h.asc + moon - sun) % 360 + 360) % 360 : ((h.asc + sun - moon) % 360 + 360) % 360;
+  return { moon: moon, jup: jup, asc: h.asc, pof: pof };
+}
+function gDiff(a, b) { return ((a - b + 540) % 360) - 180; }
+function gillenNextExact(kind, target, fromMs, stepMs, limitMs) {
+  function val(ms) {
+    var p = gillenPos(ms);
+    var v = kind === 'moon' ? p.moon : kind === 'asc' ? p.asc : p.pof;
+    return gDiff(v, target);
+  }
+  var prevMs = fromMs, prevV = val(fromMs);
+  if (Math.abs(prevV) < 0.02) return fromMs;
+  for (var ms = fromMs + stepMs; ms - fromMs <= limitMs; ms += stepMs) {
+    var v = val(ms);
+    if (Math.abs(prevV) < 5 && Math.abs(v) < 5 && ((prevV < 0 && v >= 0) || (prevV > 0 && v <= 0))) {
+      var lo = prevMs, hi = ms, vlo = prevV;
+      for (var k = 0; k < 40; k++) {
+        var mid = (lo + hi) / 2, vm = val(mid);
+        if ((vlo < 0 && vm < 0) || (vlo > 0 && vm > 0)) { lo = mid; vlo = vm; } else hi = mid;
+      }
+      return (lo + hi) / 2;
+    }
+    prevMs = ms; prevV = v;
+  }
+  return null;
+}
+function renderGillen() {
+  var el = document.getElementById('gillenList');
+  if (!state.natal) { el.innerHTML = '<p class="note">先にネイタルをセットしてください。</p>'; return; }
+  var np = state.natal.pos;
+  if (np[12] === undefined || np[13] === undefined) { el.innerHTML = '<p class="note">ギレンの法則には出生時刻が必要です（MCとPOFを使います）。</p>'; return; }
+  el.innerHTML = '<p class="note">計算中…</p>';
+  setTimeout(function () {
+    var t0 = state.tDate.getTime();
+    var cur = gillenPos(t0);
+    function circ(a, b) { var d = Math.abs(((a - b) % 360 + 360) % 360); return d > 180 ? 360 - d : d; }
+    function fmtDT(ms) { var d = new Date(ms); return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+    var rows = [];
+    var dM = circ(cur.moon, np[12]), dJ = circ(cur.jup, np[12]);
+    function c1part(nm, d) { return nm + ' ' + (d <= 30 ? '<b style="color:#ffd88a;">成立中</b>' : '範囲外') + '（' + d.toFixed(1) + '°）'; }
+    rows.push({ n: 1, label: 'T月／T木星 が 出生MC の ±30°以内', st: c1part('T月', dM) + '・' + c1part('T木星', dJ), ms: null });
+    var defs = [
+      { n: 2, label: 'T月 ☌ 出生POF', kind: 'moon', tgt: np[13], step: 600000, lim: 45 * 86400000 },
+      { n: 3, label: 'T ASC ☌ 出生POF', kind: 'asc', tgt: np[13], step: 120000, lim: 2 * 86400000 },
+      { n: 4, label: 'T POF ☌ 出生木星', kind: 'pof', tgt: np[5], step: 120000, lim: 4 * 86400000 },
+      { n: 5, label: 'T POF ☌ 出生太陽', kind: 'pof', tgt: np[0], step: 120000, lim: 4 * 86400000 }
+    ];
+    defs.forEach(function (d) {
+      var ms = gillenNextExact(d.kind, d.tgt, t0, d.step, d.lim);
+      rows.push({ n: d.n, label: d.label, st: ms ? '次のジャスト：' + fmtDT(ms) : '見つかりませんでした', ms: ms });
+    });
+    var msV = gillenNextExact('pof', np[3], t0, 120000, 4 * 86400000);
+    var msJ = gillenNextExact('pof', np[5], t0, 120000, 4 * 86400000);
+    var pick = null, pickName = '';
+    if (msV && (!msJ || msV <= msJ)) { pick = msV; pickName = '金星'; }
+    else if (msJ) { pick = msJ; pickName = '木星'; }
+    rows.push({ n: 6, label: 'T POF ☌ 出生金星／木星', st: pick ? '次のジャスト：' + fmtDT(pick) + '（' + pickName + '）' : '見つかりませんでした', ms: pick });
+    el.innerHTML = rows.map(function (r) {
+      return '<div class="aspRow"><span><b style="color:#ffd88a;">' + r.n + '.</b> ' + r.label + '</span><span style="color:#9a8d7a;">' + r.st + (r.ms ? ' <button type="button" class="stepBtn" data-gjump="' + Math.round(r.ms) + '">ジャンプ</button>' : '') + '</span></div>';
+    }).join('') + '<p class="note">効力は番号順。前提として、プログレス／トランジットが不利な時期でないこと（原典）。ASC・POFは出生1の出生地で計算しています。</p>';
+    el.querySelectorAll('button[data-gjump]').forEach(function (b) {
+      b.addEventListener('click', function () { setTransit(new Date(Number(b.getAttribute('data-gjump')))); });
+    });
+  }, 30);
+}
+
 async function startApp() {
   var sel = document.getElementById('kPlace');
   sel.innerHTML = PREFS.map(function (p, i) { return '<option value="' + i + '"' + (p[0] === '東京都' ? ' selected' : '') + '>' + p[0] + '</option>'; }).join('');
@@ -620,6 +1040,12 @@ async function startApp() {
     });
   });
   document.getElementById('tNow').addEventListener('click', function () { setTransit(new Date()); });
+  document.getElementById('mpOrb').addEventListener('change', function () { if (state.natal && state.transit) renderMidpoints(); });
+  document.getElementById('progBtn').addEventListener('click', computeProgressedSun);
+  initAspectJump();
+  document.getElementById('gillenBtn').addEventListener('click', renderGillen);
+  var nyEl = document.getElementById('nuYear'); if (nyEl && !nyEl.value) nyEl.value = new Date().getFullYear();
+  document.getElementById('nuBtn').addEventListener('click', computeNenunStyle);
 }
 </script>
 
