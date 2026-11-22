@@ -957,7 +957,7 @@ function renderGillen() {
     var rows = [];
     var dM = circ(cur.moon, np[12]), dJ = circ(cur.jup, np[12]);
     function c1part(nm, d) { return nm + ' ' + (d <= 30 ? '<b style="color:#ffd88a;">成立中</b>' : '範囲外') + '（' + d.toFixed(1) + '°）'; }
-    rows.push({ n: 1, label: 'T月／T木星 が 出生MC の ±30°以内', st: c1part('T月', dM) + '・' + c1part('T木星', dJ), ms: null });
+    rows.push({ n: 1, label: 'T月 または T木星 が 出生MC の ±30°以内', st: c1part('T月', dM) + '・' + c1part('T木星', dJ), ms: null, sortKey: (dM <= 30 || dJ <= 30) ? t0 : Infinity });
     var defs = [
       { n: 2, label: 'T月 ☌ 出生POF', kind: 'moon', tgt: np[13], step: 600000, lim: 45 * 86400000 },
       { n: 3, label: 'T ASC ☌ 出生POF', kind: 'asc', tgt: np[13], step: 120000, lim: 2 * 86400000 },
@@ -966,17 +966,18 @@ function renderGillen() {
     ];
     defs.forEach(function (d) {
       var ms = gillenNextExact(d.kind, d.tgt, t0, d.step, d.lim);
-      rows.push({ n: d.n, label: d.label, st: ms ? '次のジャスト：' + fmtDT(ms) : '見つかりませんでした', ms: ms });
+      rows.push({ n: d.n, label: d.label, st: ms ? '次のジャスト：' + fmtDT(ms) : '見つかりませんでした', ms: ms, sortKey: ms || Infinity });
     });
     var msV = gillenNextExact('pof', np[3], t0, 120000, 4 * 86400000);
     var msJ = gillenNextExact('pof', np[5], t0, 120000, 4 * 86400000);
     var pick = null, pickName = '';
     if (msV && (!msJ || msV <= msJ)) { pick = msV; pickName = '金星'; }
     else if (msJ) { pick = msJ; pickName = '木星'; }
-    rows.push({ n: 6, label: 'T POF ☌ 出生金星／木星', st: pick ? '次のジャスト：' + fmtDT(pick) + '（' + pickName + '）' : '見つかりませんでした', ms: pick });
+    rows.push({ n: 6, label: 'T POF ☌ 出生金星／木星', st: pick ? '次のジャスト：' + fmtDT(pick) + '（' + pickName + '）' : '見つかりませんでした', ms: pick, sortKey: pick || Infinity });
+    rows.sort(function (a, b) { return (a.sortKey || Infinity) - (b.sortKey || Infinity); });
     el.innerHTML = rows.map(function (r) {
-      return '<div class="aspRow"><span><b style="color:#ffd88a;">' + r.n + '.</b> ' + r.label + '</span><span style="color:#9a8d7a;">' + r.st + (r.ms ? ' <button type="button" class="stepBtn" data-gjump="' + Math.round(r.ms) + '">ジャンプ</button>' : '') + '</span></div>';
-    }).join('') + '<p class="note">効力は番号順。前提として、プログレス／トランジットが不利な時期でないこと（原典）。ASC・POFは出生1の出生地で計算しています。</p>';
+      return '<div class="aspRow"><span>' + r.label + '</span><span style="color:#9a8d7a;">' + r.st + (r.ms ? ' <button type="button" class="stepBtn" data-gjump="' + Math.round(r.ms) + '">ジャンプ</button>' : '') + '</span></div>';
+    }).join('') + '<p class="note">前提として、プログレス／トランジットが不利な時期でないこと（原典）。ASC・POFは出生1の出生地で計算しています。</p>';
     el.querySelectorAll('button[data-gjump]').forEach(function (b) {
       b.addEventListener('click', function () { setTransit(new Date(Number(b.getAttribute('data-gjump')))); });
     });
