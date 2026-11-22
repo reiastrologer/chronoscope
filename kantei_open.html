@@ -973,7 +973,7 @@ function renderGillen() {
     var pick = null, pickName = '';
     if (msV && (!msJ || msV <= msJ)) { pick = msV; pickName = '金星'; }
     else if (msJ) { pick = msJ; pickName = '木星'; }
-    rows.push({ n: 6, label: 'T POF ☌ 出生金星／木星', st: pick ? '次のジャスト：' + fmtDT(pick) + '（' + pickName + '）' : '見つかりませんでした', ms: pick, sortKey: pick || Infinity });
+    rows.push({ n: 6, label: 'T POF ☌ 出生' + (pickName || '金星／木星'), st: pick ? '次のジャスト：' + fmtDT(pick) : '見つかりませんでした', ms: pick, sortKey: pick || Infinity });
     rows.sort(function (a, b) { return (a.sortKey || Infinity) - (b.sortKey || Infinity); });
     el.innerHTML = rows.map(function (r) {
       return '<div class="aspRow"><span>' + r.label + '</span><span style="color:#9a8d7a;">' + r.st + (r.ms ? ' <button type="button" class="stepBtn" data-gjump="' + Math.round(r.ms) + '">ジャンプ</button>' : '') + '</span></div>';
