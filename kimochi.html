@@ -56,6 +56,9 @@ try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __
 <label class="fld">出生時刻（時）<select id="kBTH"></select></label>
 <label class="fld">出生時刻（分）<select id="kBTM"></select></label>
 </div>
+<div style="margin-top: 8px;">
+<label class="fld">相手の出生地（都道府県）<select id="kBPlace"></select></label>
+</div>
 <p style="font-size: 12.5px; color: #8a8178; margin-top: 8px; line-height: 1.8;">※相手の出生時間は、円の中の月の位置が正確になるだけで、読み自体は変わりません。出生時刻は、分かる範囲で大丈夫です（不明の場合は正午で計算します）。相性診断で入力した二人が、そのまま入ります。入力はあなたのブラウザの中だけに保存され、送信されません。</p>
 <div style="font-size: 13px; font-weight: 700; color: #e8cf9f; margin: 12px 0 6px;">相手はどんな人？</div>
 <select id="kMode" style="width: 100%; background: #171410; color: #faf6f0; border: 1px solid #4a4238; border-radius: 10px; padding: 11px 12px; font-size: 15px; font-family: 'Noto Sans JP', sans-serif;">
@@ -80,6 +83,7 @@ try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __
 <script>
 (function () {
 var AKEY = 'chronoscope_aisho_v1', SHARED = 'chronoscope_birth_v1';
+var PREFS = [['北海道',141.35,43.06],['青森県',140.74,40.82],['岩手県',141.15,39.70],['宮城県',140.87,38.27],['秋田県',140.10,39.72],['山形県',140.34,38.26],['福島県',140.47,37.75],['茨城県',140.45,36.34],['栃木県',139.88,36.57],['群馬県',139.06,36.39],['埼玉県',139.65,35.86],['千葉県',140.12,35.61],['東京',139.69,35.69],['神奈川県',139.64,35.45],['新潟県',139.02,37.90],['富山県',137.21,36.70],['石川県',136.63,36.60],['福井県',136.22,36.07],['山梨県',138.57,35.66],['長野県',138.18,36.65],['岐阜県',136.72,35.39],['静岡県',138.38,34.98],['愛知県',136.91,35.18],['三重県',136.51,34.73],['滋賀県',135.87,35.00],['京都府',135.76,35.01],['大阪府',135.50,34.69],['兵庫県',135.18,34.69],['奈良県',135.83,34.69],['和歌山県',135.17,34.23],['鳥取県',134.24,35.50],['島根県',133.05,35.47],['岡山県',133.92,34.66],['広島県',132.46,34.40],['山口県',131.47,34.18],['徳島県',134.56,34.07],['香川県',134.04,34.34],['愛媛県',132.77,33.84],['高知県',133.53,33.56],['福岡県',130.40,33.61],['佐賀県',130.30,33.25],['長崎',129.87,32.75],['熊本県',130.74,32.79],['大分県',131.60,33.24],['宮崎県',131.42,31.91],['鹿児島県',130.56,31.56],['沖縄県',127.68,26.21]];
 var GLYPH = { 0: '☉', 1: '☽', 2: '☿', 3: '♀', 4: '♂', 5: '♃', 6: '♄', 7: '♅', 8: '♆', 9: '♇' };
 var NAME = { 0: '太陽', 1: '月', 2: '水星', 3: '金星', 4: '火星', 5: '木星', 6: '土星', 7: '天王星', 8: '海王星', 9: '冥王星' };
 var TAROT = [
@@ -281,15 +285,15 @@ var ELAB_SIT = {
     '5h': '職場だと、期待が大きくなって、頼まれごとや評価の話が膨らみすぎる形で出やすいね。'
   },
   none: {
-    '0g': '連絡がない今は表に出てこないけど、ふとした瞬間にあなたを思い出す形で続いてる気持ちだよ。',
+    '0g': '連絡がない今は表に出てこないけど、向こうの中であなたは「どうでもいい人」になってないよ。気持ちは続いてるけど、動けずにいるだけだと思うな。',
     '0h': '連絡がないのは、気持ちがゼロだからとは限らないよ。向こうも意地やプライドで動けなくなってることがあるんだよね。',
     '2g': '向こうも連絡するきっかけを探してる頃だよ。短い一言なら、今日は届きやすいと思うな。',
     '2h': '言葉にしたいのに出せない、そういう詰まり方をしてる頃だよ。沈黙＝拒絶じゃないからね。',
-    '3g': '会えていない今は態度には出ないけど、あなたのことを思い出して、温かい気持ちになってる時間があるはずだよ。',
+    '3g': '会えていない今は態度には出ないけど、向こうの中であなたへの好意は冷めてないよ。一緒に笑った場面が浮かぶと、「やっぱり好きだな」ってなってる気持ちだと思うな。',
     '3h': '好意と意地が混ざって、連絡できないままになってることがあるよ。嫌いで止まってるんじゃないと思うな。',
     '4g': '向こうの中で、近づきたい気持ちが動いてるよ。久しぶりの連絡が来たら、それがサインだね。',
     '4h': '近づきたい気持ちと意地がぶつかって、動けなくなってる頃だよ。熱が冷めたわけじゃないと思うな。',
-    '5g': '離れていても、あなたの幸せを願ったり、いい思い出として大切にしていたり、そういう形で続いてるよ。',
+    '5g': '離れていても、「元気でいてほしい」って思えるくらい、あなたは向こうの中で大切な存在だよ。幸せを願う気持ちは本物だと思うな。',
     '5h': '期待が大きかったぶん、現実との差にモヤモヤして止まってることがあるよ。気持ちの整理に時間がかかってる頃だね。'
   }
 };
@@ -301,9 +305,9 @@ var ACT_LEAD_MEET = {
   5: 'あなたの将来性や人柄を、職場でも高く買ってるみたいだよ。いい話を回してくれることがあるかもね。'
 };
 var ACT_LEAD_NONE = {
-  0: '連絡は止まっていても、ふとした瞬間にあなたのことを思い出してるみたいだよ。気持ちは消えてないと思うな。',
+  0: '連絡は止まっていても、向こうの中であなたは「どうでもいい人」になってないよ。気持ちは消えてないと思うな。',
   2: 'あなたの様子が気になって、連絡するかどうか迷ってる頃だよ。向こうも、きっかけを探してると思うな。',
-  3: '会えていない今も、あなたのことを懐かしく、温かく思い出してるみたいだよ。好意の火は消えてないと思うな。',
+  3: '会えていない今も、あなたへの好意は冷めてないみたいだよ。一緒にいた時間が楽しかったぶん、簡単には消えない気持ちだと思うな。',
   4: 'あなたのことが頭から離れなくて、連絡したい気持ちと意地がぶつかってる頃だよ。熱は残ってると思うな。',
   5: '離れていても、あなたの幸せを願う気持ちが大きくなってるみたいだよ。応援する気持ちは本物だと思うな。'
 };
@@ -393,9 +397,12 @@ function mkSelects(pfx) {
 }
 var SA = mkSelects('kA'), SB = mkSelects('kB');
 var SAT = mkTime('kA'), SBT = mkTime('kB');
+var kBPlaceEl = document.getElementById('kBPlace');
+PREFS.forEach(function (p) { var o = document.createElement('option'); o.value = p[0]; o.textContent = p[0]; kBPlaceEl.appendChild(o); });
+kBPlaceEl.value = '東京';
 var kModeEl = document.getElementById('kMode');
 try { var mv0 = localStorage.getItem('kimochi_mode_v1'); if (mv0) kModeEl.value = mv0; } catch (e) {}
-kModeEl.addEventListener('change', function () { try { localStorage.setItem('kimochi_mode_v1', kModeEl.value); } catch (e) {} });
+kModeEl.addEventListener('change', function () { try { localStorage.setItem('kimochi_mode_v1', kModeEl.value); } catch (e) {} var autoSit = kModeEl.value === 'work' ? 'meet' : kModeEl.value === 'online' ? 'contact' : null; if (autoSit && typeof kSitEl !== 'undefined' && kSitEl) { kSitEl.value = autoSit; try { localStorage.setItem('kimochi_sit_v1', autoSit); } catch (e) {} } });
 var kSitEl = document.getElementById('kSit');
 try { var sv0 = localStorage.getItem('kimochi_sit_v1'); if (sv0) kSitEl.value = sv0; } catch (e) {}
 kSitEl.addEventListener('change', function () { try { localStorage.setItem('kimochi_sit_v1', kSitEl.value); } catch (e) {} });
@@ -413,9 +420,19 @@ function mkTime(pfx) {
 }
 function getTime(t) { if (!t || t.h.value === '') return null; return (+t.h.value) + ':' + (t.m.value === '' ? 0 : +t.m.value); }
 function setTime(t, s) { if (!t || !s) return; var p = String(s).split(':'); if (p.length !== 2) return; t.h.value = +p[0]; t.m.value = Math.round(+p[1] / 5) * 5 % 60; }
+function placeOf(name) { for (var i = 0; i < PREFS.length; i++) { if (PREFS[i][0] === name) return { lon: PREFS[i][1], lat: PREFS[i][2] }; } return { lon: 139.69, lat: 35.69 }; }
+function pHouses(jd, lat, lon) {
+  const cusps = PM._malloc(104), ascmc = PM._malloc(80);
+  PM.ccall('swe_houses_wrap', 'number', ['number', 'number', 'number', 'number', 'number', 'number'], [jd, lat, lon, 80, cusps, ascmc]);
+  const asc = PM.getValue(ascmc, 'double'), mc = PM.getValue(ascmc + 8, 'double');
+  const arr = [];
+  for (let i = 1; i <= 12; i++) arr.push(PM.getValue(cusps + i * 8, 'double'));
+  PM._free(cusps); PM._free(ascmc);
+  return { asc: asc, mc: mc, cusps: arr };
+}
 try {
   var raw = localStorage.getItem(AKEY);
-  if (raw) { var dd = JSON.parse(raw); if (dd.A) { setFromDate(SA, dd.A.date); setTime(SAT, dd.A.time); } if (dd.B) { setFromDate(SB, dd.B.date); setTime(SBT, dd.B.time); } }
+  if (raw) { var dd = JSON.parse(raw); if (dd.A) { setFromDate(SA, dd.A.date); setTime(SAT, dd.A.time); } if (dd.B) { setFromDate(SB, dd.B.date); setTime(SBT, dd.B.time); if (dd.B.place) kBPlaceEl.value = dd.B.place; } }
   else { var sh = JSON.parse(localStorage.getItem(SHARED) || 'null'); if (sh && sh.y) { SA.y.value = sh.y; SA.m.value = sh.m; SA.d.value = sh.d; } }
 } catch (e) {}
 var PM = null, PJD = null;
@@ -434,16 +451,17 @@ function pPos(jd, planet) {
   PM._free(out); PM._free(err);
   return lon;
 }
-function natalOf(ds, tm) {
+function jdOf(ds, tm) {
   var p = ds.split('-');
-  var jd;
   if (tm) {
     var tp = String(tm).split(':');
     var ut = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2], +tp[0] - 9, +tp[1] || 0));
-    jd = PJD(ut.getUTCFullYear(), ut.getUTCMonth() + 1, ut.getUTCDate(), ut.getUTCHours() + ut.getUTCMinutes() / 60, 1);
-  } else {
-    jd = PJD(+p[0], +p[1], +p[2], 3.0, 1);
+    return PJD(ut.getUTCFullYear(), ut.getUTCMonth() + 1, ut.getUTCDate(), ut.getUTCHours() + ut.getUTCMinutes() / 60, 1);
   }
+  return PJD(+p[0], +p[1], +p[2], 3.0, 1);
+}
+function natalOf(ds, tm) {
+  var jd = jdOf(ds, tm);
   var pos = {};
   for (var i = 0; i <= 9; i++) pos[i] = pPos(jd, i);
   return pos;
@@ -497,9 +515,9 @@ var ACT_HARD_SOLO = 'あなたに気持ちをぶつけたいのに、うまく�
 var ACT_HARD_AFTER = 'ただ、その気持ちが強いぶん、伝わらなかったり誘えなかったりすると、イライラが出ちゃうこともあるみたい。それは仕方ないことだよね。';
 var LEADS = {
   ex: {
-    0: 'あなたのことを、ふとした瞬間に思い出してるみたいだよ。気持ちは完全には消えてないと思うな。',
+    0: 'あなたのことが、今もふとした瞬間に頭に浮かぶみたいだよ。それだけ心に残ってるってことで、気持ちは完全には消えてないと思うな。',
     2: 'あなたの様子が気になって、連絡するかどうか迷ってるみたいだよ。何気ないやり取りなら、まだ繋がってると思うな。',
-    3: 'あなたと楽しかった時間を、懐かしく思い出してるみたいだよ。ただ、戻りたいかどうかは、向こうもまだ決めかねてる感じだね。',
+    3: 'あなたと楽しかった時間が、今も心に残ってるみたいだよ。「楽しかったな」って思い返すくらい、あなたとの時間は大きかったんだと思うな。ただ、戻りたいかどうかは、向こうもまだ決めかねてる感じだね。',
     4: 'あなたへの気持ちがぶつかり合って、イライラや未練が混ざってる日だよ。熱が残ってる証拠でもあるけど、近づき方は慎重にね。',
     5: 'あなたの幸せを願う気持ちが大きくなってるみたいだよ。離れていても、応援する気持ちは本物だと思うな。'
   },
@@ -570,7 +588,7 @@ function noticeText(fam, subj, word) {
   if (fam === 'lover') return subj + '、あなたの' + word + 'に、いつも癒されてるみたいだよ。一緒にいる理由のひとつだね。';
   if (fam === 'partner') return subj + '、あなたの' + word + 'に、毎日助けられてるみたいだよ。口に出さなくても、感謝してるからね。';
   if (fam === 'oshi') return subj + '、あなたの何気ない応援にちゃんと気づいて、力にしてるタイプみたいだよ。声援は届いてると思うな。';
-  if (fam === 'ex') return subj + '、あなたの' + word + 'を、今でも懐かしく思い出すことがあるみたいだよ。';
+  if (fam === 'ex') return subj + '、あなたの' + word + 'を、今でもふと思い出すことがあるみたいだよ。それだけ、あなたとの時間が心に残ってるってことだね。';
   if (fam === 'friend') return subj + '、あなたの' + word + 'を大事に思ってるみたいだよ。何かあっても、根っこは友達だね。';
   if (fam === 'family') return subj + '、あなたの' + word + 'を、ちゃんと見ててくれてるみたいだよ。口には出さなくても、心配して応援してるからね。';
   if (fam === 'work') return subj + '、あなたの' + word + 'を、ちゃんと評価してるみたいだよ。';
@@ -613,31 +631,44 @@ function spreadPos(pos, ids, minSep) {
   seq.forEach(function (p, idx) { out[p.id] = disp[idx]; });
   return out;
 }
-function wheelSVG(nA, nB, tPos, contacts) {
-  var S = 340, C = S / 2;
+function wheelSVG(nA, nB, tPos, contacts, cusps) {
+  var S = 640, C = S / 2;
   var SIGNS = ['♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓'];
-  var ECOL = ['#e08a7a', '#d9c07a', '#8fd0b2', '#7a9fc5'];
-  function P(lon, r) { var a = lon * Math.PI / 180; return [C - r * Math.cos(a), C + r * Math.sin(a)]; }
-  var s = '<svg viewBox="0 0 ' + S + ' ' + S + '" style="width:min(88vw,340px); display:block; margin:8px auto 0;">';
-  s += '<circle cx="' + C + '" cy="' + C + '" r="166" fill="none" stroke="#8a6d1f" stroke-width="1.5"/>';
-  s += '<circle cx="' + C + '" cy="' + C + '" r="140" fill="none" stroke="#c9b892" stroke-width="1"/>';
-  s += '<circle cx="' + C + '" cy="' + C + '" r="112" fill="none" stroke="#8a6d1f" stroke-width="1.2"/>';
-  s += '<circle cx="' + C + '" cy="' + C + '" r="86" fill="none" stroke="#c9b892" stroke-width="1"/>';
-  s += '<circle cx="' + C + '" cy="' + C + '" r="58" fill="none" stroke="#d8ccaf" stroke-width="1"/>';
+  var ECOL = ['#B03A2E', '#8A6D1F', '#148F77', '#1A5276'];
+  var rot = (nB[11] != null) ? nB[11] : 0;
+  function P(lon, r) { var a = (lon - rot) * Math.PI / 180; return [C - r * Math.cos(a), C + r * Math.sin(a)]; }
+  var s = '<svg viewBox="0 0 ' + S + ' ' + S + '" style="width:min(92vw,520px); display:block; margin:8px auto 0;">';
+  s += '<circle cx="' + C + '" cy="' + C + '" r="308" fill="#FBF7EC"/>';
+  s += '<circle cx="' + C + '" cy="' + C + '" r="302" fill="none" stroke="#B09A6A" stroke-width="1.5"/>';
+  s += '<circle cx="' + C + '" cy="' + C + '" r="262" fill="none" stroke="#B09A6A"/>';
+  s += '<circle cx="' + C + '" cy="' + C + '" r="230" fill="none" stroke="#C9B489"/>';
+  s += '<circle cx="' + C + '" cy="' + C + '" r="190" fill="none" stroke="#C9B489"/>';
+  s += '<circle cx="' + C + '" cy="' + C + '" r="148" fill="none" stroke="#8A6D1F" stroke-width="1.6" stroke-opacity="0.85"/>';
   for (var i = 0; i < 12; i++) {
-    var p1 = P(i * 30, 140), p2 = P(i * 30, 166);
-    s += '<line x1="' + p1[0].toFixed(1) + '" y1="' + p1[1].toFixed(1) + '" x2="' + p2[0].toFixed(1) + '" y2="' + p2[1].toFixed(1) + '" stroke="#c9b892" stroke-width="1"/>';
-    var pg = P(i * 30 + 15, 153);
-    s += '<text x="' + pg[0].toFixed(1) + '" y="' + pg[1].toFixed(1) + '" font-size="15" fill="' + ECOL[i % 4] + '" text-anchor="middle" dominant-baseline="middle">' + SIGNS[i] + '</text>';
+    var q1 = P(i * 30, 262), q2 = P(i * 30, 302);
+    s += '<line x1="' + q1[0].toFixed(1) + '" y1="' + q1[1].toFixed(1) + '" x2="' + q2[0].toFixed(1) + '" y2="' + q2[1].toFixed(1) + '" stroke="#B09A6A" stroke-opacity="0.55"/>';
+    var g = P(i * 30 + 15, 282);
+    s += '<text x="' + g[0].toFixed(1) + '" y="' + g[1].toFixed(1) + '" font-size="25" fill="' + ECOL[i % 4] + '" text-anchor="middle" dominant-baseline="middle">' + SIGNS[i] + '</text>';
   }
-  var dispT = spreadPos(tPos, [0, 2, 3, 4, 5], 6.8);
-  var dispA = spreadPos(nA, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 8.7);
-  var dispB = spreadPos(nB, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 11.1);
+  if (cusps) {
+    cusps.forEach(function (cusp, i) {
+      var strong = i === 0 || i === 9;
+      var h1 = P(cusp, 148), h2 = P(cusp, 262);
+      s += '<line x1="' + h1[0].toFixed(1) + '" y1="' + h1[1].toFixed(1) + '" x2="' + h2[0].toFixed(1) + '" y2="' + h2[1].toFixed(1) + '" stroke="#8A7A5A" stroke-opacity="' + (strong ? 0.95 : 0.5) + '" stroke-width="' + (strong ? 1.8 : 1) + '"/>';
+      var nxt = cusps[(i + 1) % 12];
+      var span = ((nxt - cusp) % 360 + 360) % 360;
+      var np = P(cusp + span / 2, 134);
+      s += '<text x="' + np[0].toFixed(1) + '" y="' + np[1].toFixed(1) + '" fill="#7A6A4A" font-size="12" text-anchor="middle" dominant-baseline="middle">' + (i + 1) + '</text>';
+    });
+  }
+  var dispT = spreadPos(tPos, [0, 2, 3, 4, 5], 6.6);
+  var dispA = spreadPos(nA, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 7.4);
+  var dispB = spreadPos(nB, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 8.6);
   contacts.forEach(function (ch) {
-    if (!tPos[ch.tp]) return;
-    var p1 = P(dispT[ch.tp] != null ? dispT[ch.tp] : tPos[ch.tp], 118), p2 = P(dispA[ch.ap] != null ? dispA[ch.ap] : nA[ch.ap], 106);
-    var col = ch.asp === 0 ? '#d9a514' : ch.good ? '#2e9e5b' : '#d95f43';
-    s += '<line x1="' + p1[0].toFixed(1) + '" y1="' + p1[1].toFixed(1) + '" x2="' + p2[0].toFixed(1) + '" y2="' + p2[1].toFixed(1) + '" stroke="' + col + '" stroke-width="1.6" opacity="0.75"/>';
+    if (tPos[ch.tp] == null) return;
+    var p1 = P(dispT[ch.tp] != null ? dispT[ch.tp] : tPos[ch.tp], 246), p2 = P(dispA[ch.ap] != null ? dispA[ch.ap] : nA[ch.ap], 210);
+    var col = ch.asp === 0 ? '#C99700' : ch.good ? '#1E7A46' : '#C0392B';
+    s += '<line x1="' + p1[0].toFixed(1) + '" y1="' + p1[1].toFixed(1) + '" x2="' + p2[0].toFixed(1) + '" y2="' + p2[1].toFixed(1) + '" stroke="' + col + '" stroke-width="1.7" opacity="0.85"/>';
   });
   function ring(pos, r, col, fs, disp, tickR) {
     var out = '';
@@ -647,17 +678,19 @@ function wheelSVG(nA, nB, tPos, contacts) {
       var d = ((dl - pos[pid]) % 360 + 360) % 360; if (d > 180) d -= 360;
       if (Math.abs(d) > 0.05) {
         var l1 = P(dl, (r + tickR) / 2), l2 = P(pos[pid], tickR);
-        out += '<line x1="' + l1[0].toFixed(1) + '" y1="' + l1[1].toFixed(1) + '" x2="' + l2[0].toFixed(1) + '" y2="' + l2[1].toFixed(1) + '" stroke="' + col + '" stroke-width="1" opacity="0.55"/><circle cx="' + l2[0].toFixed(1) + '" cy="' + l2[1].toFixed(1) + '" r="2" fill="' + col + '"/>';
+        out += '<line x1="' + l1[0].toFixed(1) + '" y1="' + l1[1].toFixed(1) + '" x2="' + l2[0].toFixed(1) + '" y2="' + l2[1].toFixed(1) + '" stroke="' + col + '" stroke-width="1" opacity="0.6"/><circle cx="' + l2[0].toFixed(1) + '" cy="' + l2[1].toFixed(1) + '" r="2.4" fill="' + col + '"/>';
       }
       var pp = P(dl, r);
-      out += '<text x="' + pp[0].toFixed(1) + '" y="' + pp[1].toFixed(1) + '" font-size="' + fs + '" fill="' + col + '" text-anchor="middle" dominant-baseline="middle">' + GLYPH[pid] + '</text>';
+      out += '<text x="' + pp[0].toFixed(1) + '" y="' + pp[1].toFixed(1) + '" font-size="' + fs + '" font-weight="700" fill="' + col + '" text-anchor="middle" dominant-baseline="middle">' + GLYPH[pid] + '</text>';
     }
     return out;
   }
-  s += ring(tPos, 126, '#e0685c', 15, dispT, 140);
-  s += ring(nA, 99, '#7a9fc5', 15, dispA, 112);
-  s += ring(nB, 72, '#c39bd8', 14, dispB, 86);
-  s += '<text x="' + C + '" y="' + C + '" font-size="20" fill="#c9b892" text-anchor="middle" dominant-baseline="middle">♄</text>';
+  s += ring(tPos, 246, '#C1272D', 24, dispT, 262);
+  s += ring(nA, 210, '#1F3BB3', 24, dispA, 230);
+  s += ring(nB, 169, '#7D3C98', 22, dispB, 190);
+  if (nB[11] != null) { var pa = P(nB[11], 169); s += '<text x="' + pa[0].toFixed(1) + '" y="' + pa[1].toFixed(1) + '" font-size="11" font-weight="700" fill="#7D3C98" text-anchor="middle" dominant-baseline="middle">ASC</text>'; }
+  if (nB[12] != null) { var pm2 = P(nB[12], 169); s += '<text x="' + pm2[0].toFixed(1) + '" y="' + pm2[1].toFixed(1) + '" font-size="11" font-weight="700" fill="#7D3C98" text-anchor="middle" dominant-baseline="middle">MC</text>'; }
+  s += '<text x="' + C + '" y="' + C + '" font-size="30" fill="#8A6D1F" text-anchor="middle" dominant-baseline="middle">♄</text>';
   s += '</svg>';
   return s;
 }
@@ -675,11 +708,14 @@ document.getElementById('kBtn').addEventListener('click', async function () {
       cur.A = cur.A || {}; cur.B = cur.B || {};
       cur.A.date = dA; cur.B.date = dB;
       cur.A.time = tA; cur.B.time = tB;
+      cur.B.place = kBPlaceEl.value;
       bName = (cur.B && cur.B.name) ? String(cur.B.name) : '';
       localStorage.setItem(AKEY, JSON.stringify(cur));
     } catch (e) {}
     var bName = '';
     var nA = natalOf(dA, tA), nB = natalOf(dB, tB);
+    var cuspsB = null;
+    try { var plB = placeOf(kBPlaceEl.value); var hsB = pHouses(jdOf(dB, tB), plB.lat, plB.lon); nB[11] = hsB.asc; nB[12] = hsB.mc; cuspsB = hsB.cusps; } catch (e) {}
     var syn = contactsToday(nA);
     var trAll = syn.all;
     var now = new Date();
@@ -754,8 +790,8 @@ document.getElementById('kBtn').addEventListener('click', async function () {
     });
     html += '</div>';
         html += '<div style="font-size:13px; font-weight:700; color:#e8cf9f; margin-top:16px;">🔵 三重円（相手の円で読む）</div>';
-    html += wheelSVG(nA, nB, syn.tPos, syn.all);
-    html += '<div style="font-size:11.5px; color:#9a8d7a; margin-top:4px; line-height:1.7; text-align:center;">内側＝相手（紫）／中＝あなた（青）／外側＝今日の星（赤）。線は「今日の星×あなたの星」の角度です。</div>';
+    html += wheelSVG(nA, nB, syn.tPos, syn.all, cuspsB);
+    html += '<div style="font-size:11.5px; color:#9a8d7a; margin-top:4px; line-height:1.7; text-align:center;">内側＝相手（紫）／中＝あなた（青）／外側＝今日の星（赤）。線は「今日の星×あなたの星」の角度です。ハウスは相手のプラシーダス（相手の出生時刻が不明の場合は正午、出生地が未入力の場合は東京で計算）。</div>';
     html += '<div style="font-size:13px; font-weight:700; color:#e8cf9f; margin-top:16px;">⭐ 星からの裏づけ</div>';
     html += '<div style="font-size:11.5px; color:#9a8d7a; margin-top:2px; line-height:1.7;">相手のチャートを土台に、今日の星があなたの星に触れる場所を「相手があなたに向ける星」として読んでいます。</div>';
     html += '<div style="margin-top:6px;">';
