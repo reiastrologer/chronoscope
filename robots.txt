@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /kantei_open.html
+Disallow: /kantei1223.html
+Disallow: /thanks.html
+
+Sitemap: https://reiastrologer.github.io/chronoscope/sitemap.xml
