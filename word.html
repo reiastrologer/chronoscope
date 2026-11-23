@@ -42,18 +42,22 @@ try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __
 <label class="fld">月<select id="bzM"></select></label>
 <label class="fld">日<select id="bzD"></select></label>
 </div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+<label class="fld">生まれた時（任意）<select id="bzH"></select></label>
+<label class="fld">分（任意）<select id="bzMi"></select></label>
+</div>
 <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px;">
 <label class="fld">始める日（期間はテーマで変わります）<input type="date" id="bzStart"></label>
 </div>
-<p style="font-size: 12px; color: #8a8178; margin-top: 8px;">※出生時刻と出生地は不要です（月とハウスを使わない判定のため）。入力はあなたのブラウザの中だけに保存され、送信されません。</p>
+<p style="font-size: 12px; color: #8a8178; margin-top: 8px;">※出生時刻は任意です。入れると月の位置が合って、月への配置も判定に入ります（月は1日に約13°動くので、時刻がない場合は月を使いません）。出生地は不要です（ハウスを使わない判定のため）。入力はあなたのブラウザの中だけに保存され、送信されません。</p>
 <button id="bzBtn" type="button" style="width: 100%; margin-top: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color: #e8cf9f; border: 1px solid #c5a880; border-radius: 999px; padding: 13px 26px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans JP', sans-serif;">🔤 ワードで占う</button>
 <div id="bzResult" style="margin-top: 18px; padding-bottom: 40px;"></div>
 </div>
 <script>
 (function () {
 var KEY = 'chronoscope_birth_v1';
-var GLYPH = { 0: '☉', 2: '☿', 3: '♀', 4: '♂', 5: '♃', 6: '♄', 7: '♅', 8: '♆', 9: '♇'};
-var NAME = { 0: '太陽', 2: '水星', 3: '金星', 4: '火星', 5: '木星', 6: '土星', 7: '天王星', 8: '海王星', 9: '冥王星'};
+var GLYPH = { 0: '☉', 1: '☽', 2: '☿', 3: '♀', 4: '♂', 5: '♃', 6: '♄', 7: '♅', 8: '♆', 9: '♇'};
+var NAME = { 0: '太陽', 1: '月', 2: '水星', 3: '金星', 4: '火星', 5: '木星', 6: '土星', 7: '天王星', 8: '海王星', 9: '冥王星'};
 var IDS = [0, 2, 3, 4, 5, 6, 7, 8, 9];
 var ASPG = { 0: '☌', 90: '□', 120: '△', 180: '☍'};
 var yS = document.getElementById('bzY'), mS = document.getElementById('bzM'), dS = document.getElementById('bzD');
@@ -61,9 +65,13 @@ for (var i = 1930; i <= 2030; i++) { var o = document.createElement('option'); o
 for (var i = 1; i <= 12; i++) { var o2 = document.createElement('option'); o2.value = i; o2.textContent = i + '月'; mS.appendChild(o2);}
 for (var i = 1; i <= 31; i++) { var o3 = document.createElement('option'); o3.value = i; o3.textContent = i + '日'; dS.appendChild(o3);}
 yS.value = '1990'; mS.value = '1'; dS.value = '1';
+var hS = document.getElementById('bzH'), miS = document.getElementById('bzMi');
+var oH = document.createElement('option'); oH.value = ''; oH.textContent = '不明'; hS.appendChild(oH);
+for (var i = 0; i <= 23; i++) { var oh = document.createElement('option'); oh.value = i; oh.textContent = i + '時'; hS.appendChild(oh); }
+for (var i = 0; i <= 55; i += 5) { var om = document.createElement('option'); om.value = i; om.textContent = i + '分'; miS.appendChild(om); }
 try {
 var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
-if (saved && saved.y) { yS.value = saved.y; mS.value = saved.m; dS.value = saved.d;}
+if (saved && saved.y) { yS.value = saved.y; mS.value = saved.m; dS.value = saved.d; if (saved.h !== undefined && saved.h !== null && saved.h !== '') hS.value = saved.h; if (saved.mi) miS.value = saved.mi; }
 } catch (e) {}
 var startEl = document.getElementById('bzStart');
 var now = new Date();
@@ -100,25 +108,26 @@ function fmtD(dt) { return (dt.getUTCMonth() + 1) + '月' + dt.getUTCDate() + '�
 // __WORD_RESOLVER_START__
 var THEMES = [
  { label: '転職', icon: '🧳', keys: ['転職', '就職', '退職', '辞め', 'やめ', '就活', '雇用', '面接', '採用', '求人', '応募', 'バイト', 'パート', 'アルバイト', '派遣', 'ハローワーク'], spread: [5, 7], voice: [0, 2], risk: [6], riskWord: '注意' },
- { label: '仕事', icon: '💼', keys: ['仕事', '働き', '残業', '出世', '昇進', '上司'], spread: [5, 6], voice: [0, 2], risk: [2, 4, 6], riskWord: '仕事の注意' },
- { label: '旅', icon: '✈️', keys: ['旅', '遠出', 'ドライブ', '帰省', 'ツーリング', '飛行機', '船旅', 'ツアー'], spread: [5], voice: [0], risk: [6], riskWord: '足止め注意' },
- { label: '恋愛', icon: '💘', keys: ['恋', '告白', 'デート', 'モテ'], spread: [0, 5, 7], voice: [3, 4], risk: [2, 3, 4], riskWord: 'すれ違い注意' },
- { label: '金運', icon: '💰', keys: ['金', '収入', '副業', '投資', '貯金', '宝くじ', 'ギャンブル', '稼', '商売', '売上'], spread: [5], voice: [0, 3], risk: [3, 5, 8], riskWord: '散財注意' },
+ { label: '仕事', icon: '💼', keys: ['仕事', '働き', '残業', '出世', '昇進', '上司', '転勤', '起業', '開業'], spread: [5, 6], voice: [0, 2], risk: [2, 4, 6], riskWord: '仕事の注意' },
+ { label: '旅', icon: '✈️', keys: ['旅', '遠出', 'ドライブ', '帰省', 'ツーリング', '飛行機', '船旅', 'ツアー', '留学'], spread: [5], voice: [0], risk: [6], riskWord: '足止め注意' },
+ { label: '恋愛', icon: '💘', keys: ['恋', '告白', 'デート', 'モテ', '出会い'], spread: [0, 5, 7], voice: [3, 4], risk: [2, 3, 4], riskWord: 'すれ違い注意' },
+ { label: '金運', icon: '💰', keys: ['金', '収入', '副業', '投資', '貯金', '宝くじ', 'ギャンブル', '稼', '商売', '売上', '買いたい', '買い物'], spread: [5], voice: [0, 3], risk: [3, 5, 8], riskWord: '散財注意' },
  { label: '勉強・資格', icon: '📚', keys: ['勉強', '資格', '試験', '受験', '学び', '習い事', '免許', '合格', '警察', '医者', '看護師', '教師', '公務員', '弁護士', '保育士', '薬剤師'], spread: [2, 5], voice: [0, 2], risk: [6], riskWord: '詰まり注意' },
  { label: '引っ越し', icon: '🏠', keys: ['引っ越し', '引越し', '移住', '転居', '新生活'], spread: [5, 6], voice: [0, 5, 6], risk: [2, 8], riskWord: 'ドタバタ注意', conjMax: true, days: 1826, spanLabel: '5年', strictSpread: true },
  { label: '配信・発信', icon: '📣', keys: ['配信', 'バズ', '投稿', '動画', 'ライブ', 'フォロワー', 'SNS', 'ブログ'], spread: [5, 7], voice: [0, 2, 3], risk: [2, 5, 7], riskWord: '炎上注意' },
- { label: '美容', icon: '💇', keys: ['美容', '髪', 'ダイエット', '痩せ', 'キレイ', 'きれい', '美'], spread: [3, 5], voice: [0, 3], risk: [6], riskWord: '注意', days: 61, spanLabel: '2ヶ月' },
+ { label: '美容', icon: '💇', keys: ['美容', '髪', 'ダイエット', '痩せ', 'キレイ', 'きれい', '美', '女装', 'イメチェン'], spread: [3, 5], voice: [0, 3], risk: [6], riskWord: '注意', days: 61, spanLabel: '2ヶ月' },
  { label: '結婚', icon: '💍', keys: ['結婚', '婚活', 'プロポーズ', '入籍', '婚姻'], spread: [5, 6], voice: [0, 3], risk: [7], riskWord: '注意', days: 1826, spanLabel: '5年', strictSpread: true },
  { label: '金持ち', icon: '👑', keys: ['金持ち', '大金持ち', '億万長者', '富豪', '大富豪'], spread: [5, 8, 9], voice: [0, 3], risk: [6], riskWord: '注意' },
  { label: '研究', icon: '🔬', keys: ['研究', '調査', '開発', '実験', '分析', '論文', '探求', '発明'], spread: [2, 7], voice: [0, 2], risk: [8], riskWord: '混乱注意' },
- { label: '占い・芸術', icon: '🎨', keys: ['占い', '美術', 'アート', '芸術', 'イラスト', 'デザイン', '創作'], spread: [8, 2], voice: [0, 3], risk: [6], riskWord: '注意' }
+ { label: '占い・芸術', icon: '🎨', keys: ['占い', '美術', 'アート', '芸術', 'イラスト', 'デザイン', '創作'], spread: [8, 2], voice: [0, 3], risk: [6], riskWord: '注意' },
+ { label: '修理', icon: '🔧', keys: ['修理', '修繕', '故障', '直したい', '直し', '壊れた', 'メンテナンス', '点検'], spread: [2, 4, 6], voice: [2, 4], risk: [6], riskWord: '二度手間注意', strictSpread: true, excludePairs: [[4, 6]] }
 ];
 var DREAM = { label: '夢・挑戦', icon: '🌟', keys: [], spread: [5, 7], voice: [0, 4], risk: [6], riskWord: '壁注意' };
 function resolveWord(raw) {
   var t = (raw || '').replace(/\s+/g, '');
   if (!t) return { type: 'empty' };
   if (/妊娠|出産|子宝|妊活|不妊/.test(t)) return { type: 'pregnancy' };
-  if (/気持ち|私のこと|僕のこと|俺のこと|あの人|片思い|振り向|嫌われ/.test(t)) return { type: 'feelings' };
+  if (/気持ち|私のこと|僕のこと|俺のこと|あの人|片思い|振り向|嫌われ|復縁/.test(t)) return { type: 'feelings' };
   if (/抱き|抱きたい|セックス|エッチ|エロ|風俗|ソープ|援交|パパ活|ヤリ|やらせて/.test(t)) return { type: 'crude' };
   if (/食べたい|飲みたい|寿司|ラーメン|焼肉|美味しい店|店探し/.test(t)) return { type: 'food' };
   if (/したくない|行きたくない|やりたくない/.test(t)) return { type: 'nowish' };
@@ -139,7 +148,7 @@ function deflectHtml(type) {
   if (type === 'crude') return card('<img src="./chronos_hayai.webp" alt="クロノスくん" style="width:170px; max-width:60%; border-radius:12px;"><div style="font-family:\'Noto Serif JP\',serif; font-size:19px; color:#ffe9b8; font-weight:700; margin-top:10px;">ぼ、僕にはちょっと早い…！</div><div style="font-size:13.5px; color:#faf6f0; margin-top:6px;">その言葉は、星でも読めないや。他の言葉で聞いてみて。</div>');
   if (type === 'nowish') return card('<div style="font-size:15px; color:#ffe9b8; font-weight:700;">『したくない』は、時期じゃなくて今の気持ちだよね(笑)</div><div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.9;">星で読めるのは「辞めるならいつ」「いつ楽になるか」みたいな未来の話。今しんどいなら、まず休んでいいんだよ。辞める時期が知りたければ「転職したい」で聞いてみて。</div>');
   if (type === 'food') return card('<div style="font-size:15px; color:#ffe9b8; font-weight:700;">それは星じゃなくて、検索の仕事だよ(笑)</div><div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.9;">ワード占いは「いつがいい？」に答える道具。お店探しは地図アプリでどうぞ。</div>');
-  return card('<div style="font-size:15px; color:#ffe9b8; font-weight:700;">その言葉は、まだ読めないや</div><div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.9;">入力欄の下の例みたいな言葉なら読めるよ。旅・仕事・恋愛・お金・勉強・引っ越し・配信・美容、みたいなテーマで聞いてみて。</div>');
+  return card('<div style="font-size:15px; color:#ffe9b8; font-weight:700;">その言葉は、まだ読めないや</div><div style="font-size:13.5px; color:#faf6f0; margin-top:8px; line-height:1.9;">入力欄の下の例みたいな言葉なら読めるよ。旅・仕事・恋愛・お金・勉強・引っ越し・配信・美容・修理、みたいなテーマで聞いてみて。</div>');
 }
 function scrollToBox(box) {
   var hd = document.querySelector('.topTab'); hd = hd ? hd.closest('[style*="sticky"]') : null;
@@ -161,18 +170,21 @@ var by = +yS.value, bm = +mS.value, bd = +dS.value;
 try {
 var prev = {};
 try { prev = JSON.parse(localStorage.getItem(KEY) || '{}');} catch (e) {}
-prev.y = by; prev.m = bm; prev.d = bd;
+prev.y = by; prev.m = bm; prev.d = bd; prev.h = hS.value; prev.mi = miS.value;
 localStorage.setItem(KEY, JSON.stringify(prev));
 } catch (e) {}
 var sv = (startEl.value || '').split('-');
 if (sv.length!== 3) { box.innerHTML = '<p style="color:#ff9d85;">探し始める日を選んでください。</p>'; return;}
-var jdN = PJD(by, bm, bd, 3.0, 1);
+var hasTime = hS.value !== '';
+var jdN = PJD(by, bm, bd, 0, 1) + ((hasTime ? +hS.value + (+miS.value || 0) / 60 : 12) - 9) / 24;
 var natal = {};
 IDS.forEach(function (id) { natal[id] = pPos(jdN, id);});
+if (hasTime) natal[1] = pPos(jdN, 1);
+var NIDS = hasTime ? IDS.concat([1]) : IDS;
 var sDate = new Date(Date.UTC(+sv[0], +sv[1] - 1, +sv[2]));
 var bv = [sDate.getUTCFullYear(), sDate.getUTCMonth() + 1, sDate.getUTCDate()];
 var jd0 = PJD(bv[0], bv[1], bv[2], 3.0, 1);
-var SPREAD = CUR.theme.spread, VOICE = CUR.theme.voice, RISK = CUR.theme.risk;
+var SPREAD = CUR.theme.spread, VOICE = hasTime ? CUR.theme.voice.concat([1]) : CUR.theme.voice, RISK = CUR.theme.risk;
 var RISKWORD = CUR.theme.riskWord, NEG = CUR.negative, TLABEL = CUR.theme.label, TICON = CUR.theme.icon;
 var NDAYS = CUR.theme.days || 365;
 var SPAN = CUR.theme.spanLabel || '1年';
@@ -200,14 +212,15 @@ for (var off = -3; off <= NDAYS + 3; off++) {
   IDS.forEach(function (id) { tp[id] = pPos(jd, id); });
   var seen = {};
   IDS.forEach(function (t) {
-    IDS.forEach(function (n) {
+    NIDS.forEach(function (n) {
       var diff = Math.abs(tp[t] - natal[n]) % 360; if (diff > 180) diff = 360 - diff;
       var asp = null, orb = 99;
       [0, 90, 120, 180].forEach(function (a) { var oo = Math.abs(diff - a); if (oo < orb) { orb = oo; asp = a; } });
       if (orb > 3.5 || asp === null) return;
       var isGoodAsp = (asp === 0 || asp === 120);
       var tierA = (SPREAD.indexOf(t) >= 0 && VOICE.indexOf(n) >= 0) || (!CUR.theme.strictSpread && VOICE.indexOf(t) >= 0 && SPREAD.indexOf(n) >= 0);
-      var isGood = isGoodAsp && (tierA || (!CUR.theme.strictSpread && VOICE.indexOf(n) >= 0));
+      var excl = CUR.theme.excludePairs && CUR.theme.excludePairs.some(function (pr) { return (pr[0] === t && pr[1] === n) || (pr[0] === n && pr[1] === t); });
+      var isGood = isGoodAsp && !excl && (tierA || (!CUR.theme.strictSpread && VOICE.indexOf(n) >= 0));
       var isRisk = !isGoodAsp && (RISK.indexOf(t) >= 0 || RISK.indexOf(n) >= 0 || VOICE.indexOf(n) >= 0);
       if (!isGood && !isRisk) return;
       var key = t + '-' + n + '-' + asp;
