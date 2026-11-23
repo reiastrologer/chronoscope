@@ -90,14 +90,16 @@ LINEは鑑定のご依頼とお約束専用です。鑑定依頼以外の雑談�
 <div class="sec">
 <h2>LINEが使えない方（お問い合わせフォーム）</h2>
 <p>LINEが使えない方は、こちらのフォームからお申し込みください。メールで返信します。</p>
-<form action="https://formsubmit.co/qianchuanwang@gmail.com" method="POST" style="margin-top: 12px;">
-<input type="hidden" name="_subject" value="【クロノスコープ】個人鑑定のお申し込み" />
-<input type="hidden" name="_template" value="table" />
-<input type="hidden" name="_next" value="https://reiastrologer.github.io/chronoscope/thanks.html" />
+<form action="https://api.web3forms.com/submit" method="POST" style="margin-top: 12px;">
+<input type="hidden" name="access_key" value="c495e0d6-d4d1-44df-9e29-b17aa10695bb" />
+<input type="hidden" name="subject" value="【クロノスコープ】個人鑑定のお申し込み" />
+<input type="hidden" name="from_name" value="クロノスコープ申込フォーム" />
+<input type="hidden" name="redirect" value="https://reiastrologer.github.io/chronoscope/thanks.html" />
+<input type="checkbox" name="botcheck" style="display: none;" />
 <div style="margin-bottom: 12px;"><label style="font-size: 13px; color: #c5a880;">お名前（ニックネーム可）</label><br>
 <input type="text" name="お名前" required style="width: 100%; margin-top: 4px; padding: 10px; border-radius: 8px; background: #1c1a17; color: #faf6f0; border: 1px solid #4a4238; font-size: 15px;" /></div>
 <div style="margin-bottom: 12px;"><label style="font-size: 13px; color: #c5a880;">メールアドレス（返信先）</label><br>
-<input type="email" name="メールアドレス" required style="width: 100%; margin-top: 4px; padding: 10px; border-radius: 8px; background: #1c1a17; color: #faf6f0; border: 1px solid #4a4238; font-size: 15px;" /></div>
+<input type="email" name="email" required style="width: 100%; margin-top: 4px; padding: 10px; border-radius: 8px; background: #1c1a17; color: #faf6f0; border: 1px solid #4a4238; font-size: 15px;" /></div>
 <div style="margin-bottom: 12px;"><label style="font-size: 13px; color: #c5a880;">ご希望の形式</label><br>
 <select name="ご希望の形式" style="width: 100%; margin-top: 4px; padding: 10px; border-radius: 8px; background: #1c1a17; color: #faf6f0; border: 1px solid #4a4238; font-size: 15px;">
 <option>LINE通話</option><option>LINEチャット</option><option>その他の通話アプリ（相談）</option>
