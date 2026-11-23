@@ -55,7 +55,7 @@
       <div><label>出生地</label><select id="kPlace"></select></div>
     </div>
     <div class="row3" style="margin-top:10px;">
-      <div><label>生年月日</label><input id="kDate" type="date" value="1977-12-23"></div>
+      <div><label>生年月日</label><input id="kDate" type="date" value="2000-01-01"></div>
       <div><label>出生時刻</label><input id="kTime" type="time" value="12:00"></div>
       <div><label>時刻不明</label><label style="font-size:14px; color:#faf6f0; padding-top:8px;"><input id="kUnknown" type="checkbox" style="width:auto;"> 不明（正午計算）</label></div>
     </div>
@@ -603,7 +603,7 @@ function readForm(p) {
 }
 function writeForm(p, info) {
   document.getElementById(p + 'Name').value = info ? (info.name || '') : '';
-  document.getElementById(p + 'Date').value = info ? (info.date || '1977-12-23') : '1977-12-23';
+  document.getElementById(p + 'Date').value = info ? (info.date || '2000-01-01') : '2000-01-01';
   document.getElementById(p + 'Time').value = info ? (info.time || '12:00') : '12:00';
   document.getElementById(p + 'Unknown').checked = info ? !!info.unknown : false;
   document.getElementById(p + 'Place').value = String(info && info.placeIdx !== undefined ? info.placeIdx : 12);
@@ -991,7 +991,7 @@ async function startApp() {
   try { saved = JSON.parse(localStorage.getItem('kantei_natal_v1') || 'null'); } catch (e) {}
   if (saved) {
     document.getElementById('kName').value = saved.name || '';
-    document.getElementById('kDate').value = saved.date || '1977-12-23';
+    document.getElementById('kDate').value = saved.date || '2000-01-01';
     document.getElementById('kTime').value = saved.time || '12:00';
     document.getElementById('kUnknown').checked = !!saved.unknown;
     sel.value = String(saved.placeIdx !== undefined ? saved.placeIdx : 12);
