@@ -317,7 +317,7 @@ function glyphOf(id) { var b = BODIES.find(function (x) { return x.id === id; })
 function bn(b) { return b.g === b.n ? b.n : b.g + ' ' + b.n; }
 
 var state = { natal: null, partner: null, natalInfo: null, partnerInfo: null, transit: null, tDate: new Date(), aspects: [], aspectsP: [], aspectsNP: [], lineMode: 'TN', selected: null };
-function spreadGlyphs(items, minSep) {
+function spreadGlyphs(items, minSep, cusps) {
   minSep = minSep || 7.5;
   var sorted = items.slice().sort(function (a, b) { return a.lon - b.lon; });
   if (sorted.length <= 1) { sorted.forEach(function (it) { it.disp = it.lon; }); return items; }
@@ -334,13 +334,38 @@ function spreadGlyphs(items, minSep) {
     prevRaw = p.lon;
   }
   var disp = seq.map(function (e) { return e.lon; });
+  var bounds = null;
+  if (cusps && cusps.length === 12) {
+    var MARGIN = 2.4;
+    bounds = seq.map(function (e) {
+      var u = e.lon, loD = 361, hiD = 361;
+      for (var ci = 0; ci < 12; ci++) {
+        var back = ((u - cusps[ci]) % 360 + 360) % 360;
+        if (back < loD) loD = back;
+        var fwd = ((cusps[ci] - u) % 360 + 360) % 360;
+        if (fwd < hiD) hiD = fwd;
+      }
+      var lo = u - loD + MARGIN, hi = u + hiD - MARGIN;
+      if (hi < lo) { var midv = (u - loD + u + hiD) / 2; lo = midv; hi = midv; }
+      return { lo: lo, hi: hi };
+    });
+  }
+  function clampDisp() {
+    if (!bounds) return;
+    for (var k = 0; k < disp.length; k++) {
+      if (disp[k] < bounds[k].lo) disp[k] = bounds[k].lo;
+      if (disp[k] > bounds[k].hi) disp[k] = bounds[k].hi;
+    }
+  }
   for (var it2 = 0; it2 < 120; it2++) {
     var moved = false;
     for (var k = 1; k < disp.length; k++) {
       if (disp[k] - disp[k - 1] < minSep) { var push = (minSep - (disp[k] - disp[k - 1])) / 2; disp[k - 1] -= push; disp[k] += push; moved = true; }
     }
+    clampDisp();
     if (!moved) break;
   }
+  clampDisp();
   seq.forEach(function (e, idx) { e.it.disp = disp[idx]; });
   return items;
 }
@@ -394,7 +419,7 @@ function renderWheel() {
   function dispMap(pos, ids, sep) {
     var items = [];
     ids.forEach(function (id) { if (pos[id] !== undefined && id !== 11 && id !== 12) items.push({ id: id, lon: pos[id] }); });
-    spreadGlyphs(items, sep);
+    spreadGlyphs(items, sep, state.natal ? state.natal.cusps : null);
     var m = {};
     items.forEach(function (it) { m[it.id] = it.disp; });
     return m;
@@ -419,7 +444,7 @@ function renderWheel() {
   function dots(pos, r, color, ids, side, sep, font) {
     var items = [];
     ids.forEach(function (id) { if (pos[id] !== undefined && id !== 11 && id !== 12) items.push({ id: id, lon: pos[id] }); });
-    spreadGlyphs(items, sep || (r >= 240 ? 7.0 : 8.2));
+    spreadGlyphs(items, sep || (r >= 240 ? 7.0 : 8.2), state.natal ? state.natal.cusps : null);
     var out = '';
     var sel = state.selected;
     var involved = {};
