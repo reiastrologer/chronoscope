@@ -39,18 +39,23 @@ try { var __nav = performance.getEntriesByType('navigation')[0]; if (__nav && __
 <label class="fld">月<select id="bzM"></select></label>
 <label class="fld">日<select id="bzD"></select></label>
 </div>
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px;">
+<label class="fld">出生時刻（時・任意）<select id="bzH"></select></label>
+<label class="fld">分<select id="bzMi"></select></label>
+<label class="fld">出生地（任意）<select id="bzPlace"></select></label>
+</div>
 <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px;">
 <label class="fld">探し始める日（その日を含む週から8週間を見ます）<input type="date" id="bzStart"></label>
 </div>
-<p style="font-size: 12px; color: #8a8178; margin-top: 8px;">※出生時刻と出生地は不要です（月とハウスを使わない判定のため）。入力はあなたのブラウザの中だけに保存され、送信されません。</p>
+<p style="font-size: 12px; color: #8a8178; margin-top: 8px;">※出生時刻は任意です。入れると月の位置が合って、月にかかる配置も判定に入ります。出生地も入れると、アセンダント・MCへの配置も拾います。入力はあなたのブラウザの中だけに保存され、送信されません。</p>
 <button id="bzBtn" type="button" style="width: 100%; margin-top: 12px; background: linear-gradient(135deg, rgba(197,168,128,0.35), rgba(197,168,128,0.12)); color: #e8cf9f; border: 1px solid #c5a880; border-radius: 999px; padding: 13px 26px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans JP', sans-serif;">💼 仕事の追い風を探す</button>
 <div id="bzResult" style="margin-top: 18px; padding-bottom: 40px;"></div>
 </div>
 <script>
 (function () {
 var KEY = 'chronoscope_birth_v1';
-var GLYPH = { 0: '☉', 2: '☿', 3: '♀', 4: '♂', 5: '♃', 6: '♄', 7: '♅', 8: '♆', 9: '♇'};
-var NAME = { 0: '太陽', 2: '水星', 3: '金星', 4: '火星', 5: '木星', 6: '土星', 7: '天王星', 8: '海王星', 9: '冥王星'};
+var GLYPH = { 0: '☉', 1: '☽', 2: '☿', 3: '♀', 4: '♂', 5: '♃', 6: '♄', 7: '♅', 8: '♆', 9: '♇', 11: 'A', 12: 'M'};
+var NAME = { 0: '太陽', 1: '月', 2: '水星', 3: '金星', 4: '火星', 5: '木星', 6: '土星', 7: '天王星', 8: '海王星', 9: '冥王星', 11: 'アセンダント', 12: 'MC'};
 var IDS = [0, 2, 3, 4, 5, 6, 7, 8, 9];
 var ASPG = { 0: '☌', 90: '□', 120: '△', 180: '☍'};
 var yS = document.getElementById('bzY'), mS = document.getElementById('bzM'), dS = document.getElementById('bzD');
@@ -58,15 +63,20 @@ for (var i = 1930; i <= 2030; i++) { var o = document.createElement('option'); o
 for (var i = 1; i <= 12; i++) { var o2 = document.createElement('option'); o2.value = i; o2.textContent = i + '月'; mS.appendChild(o2);}
 for (var i = 1; i <= 31; i++) { var o3 = document.createElement('option'); o3.value = i; o3.textContent = i + '日'; dS.appendChild(o3);}
 yS.value = '1990'; mS.value = '1'; dS.value = '1';
+var hS = document.getElementById('bzH'), miS = document.getElementById('bzMi');
+(function () { var o0 = document.createElement('option'); o0.value = ''; o0.textContent = '不明'; hS.appendChild(o0); for (var i = 0; i < 24; i++) { var o = document.createElement('option'); o.value = i; o.textContent = i + '時'; hS.appendChild(o);} for (var j = 0; j < 60; j += 5) { var o2 = document.createElement('option'); o2.value = j; o2.textContent = j + '分'; miS.appendChild(o2);} })();
 try {
 var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
-if (saved && saved.y) { yS.value = saved.y; mS.value = saved.m; dS.value = saved.d;}
+if (saved && saved.y) { yS.value = saved.y; mS.value = saved.m; dS.value = saved.d; if (saved.h !== undefined && saved.h !== null && saved.h !== '') { hS.value = saved.h; miS.value = saved.mi || 0; } if (saved.place) plS.value = saved.place; }
 } catch (e) {}
 var startEl = document.getElementById('bzStart');
 var now = new Date();
 startEl.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
 
-var PM = null, PJD = null;
+var BZ_PREFS = {"北海道": [141.35, 43.06], "青森県": [140.74, 40.82], "岩手県": [141.15, 39.7], "宮城県": [140.87, 38.27], "秋田県": [140.1, 39.72], "山形県": [140.34, 38.26], "福島県": [140.47, 37.75], "茨城県": [140.45, 36.34], "栃木県": [139.88, 36.57], "群馬県": [139.06, 36.39], "埼玉県": [139.65, 35.86], "千葉県": [140.12, 35.61], "東京": [139.69, 35.69], "神奈川県": [139.64, 35.45], "新潟県": [139.02, 37.9], "富山県": [137.21, 36.7], "石川県": [136.63, 36.6], "福井県": [136.22, 36.07], "山梨県": [138.57, 35.66], "長野県": [138.18, 36.65], "岐阜県": [136.72, 35.39], "静岡県": [138.38, 34.98], "愛知県": [136.91, 35.18], "三重県": [136.51, 34.73], "滋賀県": [135.87, 35.0], "京都府": [135.76, 35.01], "大阪府": [135.5, 34.69], "兵庫県": [135.18, 34.69], "奈良県": [135.83, 34.69], "和歌山県": [135.17, 34.23], "鳥取県": [134.24, 35.5], "島根県": [133.05, 35.47], "岡山県": [133.92, 34.66], "広島県": [132.46, 34.4], "山口県": [131.47, 34.18], "徳島県": [134.56, 34.07], "香川県": [134.04, 34.34], "愛媛県": [132.77, 33.84], "高知県": [133.53, 33.56], "福岡県": [130.4, 33.61], "佐賀県": [130.3, 33.25], "長崎": [129.87, 32.75], "熊本県": [130.74, 32.79], "大分県": [131.6, 33.24], "宮崎県": [131.42, 31.91], "鹿児島県": [130.56, 31.56], "沖縄県": [127.68, 26.21]};
+var plS = document.getElementById('bzPlace');
+(function () { var o0 = document.createElement('option'); o0.value = ''; o0.textContent = '選ばない'; plS.appendChild(o0); Object.keys(BZ_PREFS).forEach(function (k) { var o = document.createElement('option'); o.value = k; o.textContent = k; plS.appendChild(o); }); })();
+var PM = null, PJD = null, PH = null;
 async function pInit() {
 if (PM) return;
 const mod = await import('./assets/swisseph-BtfJwKK5.js');
@@ -74,6 +84,7 @@ const factory = typeof mod.default === 'function'? mod.default: mod.SwissEphModu
 const wasmBinary = await (await fetch('./assets/swisseph-BmP0Bw24.wasm')).arrayBuffer();
 PM = await factory({ instantiateWasm: (imports, success) => { WebAssembly.instantiate(wasmBinary, imports).then(r => success(r.instance, r.module)); return {};}});
 PJD = PM.cwrap('swe_julday_wrap', 'number', ['number', 'number', 'number', 'number', 'number']);
+PH = PM.cwrap('swe_houses_wrap', 'number', ['number', 'number', 'number', 'number', 'number', 'number']);
 }
 function pPos(jd, planet) {
 const out = PM._malloc(48), err = PM._malloc(256);
@@ -81,6 +92,13 @@ const rc = PM.ccall('swe_calc_ut_wrap', 'number', ['number', 'number', 'number',
 const lon = rc < 0? NaN: PM.getValue(out, 'double');
 PM._free(out); PM._free(err);
 return lon;
+}
+function pHouses(jd, lat, lon) {
+const cusps = PM._malloc(104), ascmc = PM._malloc(80);
+PM.ccall('swe_houses_wrap', 'number', ['number', 'number', 'number', 'number', 'number', 'number'], [jd, lat, lon, 80, cusps, ascmc]);
+const asc = PM.getValue(ascmc, 'double'), mc = PM.getValue(ascmc + 8, 'double');
+PM._free(cusps); PM._free(ascmc);
+return { asc: asc, mc: mc };
 }
 function verdictOf(g, r) {
 if (!g &&!r) return '静か';
@@ -102,35 +120,44 @@ var by = +yS.value, bm = +mS.value, bd = +dS.value;
 try {
 var prev = {};
 try { prev = JSON.parse(localStorage.getItem(KEY) || '{}');} catch (e) {}
-prev.y = by; prev.m = bm; prev.d = bd;
+prev.y = by; prev.m = bm; prev.d = bd; prev.h = hS.value; prev.mi = miS.value; prev.place = plS.value;
 localStorage.setItem(KEY, JSON.stringify(prev));
 } catch (e) {}
 var sv = (startEl.value || '').split('-');
 if (sv.length!== 3) { box.innerHTML = '<p style="color:#ff9d85;">探し始める日を選んでください。</p>'; return;}
-var jdN = PJD(by, bm, bd, 3.0, 1);
+var hasTime = hS.value !== '';
+var jdN = hasTime ? PJD(by, bm, bd, (+hS.value) + (+miS.value) / 60 - 9, 1) : PJD(by, bm, bd, 3.0, 1);
 var natal = {};
 IDS.forEach(function (id) { natal[id] = pPos(jdN, id);});
+if (hasTime) natal[1] = pPos(jdN, 1);
+var hasHouse = hasTime && plS.value && BZ_PREFS[plS.value];
+if (hasHouse) { var hsN = pHouses(jdN, BZ_PREFS[plS.value][1], BZ_PREFS[plS.value][0]); natal[11] = hsN.asc; natal[12] = hsN.mc; }
 var sDate = new Date(Date.UTC(+sv[0], +sv[1] - 1, +sv[2]));
 var monOff = (sDate.getUTCDay() + 6) % 7;
 var mDate = new Date(sDate.getTime() - monOff * 86400000);
 var bv = [mDate.getUTCFullYear(), mDate.getUTCMonth() + 1, mDate.getUTCDate()];
 var jd0 = PJD(bv[0], bv[1], bv[2], 3.0, 1);
 var SPREAD = [5, 6], VOICE = [0, 2], RISK = [2, 4, 6];
+var NIDS = IDS.slice(); if (hasTime) NIDS.push(1); if (hasHouse) { NIDS.push(11); NIDS.push(12); }
+var VOICE_E = VOICE.slice(); if (hasTime) VOICE_E.push(1); if (hasHouse) { VOICE_E.push(11); VOICE_E.push(12); }
+var TIDS = IDS.concat([1]);
 var events = {};
 for (var off = -3; off < 59; off++) {
   var jd = jd0 + off;
   var tp = {};
-  IDS.forEach(function (id) { tp[id] = pPos(jd, id); });
-  IDS.forEach(function (t) {
-    IDS.forEach(function (n) {
+  TIDS.forEach(function (id) { tp[id] = pPos(jd, id); });
+  TIDS.forEach(function (t) {
+    NIDS.forEach(function (n) {
       var diff = Math.abs(tp[t] - natal[n]) % 360; if (diff > 180) diff = 360 - diff;
       var asp = null, orb = 99;
       [0, 90, 120, 180].forEach(function (a) { var oo = Math.abs(diff - a); if (oo < orb) { orb = oo; asp = a; } });
-      if (orb > 3.5 || asp === null) return;
+      if (orb > (t === 1 ? 5 : 3.5) || asp === null) return;
+      if (t === 1 && !(asp === 0 || asp === 120)) return;
+      if ((n === 11 || n === 12) && !(asp === 0 || asp === 120)) return;
       var isGoodAsp = (asp === 0 || asp === 120);
-      var tierA = (SPREAD.indexOf(t) >= 0 && VOICE.indexOf(n) >= 0) || (VOICE.indexOf(t) >= 0 && SPREAD.indexOf(n) >= 0);
-      var isBuzzGood = isGoodAsp && (tierA || VOICE.indexOf(n) >= 0);
-      var isBuzzRisk = !isGoodAsp && (RISK.indexOf(t) >= 0 || RISK.indexOf(n) >= 0 || VOICE.indexOf(n) >= 0);
+      var tierA = (SPREAD.indexOf(t) >= 0 && VOICE_E.indexOf(n) >= 0) || (VOICE_E.indexOf(t) >= 0 && SPREAD.indexOf(n) >= 0);
+      var isBuzzGood = isGoodAsp && (tierA || VOICE_E.indexOf(n) >= 0);
+      var isBuzzRisk = !isGoodAsp && (RISK.indexOf(t) >= 0 || RISK.indexOf(n) >= 0 || VOICE_E.indexOf(n) >= 0);
       if (!isBuzzGood && !isBuzzRisk) return;
       var mult = tierA ? 1 : 0.5;
       var key = t + '-' + n + '-' + asp;
