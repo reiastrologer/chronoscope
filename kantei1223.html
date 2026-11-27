@@ -360,23 +360,37 @@ function spreadGlyphs(items, minSep, cusps) {
       return { lo: lo, hi: hi };
     });
   }
-  function clampDisp() {
-    if (!bounds) return;
-    for (var k = 0; k < disp.length; k++) {
-      if (disp[k] < bounds[k].lo) disp[k] = bounds[k].lo;
-      if (disp[k] > bounds[k].hi) disp[k] = bounds[k].hi;
+  function solveDisp(exp, ms) {
+    var d = seq.map(function (e) { return e.lon; });
+    function clampD() {
+      if (!bounds) return;
+      for (var k = 0; k < d.length; k++) {
+        if (d[k] < bounds[k].lo - exp) d[k] = bounds[k].lo - exp;
+        if (d[k] > bounds[k].hi + exp) d[k] = bounds[k].hi + exp;
+      }
     }
-  }
-  for (var it2 = 0; it2 < 120; it2++) {
-    var moved = false;
-    for (var k = 1; k < disp.length; k++) {
-      if (disp[k] - disp[k - 1] < minSep) { var push = (minSep - (disp[k] - disp[k - 1])) / 2; disp[k - 1] -= push; disp[k] += push; moved = true; }
+    for (var it2 = 0; it2 < 120; it2++) {
+      var moved = false;
+      for (var k = 1; k < d.length; k++) {
+        if (d[k] - d[k - 1] < ms) { var push = (ms - (d[k] - d[k - 1])) / 2; d[k - 1] -= push; d[k] += push; moved = true; }
+      }
+      clampD();
+      if (!moved) break;
     }
-    clampDisp();
-    if (!moved) break;
+    clampD();
+    return d;
   }
-  clampDisp();
-  seq.forEach(function (e, idx) { e.it.disp = disp[idx]; });
+  var disp = null, usedScale = 1;
+  var scales = [1, 0.85, 0.7, 0.55];
+  for (var ei = 0; ei < scales.length; ei++) {
+    var ms2 = minSep * scales[ei];
+    disp = solveDisp(0, ms2);
+    var okGap = true;
+    for (var g2 = 1; g2 < disp.length; g2++) if (disp[g2] - disp[g2 - 1] < ms2 * 0.9) { okGap = false; break; }
+    usedScale = scales[ei];
+    if (okGap || !bounds) break;
+  }
+  seq.forEach(function (e, idx) { e.it.disp = disp[idx]; e.it.dispScale = usedScale; });
   return items;
 }
 function renderWheel() {
@@ -455,6 +469,14 @@ function renderWheel() {
     var items = [];
     ids.forEach(function (id) { if (pos[id] !== undefined && id !== 11 && id !== 12) items.push({ id: id, lon: pos[id] }); });
     spreadGlyphs(items, sep || (r >= 240 ? 7.0 : 8.2), state.natal ? state.natal.cusps : null);
+    var sItems = items.slice().sort(function (a, b) { return a.disp - b.disp; });
+    var ci2 = 0;
+    sItems.forEach(function (it, idx) {
+      var prev = sItems[idx - 1];
+      var gap = prev ? ((it.disp - prev.disp) % 360 + 360) % 360 : 999;
+      if (gap < 5.5) { ci2++; it.radOff = (ci2 % 2 === 0) ? -9 : 9; }
+      else { ci2 = 0; it.radOff = 0; }
+    });
     var out = '';
     var sel = state.selected;
     var involved = {};
@@ -470,9 +492,9 @@ function renderWheel() {
     items.forEach(function (it) {
       var tk1 = P(it.lon, r - 14), tk2 = P(it.lon, r - 6);
       out += '<line x1="' + tk1[0].toFixed(1) + '" y1="' + tk1[1].toFixed(1) + '" x2="' + tk2[0].toFixed(1) + '" y2="' + tk2[1].toFixed(1) + '" stroke="' + color + '" stroke-opacity="0.7"/>';
-      var gp = P(it.disp, r);
+      var gp = P(it.disp, r + (it.radOff || 0));
       var dim = sel && !involved[side + it.id] ? ' opacity="0.25"' : '';
-      out += '<g class="plHit" data-side="' + side + '" data-id="' + it.id + '" style="cursor:pointer;"' + dim + '><circle cx="' + gp[0].toFixed(1) + '" cy="' + gp[1].toFixed(1) + '" r="21" fill="rgba(0,0,0,0)"/><text x="' + gp[0].toFixed(1) + '" y="' + gp[1].toFixed(1) + '" fill="' + color + '" font-size="' + (font || 26) + '" font-weight="700" stroke="rgba(0,0,0,0.6)" stroke-width="0.6" paint-order="stroke" text-anchor="middle" dominant-baseline="middle">' + glyphOf(it.id) + '</text></g>';
+      out += '<g class="plHit" data-side="' + side + '" data-id="' + it.id + '" style="cursor:pointer;"' + dim + '><circle cx="' + gp[0].toFixed(1) + '" cy="' + gp[1].toFixed(1) + '" r="21" fill="rgba(0,0,0,0)"/><text x="' + gp[0].toFixed(1) + '" y="' + gp[1].toFixed(1) + '" fill="' + color + '" font-size="' + Math.round((font || 26) * (it.dispScale || 1)) + '" font-weight="700" stroke="rgba(0,0,0,0.6)" stroke-width="0.6" paint-order="stroke" text-anchor="middle" dominant-baseline="middle">' + glyphOf(it.id) + '</text></g>';
     });
     [11, 12].forEach(function (id) {
       if (pos[id] === undefined || ids.indexOf(id) < 0) return;
