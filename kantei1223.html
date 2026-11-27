@@ -494,8 +494,19 @@ function renderWheel() {
   s += '</svg>';
   box.innerHTML = s;
   box.querySelectorAll('.plHit').forEach(function (g) {
-    g.addEventListener('click', function () {
-      var side = g.getAttribute('data-side'), id = Number(g.getAttribute('data-id'));
+    g.addEventListener('click', function (ev) {
+      var svgEl = box.querySelector('svg');
+      var pt = svgEl.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+      var loc = pt.matrixTransform(svgEl.getScreenCTM().inverse());
+      var best = null, bd = 1e9;
+      box.querySelectorAll('.plHit').forEach(function (h) {
+        var c = h.querySelector('circle');
+        var dx = Number(c.getAttribute('cx')) - loc.x, dy = Number(c.getAttribute('cy')) - loc.y;
+        var d = dx * dx + dy * dy;
+        if (d < bd) { bd = d; best = h; }
+      });
+      if (!best || bd > 900) return;
+      var side = best.getAttribute('data-side'), id = Number(best.getAttribute('data-id'));
       if (state.selected && state.selected.side === side && state.selected.id === id) state.selected = null;
       else state.selected = { side: side, id: id };
       renderWheel(); renderAspDetail();
