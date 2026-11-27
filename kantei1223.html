@@ -93,14 +93,6 @@
   </div>
 
   <div class="card layIn">
-    <h2>🕐 トランジット <span id="tLabel" style="color:#faf6f0;"></span></h2>
-    <input id="tDate" type="datetime-local">
-    <div style="margin-top:10px; text-align:center;">
-      <button class="stepBtn now" id="tNow" type="button">今</button><button class="stepBtn" data-hours="-1" type="button">−1時間</button><button class="stepBtn" data-hours="1" type="button">+1時間</button><button class="stepBtn" data-days="-1" type="button">−1日</button><button class="stepBtn" data-days="1" type="button">+1日</button><button class="stepBtn" data-days="-7" type="button">−1週間</button><button class="stepBtn" data-days="7" type="button">+1週間</button><button class="stepBtn" data-months="-3" type="button">−3ヶ月</button><button class="stepBtn" data-months="3" type="button">+3ヶ月</button><button class="stepBtn" data-months="-6" type="button">−半年</button><button class="stepBtn" data-months="6" type="button">+半年</button><button class="stepBtn" data-years="-1" type="button">−1年</button><button class="stepBtn" data-years="1" type="button">+1年</button>
-    </div>
-  </div>
-
-  <div class="card layIn">
     <h2>🎯 アスペクト・ジャンプ</h2>
     <p class="note" style="margin-top:0;">希望のアスペクトが成立する日へ移動します（オーブ5°以内・前後5年）。条件を増やすと、全部が同時に成立する日を探します。</p>
     <div id="ajConds"></div>
@@ -127,6 +119,13 @@
       <button class="stepBtn lineModeBtn" data-mode="NP" type="button">線：出生1 × 出生2</button>
     </div>
     <div id="wheel"></div>
+    <div style="margin-top:10px;">
+      <div style="font-size:14px; font-weight:700; color:#e8cf9f;">🕐 トランジット <span id="tLabel" style="color:#faf6f0;"></span></div>
+      <input id="tDate" type="datetime-local" style="margin-top:6px;">
+      <div style="margin-top:10px; text-align:center;">
+        <button class="stepBtn now" id="tNow" type="button">今</button><button class="stepBtn" data-hours="-1" type="button">−1時間</button><button class="stepBtn" data-hours="1" type="button">+1時間</button><button class="stepBtn" data-days="-1" type="button">−1日</button><button class="stepBtn" data-days="1" type="button">+1日</button><button class="stepBtn" data-days="-7" type="button">−1週間</button><button class="stepBtn" data-days="7" type="button">+1週間</button><button class="stepBtn" data-months="-3" type="button">−3ヶ月</button><button class="stepBtn" data-months="3" type="button">+3ヶ月</button><button class="stepBtn" data-months="-6" type="button">−半年</button><button class="stepBtn" data-months="6" type="button">+半年</button><button class="stepBtn" data-years="-1" type="button">−1年</button><button class="stepBtn" data-years="1" type="button">+1年</button>
+      </div>
+    </div>
     <div id="aspDetail" style="margin-top:10px;"></div>
     <p class="note" id="wheelNote">ハウスはネイタルのプラシーダス。線はトランジット×ネイタルのアスペクト（金＝合、緑＝トライン、赤＝スクエア／オポジション）。</p>
   </div>
